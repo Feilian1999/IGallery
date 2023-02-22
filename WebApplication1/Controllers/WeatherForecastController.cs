@@ -29,5 +29,15 @@ namespace WebApplication1.Controllers
             })
             .ToArray();
         }
+        [HttpGet("Helloworld/hello")]
+        public string SayHello()
+        {
+            return "Hello";
+        }
+        [HttpGet("hello")]
+        public string SayHello2()
+        {
+            return "Hello2";
+        }
     }
 }
