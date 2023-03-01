@@ -1,6 +1,6 @@
 # IGallery    
 ![IGallery](https://socialify.git.ci/Feilian1999/IGallery/image?font=KoHo&language=1&name=1&owner=1&pattern=Charlie%20Brown&theme=Light)
-## Introduce
+## Introduction
 A online gallery developed mainly for showing IG works.  
 This Repo is Back-end developed by ASP.Net.  
   
