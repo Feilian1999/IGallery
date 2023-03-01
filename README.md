@@ -1,7 +1,8 @@
 # IGallery    
-簡述：  
-負責後端開發。  
-主要功能為創建一個可以展示IG作品的線上畫廊。  
+![IGallery](https://socialify.git.ci/Feilian1999/IGallery/image?font=KoHo&language=1&name=1&owner=1&pattern=Charlie%20Brown&theme=Light)
+## Introduce
+A online gallery developed mainly for showing IG works.  
+This Repo is Back-end developed by ASP.Net.  
   
-與前端結合：  
+### In collaboration with：  
 https://github.com/zx123497/IGallery.
