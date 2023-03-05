@@ -27,18 +27,19 @@ namespace WebApplication1.Controllers
 
 
         // api functions
-        [HttpPost]
+        [HttpPost("GetIndex")]
         public IActionResult Index(string firstName, string lastName)
         {
             string response = "HI" + firstName + lastName;
             return Ok(response);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> OAuthtoToken(String code)
+        [HttpPost("GetToken")]
+        public async Task<ActionResult<GetTokenRs>> OAuthtoToken(String code)
         {
-            GetTokenRs rs = await _getTokenService.GetToken(code);
-            return Ok(rs);
+            GetTokenRs rs = await _getTokenService.GetToken(code).ConfigureAwait(false);
+            Console.WriteLine("HEWRERERERERE: "+rs);
+            return rs;
         }
 
         [HttpGet]

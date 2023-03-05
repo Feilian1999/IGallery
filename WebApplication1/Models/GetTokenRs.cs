@@ -2,8 +2,8 @@
 {
     public class GetTokenRs
     {
-        public string? AccessToken { get;set; }
-        public string? UserID { get;set; } 
+        public string? Access_token { get;set; }
+        public string? User_id { get;set; } 
 
     }
 }
