@@ -16,13 +16,15 @@ namespace WebApplication1.Controllers
     {
         // 裝 serivces
         private readonly IGetIgDataService _getIgDataService;
-
+        private readonly IGetTokenService _getTokenService;
 
         // DI 注入
-        public InstagramController(IGetIgDataService getIgdataService)
+        public InstagramController(IGetIgDataService getIgdataService, IGetTokenService getTokenService)
         {
             _getIgDataService = getIgdataService;
+            _getTokenService = getTokenService;
         }
+
 
         // api functions
         [HttpPost]
@@ -30,6 +32,13 @@ namespace WebApplication1.Controllers
         {
             string response = "HI" + firstName + lastName;
             return Ok(response);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> OAuthtoToken(String code)
+        {
+            GetTokenRs rs = await _getTokenService.GetToken(code);
+            return Ok(rs);
         }
 
         [HttpGet]

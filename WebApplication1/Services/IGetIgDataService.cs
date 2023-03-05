@@ -11,5 +11,6 @@ namespace WebApplication1.Services
         /// <returns> ig data object</returns>
         IgData GetIgData();
     }
+
 }
 

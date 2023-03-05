@@ -11,7 +11,7 @@ builder.Services.AddSwaggerGen();
 
 // service/interface 相依綁定
 builder.Services.AddScoped<IGetIgDataService, GetIgDataService>();
-
+builder.Services.AddScoped<IGetTokenService, GetTokenservice>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
