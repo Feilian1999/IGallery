@@ -10,7 +10,7 @@ using static System.Net.WebRequestMethods;
 
 namespace WebApplication1.Services
 {
-    public class GetTokenservice : IGetTokenService
+    public class GetTokenService : IGetTokenService
     {
         public async Task<GetTokenRs> GetToken(string oauthToken)
         {

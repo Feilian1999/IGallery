@@ -17,12 +17,14 @@ namespace WebApplication1.Controllers
         // 裝 serivces
         private readonly IGetIgDataService _getIgDataService;
         private readonly IGetTokenService _getTokenService;
+        private readonly IExtendTokenService _extendTokenService;
 
         // DI 注入
-        public InstagramController(IGetIgDataService getIgdataService, IGetTokenService getTokenService)
+        public InstagramController(IGetIgDataService getIgdataService, IGetTokenService getTokenService, IExtendTokenService extendTokenService)
         {
             _getIgDataService = getIgdataService;
             _getTokenService = getTokenService;
+            _extendTokenService = extendTokenService;
         }
 
 
@@ -39,6 +41,14 @@ namespace WebApplication1.Controllers
         {
             GetTokenRs rs = await _getTokenService.GetToken(code).ConfigureAwait(false);
             Console.WriteLine("HEWRERERERERE: "+rs);
+            return rs;
+        }
+
+        [HttpGet("ExtendToken")]
+        public async Task<ActionResult<ExtendTokenRs>> ExtendToken(String accessToken)
+        {
+            ExtendTokenRs rs = await _extendTokenService.ExtendTokenRs(accessToken).ConfigureAwait(false);
+            Console.WriteLine("HEWRERERERERE: " + rs);
             return rs;
         }
 
