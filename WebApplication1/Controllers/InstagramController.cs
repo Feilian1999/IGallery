@@ -50,10 +50,10 @@ namespace WebApplication1.Controllers
             return rs;
         }
 
-        [HttpGet]
-        public IActionResult GetIgData()
+        [HttpGet("IgData")]
+        public async Task<ActionResult<IgData>> GetIgData()
         {
-            var response = _getIgDataService.GetIgData();
+            var response = await _getIgDataService.GetIgData().ConfigureAwait(false);
             return Ok(response);
         }
     }
