@@ -23,15 +23,19 @@ namespace WebApplication1.Services
                     { "redirect_uri", "https://zx123497.github.io/IGallery/" },
                     { "code", oauthToken}
                 });
-            HttpClient client = new HttpClient() {BaseAddress = new Uri("https://api.instagram.com") };
-            
-            var response = await client.PostAsync("/oauth/access_token", formContent);
-            var content = response.Content.ReadAsStringAsync().Result;
-            if (content != null) { 
-                var rs = JsonConvert.DeserializeObject<GetTokenRs>(content);
-                return rs;  
+            using (var client = new HttpClient() { BaseAddress = new Uri("https://api.instagram.com") })
+            {
+                var response = await client.PostAsync("/oauth/access_token", formContent);
+                var content = response.Content.ReadAsStringAsync().Result;
+                if (content != null)
+                {
+                    var rs = JsonConvert.DeserializeObject<GetTokenRs>(content);
+                    return rs;
+                }
+                return new GetTokenRs();
             }
-            return new GetTokenRs();
+            
+            
                
         }
 

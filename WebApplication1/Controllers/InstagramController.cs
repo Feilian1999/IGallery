@@ -40,7 +40,6 @@ namespace WebApplication1.Controllers
         public async Task<ActionResult<GetTokenRs>> OAuthtoToken(String code)
         {
             GetTokenRs rs = await _getTokenService.GetToken(code).ConfigureAwait(false);
-            Console.WriteLine("HEWRERERERERE: "+rs);
             return rs;
         }
 
@@ -48,7 +47,6 @@ namespace WebApplication1.Controllers
         public async Task<ActionResult<ExtendTokenRs>> ExtendToken(String accessToken)
         {
             ExtendTokenRs rs = await _extendTokenService.ExtendTokenRs(accessToken).ConfigureAwait(false);
-            Console.WriteLine("HEWRERERERERE: " + rs);
             return rs;
         }
 
