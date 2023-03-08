@@ -11,8 +11,25 @@ namespace WebApplication1.Models
 		//public string? timestamp { get; set; }
 		//public string? username { get; set; }
 
-		public object? data {  get; set; }
-		public object? paging { get; set; }
+		public Data[]? data {  get; set; }
+		public Paging? paging { get; set; }
     }
+
+	public class Data
+	{
+		public string? id { get; set; }
+		public string? caption { get; set; }
+	}
+
+	public class Paging
+	{
+		public Cursors? cursors { get; set; }
+	}
+
+	public class Cursors
+	{
+		public string? after { get; set; }
+		public string? before { get; set; }
+	}
 }
 
