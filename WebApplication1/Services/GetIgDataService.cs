@@ -11,10 +11,10 @@ namespace WebApplication1.Services
             using (var client = new HttpClient { BaseAddress = new Uri("https://graph.instagram.com") })
             {
                 var fields = "id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,username";
-                var token = "IGQVJVeWxsSW9QX1cwMWtEOWZAWOFA0ZAURFcjk4VDdIYWF0VW9HYXFTc2VoYm9ocnRHRG83VmRKbWJ1YlpqcnIzTUdYYTN0VFh3SXZAZAaUR1TWk3X3VKa3pydEdIYmJsMHlocUZAXNFFFNVpHY3pRU2FkWW5YdU41SVRKSHQw";
+                var token = "IGQVJYRklMaHBLeWMyY1IzZAC0waGF6Q1Q1UVNEZAXpLeVgzSUg5V0N5SXU5MTZAUM092cmVQR2VlVENPZAVRyaGw1YTNZAR3IwdkZAMdWU5RUZAvWGJTRVlpaDY0SFdGcHdwRUFuMVlXbWg5VVVLX1NFQkd4QnVzS1habUVya3Bj";
                 var extToken = "IGQVJYdDh1cXh6TjlWZAVdpWG1ya21LSUpRWWg1VHNqaUQ1Qzl5cXJGVzJVWGdLVTFGT2FYWjVsOURGT3BBNHlhd1ZAPMHU1VnJjb09PaXREQUwtMkJkS3ZAmYmxVcDlnZAHdRZAmNSTnF3";
-                string url = $"/me/media?fields={fields}&access_token={extToken}";
-                client.DefaultRequestHeaders.Add("Authentication", "Bearer " + extToken);
+                string url = $"/me/media?fields={fields}&access_token={token}";
+                //client.DefaultRequestHeaders.Add("Authentication", "Bearer " + extToken);
                 HttpResponseMessage response = await client.GetAsync(url);
                 var responseContent = response.Content.ReadAsStringAsync().Result;
                 if (responseContent != null)
