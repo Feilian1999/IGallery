@@ -11,7 +11,7 @@ namespace WebApplication1.Services
             using (var client = new HttpClient { BaseAddress = new Uri("https://graph.instagram.com") })
             {
                 var fields = "id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,username";
-                var token = "IGQVJWQWdWY1NwQks0VWlxVkpMeFhXaWxnR0RqMUhlQlkxOE1MdnF6MnpPTU5vbnAtVkloOUpqd1hjNmI0VnA3OTRQdzFPVmcxd0NOZA09PbGp3cEhsUkZAhS05wR2M3MkNYc0F1OWN3";
+                var token = "IGQVJVeWxsSW9QX1cwMWtEOWZAWOFA0ZAURFcjk4VDdIYWF0VW9HYXFTc2VoYm9ocnRHRG83VmRKbWJ1YlpqcnIzTUdYYTN0VFh3SXZAZAaUR1TWk3X3VKa3pydEdIYmJsMHlocUZAXNFFFNVpHY3pRU2FkWW5YdU41SVRKSHQw";
                 string url = $"/me/media?fields={fields}&access_token={token}";
 
                 HttpResponseMessage response = await client.GetAsync(url);
