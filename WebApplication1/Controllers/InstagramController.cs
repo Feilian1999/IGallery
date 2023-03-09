@@ -56,6 +56,20 @@ namespace WebApplication1.Controllers
             var response = await _getIgDataService.GetIgData().ConfigureAwait(false);
             return Ok(response);
         }
+
+        [HttpGet("PostId")]
+        public async Task<ActionResult<IgData>> GetPostId(string postId)
+        {
+            var response = await _getIgDataService.GetIgPost(postId).ConfigureAwait(false);
+            return Ok(response);
+        }
+
+        [HttpGet("AlbumId")]
+        public async Task<ActionResult<IgData>> GetAlbumData(string albumId)
+        {
+            var response = await _getIgDataService.GetAlbumData(albumId).ConfigureAwait(false);
+            return Ok(response);
+        }
     }
 }
 
