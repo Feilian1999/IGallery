@@ -20,8 +20,8 @@ namespace WebApplication1.Services
         /// <summary>
         /// 取得"單一"貼文資料，透過貼文id獲取
         /// </summary>
-        /// <returns> ig data object</returns>
-        public Task<IgData> GetIgPost(string postId);
+        /// <returns> data object</returns>
+        public Task<PostInAlbum> GetAlbumPost(string postId);
     }
 
 }

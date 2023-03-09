@@ -60,7 +60,7 @@ namespace WebApplication1.Controllers
         [HttpGet("PostId")]
         public async Task<ActionResult<IgData>> GetPostId(string postId)
         {
-            var response = await _getIgDataService.GetIgPost(postId).ConfigureAwait(false);
+            var response = await _getIgDataService.GetAlbumPost(postId).ConfigureAwait(false);
             return Ok(response);
         }
 

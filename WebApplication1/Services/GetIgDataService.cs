@@ -24,22 +24,22 @@ namespace WebApplication1.Services
             }
             return new IgData();
         }
-        public async Task<IgData> GetIgPost(string postId)
+        public async Task<PostInAlbum> GetAlbumPost(string postId)
         {
             using (var client = new HttpClient { BaseAddress = new Uri("https://graph.instagram.com") })
             {
-                var fields = "id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,username";
+                var fields = "id,media_type,media_url,permalink,thumbnail_url,timestamp,username";
                 var token = getToken();
                 string url = $"/{postId}?fields={fields}&access_token={token}";
                 HttpResponseMessage response = await client.GetAsync(url);
                 var responseContent = response.Content.ReadAsStringAsync().Result;
                 if (responseContent != null)
                 {
-                    var rs = JsonConvert.DeserializeObject<IgData>(responseContent);
+                    var rs = JsonConvert.DeserializeObject<PostInAlbum>(responseContent);
                     return rs;
                 }
             }
-            return new IgData();
+            return new PostInAlbum();
         }
 
         public async Task<AlbumData> GetAlbumData(string albumId)
