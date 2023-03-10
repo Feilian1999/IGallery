@@ -24,7 +24,7 @@ namespace WebApplication1.Models
 		public string? permalink { get; set; }
 		public string? timestamp { get; set; }
 		public string? username { get; set; }
-
+		public PostInAlbum[]? children { get; set; }
     }
 
 	public class Paging

@@ -57,12 +57,32 @@ namespace WebApplication1.Controllers
             var rawRs = await _getIgDataService.GetIgData(authorization).ConfigureAwait(false);
             Action<Data> action = new Action<Data> (_GetDataIfAlbum);
             var postArr = rawRs.data;
+            var organizedResponse = new IgData() { paging = rawRs.paging };
+            var pInd = 0;
+            var posts = new Data[postArr.Length];
             foreach(Data post in postArr)
             {
-                
+                if(post.media_type == "CAROUSEL_ALBUM")
+                {
+                    var idList = await _getIgDataService.GetAlbumData(post.id, authorization);
+                    var albums = new PostInAlbum[idList.data.Length];
+                    int index = 0;
+                    foreach (AlbumId id in idList.data)
+                    {
+                        var album = await _getIgDataService.GetAlbumPost(id.id, authorization);
+                        albums[index] = album;
+                        index++;
+                    }
+                    post.children = albums;
+                }
+
+                posts[pInd] = post;
+                pInd++;
             }
 
-            return rawRs;
+            organizedResponse.data = posts;
+
+            return organizedResponse;
         }
 
         [HttpGet("PostId")]
