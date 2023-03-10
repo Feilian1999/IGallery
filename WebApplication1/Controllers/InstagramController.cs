@@ -28,14 +28,11 @@ namespace WebApplication1.Controllers
         }
 
 
-        // api functions
-        [HttpPost("GetIndex")]
-        public IActionResult Index(string firstName, string lastName)
-        {
-            string response = "HI" + firstName + lastName;
-            return Ok(response);
-        }
-
+        /// <summary>
+        /// get token by giving authorization code
+        /// </summary>
+        /// <param name="rq"></param>
+        /// <returns></returns>
         [HttpPost("GetToken")]
         public async Task<ActionResult<GetTokenRs>> OAuthtoToken([FromBody] OAuthToTokenRq rq)
         {
@@ -44,6 +41,11 @@ namespace WebApplication1.Controllers
             return rs;
         }
 
+        /// <summary>
+        /// extend token to 60 days
+        /// </summary>
+        /// <param name="accessToken"></param>
+        /// <returns></returns>
         [HttpGet("ExtendToken")]
         public async Task<ActionResult<ExtendTokenRs>> ExtendToken(String accessToken)
         {
@@ -51,6 +53,11 @@ namespace WebApplication1.Controllers
             return rs;
         }
 
+        /// <summary>
+        /// 取得所有Ig帳號貼文，包含Album各頁資訊
+        /// </summary>
+        /// <param name="authorization"></param>
+        /// <returns>posts data json</returns>
         [HttpGet("IgData")]
         public async Task<ActionResult<IgData>> GetIgData([FromHeader]string authorization)
         {
