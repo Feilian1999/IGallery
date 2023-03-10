@@ -1,4 +1,5 @@
-﻿namespace WebApplication1.Models
+﻿using System.ComponentModel.DataAnnotations;
+namespace WebApplication1.Models
 {
     public class AlbumData
     {

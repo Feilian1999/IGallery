@@ -12,54 +12,42 @@ namespace WebApplication1.Services
             {
                 var fields = "id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,username";
                 string url = $"/me/media?fields={fields}&access_token={token}";
-                //client.DefaultRequestHeaders.Add("Authentication", "Bearer " + extToken);
                 HttpResponseMessage response = await client.GetAsync(url);
-                var responseContent = response.Content.ReadAsStringAsync().Result;
-                if (responseContent != null)
-                {
-                    var rs = JsonConvert.DeserializeObject<IgData>(responseContent);
-                    return rs;
-                }
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var rs = JsonConvert.DeserializeObject<IgData>(responseContent);
+                return rs ?? throw new ArgumentNullException(nameof(rs));
             }
-            return new IgData();
         }
-        public async Task<PostInAlbum> GetAlbumPost(string postId)
+        public async Task<PostInAlbum> GetAlbumPost(string postId, string token)
         {
             using (var client = new HttpClient { BaseAddress = new Uri("https://graph.instagram.com") })
             {
                 var fields = "id,media_type,media_url,permalink,thumbnail_url,timestamp,username";
-                var token = getToken();
                 string url = $"/{postId}?fields={fields}&access_token={token}";
                 HttpResponseMessage response = await client.GetAsync(url);
-                var responseContent = response.Content.ReadAsStringAsync().Result;
-                if (responseContent != null)
-                {
-                    var rs = JsonConvert.DeserializeObject<PostInAlbum>(responseContent);
-                    return rs;
-                }
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var rs = JsonConvert.DeserializeObject<PostInAlbum>(responseContent);
+                return rs ?? throw new ArgumentNullException(nameof(rs));
             }
-            return new PostInAlbum();
         }
 
-        public async Task<AlbumData> GetAlbumData(string albumId)
+        public async Task<AlbumData> GetAlbumData(string albumId, string token)
         {
             using (var client = new HttpClient { BaseAddress = new Uri("https://graph.instagram.com") })
             {
-                var token = getToken();
                 string url = $"/{albumId}/children?access_token={token}";
-                //client.DefaultRequestHeaders.Add("Authentication", "Bearer " + extToken);
                 HttpResponseMessage response = await client.GetAsync(url);
-                var responseContent = response.Content.ReadAsStringAsync().Result;
-                if (responseContent != null)
-                {
-                    var rs = JsonConvert.DeserializeObject<AlbumData>(responseContent);
-                    return rs;
-                }
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var rs = JsonConvert.DeserializeObject<AlbumData>(responseContent);
+                return rs ?? throw new ArgumentNullException(nameof(rs));
             }
-            return new AlbumData();
         }
 
-        private string getToken()
+        /// <summary>
+        /// 取得測試用token
+        /// </summary>
+        /// <returns>token string</returns>
+        private string _getToken()
         {
             var builder = new ConfigurationBuilder()
               .SetBasePath(Directory.GetCurrentDirectory())
