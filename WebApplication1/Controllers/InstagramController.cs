@@ -37,8 +37,9 @@ namespace WebApplication1.Controllers
         }
 
         [HttpPost("GetToken")]
-        public async Task<ActionResult<GetTokenRs>> OAuthtoToken(String code)
+        public async Task<ActionResult<GetTokenRs>> OAuthtoToken([FromBody] OAuthToTokenRq rq)
         {
+            var code = rq.Code;
             GetTokenRs rs = await _getTokenService.GetToken(code).ConfigureAwait(false);
             return rs;
         }
@@ -51,9 +52,9 @@ namespace WebApplication1.Controllers
         }
 
         [HttpGet("IgData")]
-        public async Task<ActionResult<IgData>> GetIgData()
+        public async Task<ActionResult<IgData>> GetIgData([FromHeader]string authorization)
         {
-            var response = await _getIgDataService.GetIgData().ConfigureAwait(false);
+            var response = await _getIgDataService.GetIgData(authorization).ConfigureAwait(false);
             return Ok(response);
         }
 

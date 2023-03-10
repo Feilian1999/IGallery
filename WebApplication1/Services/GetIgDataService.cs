@@ -6,12 +6,11 @@ namespace WebApplication1.Services
 {
     public class GetIgDataService : IGetIgDataService
     {
-        public async Task<IgData> GetIgData()
+        public async Task<IgData> GetIgData(string token)
         {
             using (var client = new HttpClient { BaseAddress = new Uri("https://graph.instagram.com") })
             {
                 var fields = "id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,username";
-                var token = getToken();
                 string url = $"/me/media?fields={fields}&access_token={token}";
                 //client.DefaultRequestHeaders.Add("Authentication", "Bearer " + extToken);
                 HttpResponseMessage response = await client.GetAsync(url);
