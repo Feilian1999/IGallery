@@ -31,14 +31,14 @@ builder.Services.AddSwaggerGen(options =>
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Version = "v1",
-        Title = "IGallery API~~~",
+        Title = "IGallery API",
         Description = "Provide Powerful APIs for IGallery!",
-        TermsOfService = new Uri("https://igouist.github.io/"),
+        TermsOfService = new Uri("https://github.com/Feilian1999/IGallery"),
         Contact = new OpenApiContact
         {
             Name = "IGallery Team",
             Email = "leo000111444@gmail.com",
-            Url = new Uri("https://igouist.github.io/about/"),
+            Url = new Uri("https://github.com/Feilian1999/IGallery"),
         }
     });
 
