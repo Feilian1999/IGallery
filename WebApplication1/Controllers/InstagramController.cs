@@ -54,22 +54,57 @@ namespace WebApplication1.Controllers
         [HttpGet("IgData")]
         public async Task<ActionResult<IgData>> GetIgData([FromHeader]string authorization)
         {
-            var response = await _getIgDataService.GetIgData(authorization).ConfigureAwait(false);
-            return Ok(response);
+            var rawRs = await _getIgDataService.GetIgData(authorization).ConfigureAwait(false);
+            Action<Data> action = new Action<Data> (_GetDataIfAlbum);
+            var postArr = rawRs.data;
+            var organizedResponse = new IgData() { paging = rawRs.paging };
+            var pInd = 0;
+            var posts = new Data[postArr.Length];
+            foreach(Data post in postArr)
+            {
+                if(post.media_type == "CAROUSEL_ALBUM")
+                {
+                    var idList = await _getIgDataService.GetAlbumData(post.id, authorization);
+                    var albums = new PostInAlbum[idList.data.Length];
+                    int index = 0;
+                    foreach (AlbumId id in idList.data)
+                    {
+                        var album = await _getIgDataService.GetAlbumPost(id.id, authorization);
+                        albums[index] = album;
+                        index++;
+                    }
+                    post.children = albums;
+                }
+
+                posts[pInd] = post;
+                pInd++;
+            }
+
+            organizedResponse.data = posts;
+
+            return organizedResponse;
         }
 
         [HttpGet("PostId")]
-        public async Task<ActionResult<IgData>> GetPostId(string postId)
+        public async Task<ActionResult<IgData>> GetPostId(string postId, string token)
         {
-            var response = await _getIgDataService.GetAlbumPost(postId).ConfigureAwait(false);
+            var response = await _getIgDataService.GetAlbumPost(postId, token).ConfigureAwait(false);
             return Ok(response);
         }
 
         [HttpGet("AlbumId")]
-        public async Task<ActionResult<IgData>> GetAlbumData(string albumId)
+        public async Task<ActionResult<IgData>> GetAlbumData(string albumId, string token)
         {
-            var response = await _getIgDataService.GetAlbumData(albumId).ConfigureAwait(false);
+            var response = await _getIgDataService.GetAlbumData(albumId, token).ConfigureAwait(false);
             return Ok(response);
+        }
+
+        private static void _GetDataIfAlbum(Data data)
+        {
+            if(data.media_type == "CAROUSEL_ALBUM")
+            {
+
+            }
         }
     }
 }

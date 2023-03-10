@@ -1,3 +1,6 @@
+using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
+using System.Reflection;
 using WebApplication1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,11 +19,63 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 // service/interface 相依綁定
 builder.Services.AddScoped<IGetIgDataService, GetIgDataService>();
 builder.Services.AddScoped<IGetTokenService, GetTokenService>();
 builder.Services.AddScoped<IExtendTokenService, ExtendTokenService>();
+
+// 註冊 Swagger 產生器
+builder.Services.AddSwaggerGen(options =>
+{
+    // API 服務簡介
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Version = "v1",
+        Title = "IGallery API~~~",
+        Description = "Provide Powerful APIs for IGallery!",
+        TermsOfService = new Uri("https://igouist.github.io/"),
+        Contact = new OpenApiContact
+        {
+            Name = "IGallery Team",
+            Email = "leo000111444@gmail.com",
+            Url = new Uri("https://igouist.github.io/about/"),
+        }
+    });
+
+    options.AddSecurityDefinition("Bearer",
+    new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "JWT Authorization"
+    });
+
+    options.AddSecurityRequirement(
+    new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+
+    // 讀取 XML 檔案產生 API 說明
+    //var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    //var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    //options.IncludeXmlComments(xmlPath);
+});
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
