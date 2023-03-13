@@ -17,7 +17,7 @@ namespace WebApplication1.Services
 			var result = 0;
 			if (!isExist)
 			{
-                var response = _db.Artists.Add(artist);
+                _db.Artists.Add(artist);
                 result = _db.SaveChanges();
             }
             return result;
@@ -27,10 +27,7 @@ namespace WebApplication1.Services
 		public bool CheckArtistExist(string? name)
 		{
 			var isExist = _db.Artists.Any(artist => artist.ArtistName == name);
-			if (isExist)
-			{
-				throw new Exception("The artist is already in our database!~");
-			}
+			
 			return isExist;
         }
 	}

@@ -47,19 +47,23 @@ namespace WebApplication1.Controllers
             var artist = _db.Artists
                 .Select(artist => new Artist { ArtistId = artist.ArtistId, ArtistName = artist.ArtistName })
                 .Where(artist => artist.ArtistName == artistInfo.Username);
-            var newToken = new Token
+            if (!_db.Tokens.Any(token => token.ArtistId == artist.First().ArtistId))
             {
-                AccessToken = extToken.access_token,
-                ArtistId = artist.First().ArtistId,
-                CreateTime = DateTime.Now,
-                UpdateTime = DateTime.Now,
-                ExpireTime = DateTime.Now.AddSeconds((double)extToken.expires_in),
-                Artist = artist.First(),
-            };
+                var newToken = new Token
+                {
+                    AccessToken = extToken.access_token,
+                    ArtistId = artist.First().ArtistId,
+                    CreateTime = DateTime.Now,
+                    UpdateTime = DateTime.Now,
+                    ExpireTime = DateTime.Now.AddSeconds((double)extToken.expires_in),
+                };
 
-            var addTokenRes = _db.Tokens.Add(newToken);
-            var finalRes = _db.SaveChanges();
-            return Ok("successfully add artist and Generate 60 day token number: " + extToken.access_token);
+                var addTokenRes = _db.Tokens.Add(newToken);
+                var finalRes = _db.SaveChanges();
+                return Ok("successfully add artist and Generate 60 day token number: " + extToken.access_token);
+            }
+
+            return BadRequest("Artist or Token already exist,  abort!");
         }
 
          
