@@ -43,6 +43,19 @@ namespace WebApplication1.Services
             }
         }
 
+        public async Task<ArtistInfo> GetArtistInfo(string userID, string token)
+        {
+            using (var client = new HttpClient { BaseAddress = new Uri("https://graph.instagram.com") })
+            {
+                string fields = "account_type,id,media_count,username";
+                string url = $"/{userID}?fields={fields}&access_token={token}";
+                HttpResponseMessage response = await client.GetAsync(url);
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var rs = JsonConvert.DeserializeObject<ArtistInfo>(responseContent);
+                return rs ?? throw new ArgumentNullException(nameof(rs));
+            }
+        }
+
         /// <summary>
         /// 取得測試用token
         /// </summary>

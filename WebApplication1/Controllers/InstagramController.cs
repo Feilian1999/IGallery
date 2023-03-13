@@ -46,7 +46,7 @@ namespace WebApplication1.Controllers
         /// </summary>
         /// <param name="accessToken"></param>
         /// <returns></returns>
-        [HttpGet("ExtendToken")]
+        [HttpGet("[action]")]
         public async Task<ActionResult<ExtendTokenRs>> ExtendToken(String accessToken)
         {
             ExtendTokenRs rs = await _extendTokenService.ExtendTokenRs(accessToken).ConfigureAwait(false);

@@ -22,6 +22,11 @@ namespace WebApplication1.Services
         /// </summary>
         /// <returns> data object</returns>
         public Task<PostInAlbum> GetAlbumPost(string postId, string token);
+        /// <summary>
+        /// 取得Ig創作者資訊
+        /// </summary>
+        /// <returns> data object</returns>
+        public Task<ArtistInfo> GetArtistInfo(string userID, string token);
     }
 
 }
