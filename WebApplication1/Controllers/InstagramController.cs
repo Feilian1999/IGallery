@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using SQLitePCL;
 using WebApplication1.Models;
 using WebApplication1.Services;
 
@@ -18,10 +20,12 @@ namespace WebApplication1.Controllers
         private readonly IGetIgDataService _getIgDataService;
         private readonly IGetTokenService _getTokenService;
         private readonly IExtendTokenService _extendTokenService;
+        private readonly DBContext _db;
 
         // DI 注入
-        public InstagramController(IGetIgDataService getIgdataService, IGetTokenService getTokenService, IExtendTokenService extendTokenService)
+        public InstagramController(DBContext db, IGetIgDataService getIgdataService, IGetTokenService getTokenService, IExtendTokenService extendTokenService)
         {
+            _db = db;
             _getIgDataService = getIgdataService;
             _getTokenService = getTokenService;
             _extendTokenService = extendTokenService;
@@ -46,7 +50,7 @@ namespace WebApplication1.Controllers
         /// </summary>
         /// <param name="accessToken"></param>
         /// <returns></returns>
-        [HttpGet("ExtendToken")]
+        [HttpGet("[action]")]
         public async Task<ActionResult<ExtendTokenRs>> ExtendToken(String accessToken)
         {
             ExtendTokenRs rs = await _extendTokenService.ExtendTokenRs(accessToken).ConfigureAwait(false);
@@ -86,6 +90,43 @@ namespace WebApplication1.Controllers
                 posts[pInd] = post;
                 pInd++;
             }
+
+            organizedResponse.data = posts;
+
+            return organizedResponse;
+        }
+
+        [HttpGet("[action]")]
+        public async Task<ActionResult<IgData>> GetAllIgDataFromTokenList()
+        {
+            var organizedResponse = new IgData();
+            var tokens = _db.Tokens.Select(token => token).ToArray();
+            var posts = new Data[25*tokens.Length];
+            foreach (Token token in tokens) {
+                var rawRs = await _getIgDataService.GetIgData(token.AccessToken).ConfigureAwait(false);
+                var postArr = rawRs.data;
+                var pInd = 0;
+                foreach (Data post in postArr)
+                {
+                    if (post.media_type == "CAROUSEL_ALBUM")
+                    {
+                        var idList = await _getIgDataService.GetAlbumData(post.id, token.AccessToken);
+                        var albums = new PostInAlbum[idList.data.Length];
+                        int index = 0;
+                        foreach (AlbumId id in idList.data)
+                        {
+                            var album = await _getIgDataService.GetAlbumPost(id.id, token.AccessToken);
+                            albums[index] = album;
+                            index++;
+                        }
+                        post.children = albums;
+                    }
+
+                    posts[pInd] = post;
+                    pInd++;
+                }
+            }
+            
 
             organizedResponse.data = posts;
 

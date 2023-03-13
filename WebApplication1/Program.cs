@@ -1,11 +1,16 @@
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using System.Configuration;
 using System.Reflection;
+using WebApplication1.Helpers;
+using WebApplication1.Models;
 using WebApplication1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
-
+var config = new ConfigurationBuilder()
+        .AddJsonFile("appsettings.json", optional: false)
+        .Build();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
@@ -14,7 +19,12 @@ builder.Services.AddCors(options =>
                           builder.AllowAnyOrigin().AllowAnyHeader();
                       });
 });
-// Add services to the container.
+// Add dbContext
+builder.Services.AddDbContext<DBContext>();
+
+// add options configuation
+builder.Services.Configure<DatabaseConnectionOptions>(config.GetSection("ConnectionStrings"));
+
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -23,7 +33,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddScoped<IGetIgDataService, GetIgDataService>();
 builder.Services.AddScoped<IGetTokenService, GetTokenService>();
 builder.Services.AddScoped<IExtendTokenService, ExtendTokenService>();
-
+builder.Services.AddScoped<IArtistService, ArtistService>();
 // 註冊 Swagger 產生器
 builder.Services.AddSwaggerGen(options =>
 {
