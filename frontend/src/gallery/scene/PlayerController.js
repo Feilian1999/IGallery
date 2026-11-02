@@ -79,12 +79,28 @@ const PlayerController = () => {
     const player = runtime.player;
     const {yaw, pitch} = runtime.camera;
     const elevation = THREE.MathUtils.clamp(0.36 - pitch, 0.1, 1.05);
+    // rooms with a low roof over the visitor (the festival walkway) set their own ceiling
+    const state = getGalleryState();
+    const layout = state.exhibition.rooms[state.room].layout;
+    const ceiling = layout.CAMERA_CEILING ?? WALL_HEIGHT - 0.45;
+    const fullReach = Math.cos(elevation) * FOLLOW_DISTANCE;
+    let reach = fullReach;
+    // a round room keeps the camera inside its wall by pulling it in toward the robot
+    if (layout.CAMERA_RADIUS) {
+      const dx = Math.sin(yaw);
+      const dz = Math.cos(yaw);
+      const along = player.position.x * dx + player.position.z * dz;
+      const inside = layout.CAMERA_RADIUS ** 2 - (player.position.x ** 2 + player.position.z ** 2);
+      if (inside > 0) reach = Math.max(0.6, Math.min(reach, -along + Math.sqrt(along * along + inside)));
+    }
+    // pulled in close, the camera rises and looks past the robot instead of at its back
+    const shortfall = fullReach - reach;
     target.set(
-        player.position.x + Math.sin(yaw) * Math.cos(elevation) * FOLLOW_DISTANCE,
-        Math.min(1.25 + Math.sin(elevation) * FOLLOW_DISTANCE, WALL_HEIGHT - 0.45),
-        player.position.z + Math.cos(yaw) * Math.cos(elevation) * FOLLOW_DISTANCE,
+        player.position.x + Math.sin(yaw) * reach,
+        Math.min(1.25 + Math.sin(elevation) * FOLLOW_DISTANCE + shortfall * 0.45, ceiling),
+        player.position.z + Math.cos(yaw) * reach,
     );
-    look.set(player.position.x, 1.25, player.position.z);
+    look.set(player.position.x - Math.sin(yaw) * shortfall * 0.9, 1.25, player.position.z - Math.cos(yaw) * shortfall * 0.9);
   };
 
   useFrame((_, delta) => {

@@ -2,32 +2,108 @@
 import * as React from "react";
 import * as THREE from "three";
 import {useFrame} from "@react-three/fiber";
-import {SQUARE, STALLS, STALL, YAGURA, STAGE, SIGNBOARD, TORII, PORTAL, POLES, POLE_HEIGHT} from "../layout/festival";
+import {
+  WALL_RADIUS, WALL_HEIGHT, GARDEN_RADIUS, POST_RADIUS, BENCH_RADIUS, ROOF, GATE_HALF_ANGLE, BAMBOO, TREE,
+  SLOT_ANGLES, POST_ANGLES, BENCH_ANGLES, BENCH, TORII, PORTAL, ringPoint,
+} from "../layout/festival";
 import {useGalleryStore, getGalleryState} from "../store";
 import audio from "../audio/AudioEngine";
 import Painting from "./Painting";
 import Portal from "./Portal";
 
-const WOOD = "#5b3a24";
-const DARK_WOOD = "#3a2618";
-const SHRINE_RED = "#c0392b";
-const LANTERN_COLORS = ["#ff4b3e", "#fff0d2", "#ff4b3e", "#ffb347"];
+const DARK_WOOD = "#3b2a1f";
+const POST_RED = "#7a2a20";
+const SHRINE_RED = "#b8322a";
 
-// Red and white vertical stripes, the curtain (紅白幕) hung around festival structures.
-const stripeTexture = () => {
+// A small deterministic random, so the garden looks the same on every visit.
+const seeded = (seed) => () => {
+  seed = (seed * 16807) % 2147483647;
+  return (seed - 1) / 2147483646;
+};
+
+const canvasTexture = (width, height, draw, repeat) => {
   const canvas = document.createElement("canvas");
-  canvas.width = 64;
-  canvas.height = 8;
-  const context = canvas.getContext("2d");
-  context.fillStyle = "#f4efe6";
-  context.fillRect(0, 0, 64, 8);
-  context.fillStyle = "#c62f37";
-  context.fillRect(0, 0, 32, 8);
+  canvas.width = width;
+  canvas.height = height;
+  draw(canvas.getContext("2d"), width, height);
   const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = THREE.RepeatWrapping;
   texture.colorSpace = THREE.SRGBColorSpace;
+  if (repeat) {
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(...repeat);
+  }
   return texture;
 };
+
+// Raked gravel: concentric grooves around the tree.
+const gravelTexture = () => canvasTexture(1024, 1024, (context, size) => {
+  context.fillStyle = "#d8d1c3";
+  context.fillRect(0, 0, size, size);
+  context.lineWidth = 3;
+  for (let r = 40; r < size / 2; r += 14) {
+    context.strokeStyle = r % 28 ? "rgba(120, 108, 92, 0.32)" : "rgba(255, 255, 255, 0.5)";
+    context.beginPath();
+    context.arc(size / 2, size / 2, r, 0, Math.PI * 2);
+    context.stroke();
+  }
+});
+
+// Paving for the walkway.
+const pavingTexture = () => canvasTexture(256, 256, (context, size) => {
+  context.fillStyle = "#8c5c4a";
+  context.fillRect(0, 0, size, size);
+  for (let row = 0; row < 8; row++) {
+    for (let column = 0; column < 4; column++) {
+      const offset = row % 2 ? 32 : 0;
+      context.fillStyle = `hsl(14, ${28 + ((row * 7 + column * 3) % 10)}%, ${36 + ((row * 5 + column * 11) % 9)}%)`;
+      context.fillRect(column * 64 + offset + 2, row * 32 + 2, 60, 28);
+    }
+  }
+}, [36, 4]);
+
+// Shoji: a paper screen with a wooden lattice, lit from behind.
+const shojiTexture = () => canvasTexture(256, 384, (context, width, height) => {
+  context.fillStyle = "#fbf2df";
+  context.fillRect(0, 0, width, height);
+  context.strokeStyle = "#6b4a32";
+  context.lineWidth = 6;
+  context.strokeRect(3, 3, width - 6, height - 6);
+  context.lineWidth = 3;
+  for (let x = width / 4; x < width; x += width / 4) {
+    context.beginPath();
+    context.moveTo(x, 0);
+    context.lineTo(x, height);
+    context.stroke();
+  }
+  for (let y = height / 6; y < height; y += height / 6) {
+    context.beginPath();
+    context.moveTo(0, y);
+    context.lineTo(width, y);
+    context.stroke();
+  }
+});
+
+// Roof slats seen from below.
+const slatTexture = () => canvasTexture(512, 16, (context, width, height) => {
+  context.fillStyle = "#5e1c16";
+  context.fillRect(0, 0, width, height);
+  context.fillStyle = "#9a2f24";
+  for (let x = 0; x < width; x += 16) context.fillRect(x, 0, 11, height);
+}, [6, 1]);
+
+// A paper umbrella canopy: colored panels with thin ribs.
+const umbrellaTexture = (colors) => canvasTexture(512, 64, (context, width, height) => {
+  const panels = 16;
+  for (let i = 0; i < panels; i++) {
+    context.fillStyle = colors[i % colors.length];
+    context.fillRect((i * width) / panels, 0, width / panels, height);
+  }
+  context.fillStyle = "rgba(60, 30, 20, 0.6)";
+  for (let i = 0; i < panels; i++) context.fillRect((i * width) / panels, 0, 2, height);
+  context.fillStyle = "rgba(255, 255, 255, 0.35)";
+  context.fillRect(0, height * 0.72, width, 3);
+});
 
 const Box = ({position, size, color, rotation, roughness = 0.85}) => (
   <mesh position={position} rotation={rotation} castShadow receiveShadow>
@@ -36,311 +112,43 @@ const Box = ({position, size, color, rotation, roughness = 0.85}) => (
   </mesh>
 );
 
-// --- the square ------------------------------------------------------------------------
-
-const Ground = () => {
-  const width = SQUARE.maxX - SQUARE.minX;
-  const depth = SQUARE.maxZ - SQUARE.minZ;
-  return (
-    <group>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
-        <planeGeometry args={[160, 160]} />
-        <meshStandardMaterial color="#17130f" roughness={1} />
-      </mesh>
-      {/* gravel square */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[(SQUARE.minX + SQUARE.maxX) / 2, 0, (SQUARE.minZ + SQUARE.maxZ) / 2]} receiveShadow>
-        <planeGeometry args={[width, depth]} />
-        <meshStandardMaterial color="#3b342c" roughness={0.97} />
-      </mesh>
-      {/* stone path from the torii to the stage */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, (TORII.center[1] + STAGE.center[1]) / 2]} receiveShadow>
-        <planeGeometry args={[2.4, TORII.center[1] - STAGE.center[1]]} />
-        <meshStandardMaterial color="#5a5148" roughness={0.9} />
-      </mesh>
-    </group>
-  );
+// Something standing on the ring at `angle`, turned to face the garden.
+const OnRing = ({angle, radius, y = 0, children}) => {
+  const [x, z] = ringPoint(angle, radius);
+  return <group position={[x, y, z]} rotation={[0, -angle, 0]}>{children}</group>;
 };
 
-const Fence = () => {
-  const rails = [];
-  const add = (from, to) => rails.push({from, to});
-  add([SQUARE.minX, SQUARE.minZ], [SQUARE.maxX, SQUARE.minZ]);
-  add([SQUARE.minX, SQUARE.minZ], [SQUARE.minX, SQUARE.maxZ]);
-  add([SQUARE.maxX, SQUARE.minZ], [SQUARE.maxX, SQUARE.maxZ]);
-  add([SQUARE.minX, SQUARE.maxZ], [-TORII.width / 2 - 0.6, SQUARE.maxZ]);
-  add([TORII.width / 2 + 0.6, SQUARE.maxZ], [SQUARE.maxX, SQUARE.maxZ]);
-  return (
-    <group>
-      {rails.map(({from, to}, i) => {
-        const length = Math.hypot(to[0] - from[0], to[1] - from[1]);
-        const angle = Math.atan2(to[1] - from[1], to[0] - from[0]);
-        const mid = [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2];
-        return (
-          <group key={i} position={[mid[0], 0, mid[1]]} rotation={[0, -angle, 0]}>
-            <Box position={[0, 0.75, 0]} size={[length, 0.08, 0.08]} color={DARK_WOOD} />
-            <Box position={[0, 0.4, 0]} size={[length, 0.08, 0.08]} color={DARK_WOOD} />
-            {Array.from({length: Math.floor(length / 1.6) + 1}, (_, j) => (
-              <Box key={j} position={[-length / 2 + j * 1.6, 0.45, 0]} size={[0.1, 0.9, 0.1]} color={DARK_WOOD} />
-            ))}
-          </group>
-        );
-      })}
-    </group>
-  );
-};
+// --- sky -----------------------------------------------------------------------------
 
-// Dark tree silhouettes around the square, for a skyline.
-const Trees = () => {
-  const mesh = React.useRef();
-  const trees = React.useMemo(() => {
-    const list = [];
-    for (let i = 0; i < 70; i++) {
-      const angle = (i / 70) * Math.PI * 2 + Math.sin(i * 7.1) * 0.05;
-      const radius = 22 + ((i * 37) % 9);
-      list.push({x: Math.cos(angle) * radius, z: Math.sin(angle) * radius - 2, scale: 0.8 + ((i * 13) % 7) / 10});
-    }
-    return list;
-  }, []);
-  React.useLayoutEffect(() => {
-    const matrix = new THREE.Matrix4();
-    trees.forEach((tree, i) => {
-      matrix.compose(new THREE.Vector3(tree.x, 4 * tree.scale, tree.z), new THREE.Quaternion(), new THREE.Vector3(tree.scale, tree.scale, tree.scale));
-      mesh.current.setMatrixAt(i, matrix);
-    });
-    mesh.current.instanceMatrix.needsUpdate = true;
-  }, [trees]);
-  return (
-    <instancedMesh ref={mesh} args={[null, null, trees.length]}>
-      <coneGeometry args={[2.6, 8, 7]} />
-      <meshStandardMaterial color="#0e1712" roughness={1} />
-    </instancedMesh>
-  );
-};
+const SKY_VERTEX = `
+  varying vec3 vDirection;
+  void main() {
+    vDirection = normalize(position);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+// summer dusk: deep blue overhead, violet, then a warm band at the horizon
+const SKY_FRAGMENT = `
+  varying vec3 vDirection;
+  void main() {
+    float h = clamp(vDirection.y, -0.1, 1.0);
+    vec3 horizon = vec3(0.98, 0.62, 0.40);
+    vec3 middle = vec3(0.46, 0.27, 0.45);
+    vec3 top = vec3(0.10, 0.10, 0.24);
+    vec3 color = mix(horizon, middle, smoothstep(0.0, 0.18, h));
+    color = mix(color, top, smoothstep(0.18, 0.6, h));
+    gl_FragColor = vec4(color, 1.0);
+  }
+`;
 
-// --- structures -------------------------------------------------------------------------
-
-const Torii = () => {
-  const [x, z] = TORII.center;
-  const half = TORII.width / 2;
-  return (
-    <group position={[x, 0, z]}>
-      {[-half, half].map((offset) => (
-        <mesh key={offset} position={[offset, TORII.height / 2, 0]} castShadow>
-          <cylinderGeometry args={[0.26, 0.3, TORII.height, 16]} />
-          <meshStandardMaterial color={SHRINE_RED} roughness={0.6} />
-        </mesh>
-      ))}
-      {/* nuki, the lower beam */}
-      <Box position={[0, TORII.height - 1.1, 0]} size={[TORII.width + 1, 0.28, 0.24]} color={SHRINE_RED} roughness={0.6} />
-      {/* kasagi, the top beam, with its black cap */}
-      <Box position={[0, TORII.height + 0.05, 0]} size={[TORII.width + 2.2, 0.36, 0.5]} color={SHRINE_RED} roughness={0.6} />
-      <Box position={[0, TORII.height + 0.3, 0]} size={[TORII.width + 2.6, 0.18, 0.62]} color="#1a1412" />
-      <Box position={[0, TORII.height - 0.5, 0]} size={[0.3, 0.9, 0.2]} color={SHRINE_RED} />
-    </group>
-  );
-};
-
-const HangingLantern = ({position, color = "#ff4b3e", scale = 1}) => (
-  <group position={position} scale={scale}>
-    <mesh scale={[1, 1.25, 1]}>
-      <sphereGeometry args={[0.22, 16, 12]} />
-      <meshBasicMaterial color={color} toneMapped={false} />
-    </mesh>
-    {[-1, 1].map((side) => (
-      <mesh key={side} position={[0, side * 0.27, 0]}>
-        <cylinderGeometry args={[0.12, 0.12, 0.06, 12]} />
-        <meshStandardMaterial color="#1a1412" />
-      </mesh>
-    ))}
-  </group>
-);
-
-// A food stall (屋台): back board with the painting, a counter, posts and a striped canopy.
-const Stall = ({stall}) => {
-  const {width, depth, counterHeight, roofHeight} = STALL;
-  const stripes = React.useMemo(() => {
-    const texture = stripeTexture();
-    texture.repeat.set(5, 1);
-    return texture;
-  }, []);
-  return (
-    <group position={[stall.x, 0, stall.z]} rotation={[0, Math.atan2(stall.facing, 0), 0]}>
-      {/* back board */}
-      <Box position={[0, 1.7, -0.05]} size={[width, 3.4, 0.1]} color={WOOD} />
-      {/* counter */}
-      <Box position={[0, counterHeight / 2, depth]} size={[width - 0.2, counterHeight, 0.5]} color={DARK_WOOD} />
-      <mesh position={[0, counterHeight / 2, depth + 0.26]}>
-        <planeGeometry args={[width - 0.2, counterHeight - 0.1]} />
-        <meshStandardMaterial map={stripes} roughness={0.9} />
-      </mesh>
-      {/* posts */}
-      {[-1, 1].map((side) => [0, depth + 0.2].map((d) => (
-        <Box key={`${side}${d}`} position={[side * (width / 2 - 0.05), roofHeight / 2, d]} size={[0.1, roofHeight, 0.1]} color={DARK_WOOD} />
-      )))}
-      {/* canopy, sloping toward the visitor */}
-      <Box position={[0, roofHeight + 0.15, depth / 2 + 0.15]} rotation={[0.28, 0, 0]} size={[width + 0.5, 0.08, depth + 1.1]} color={stall.canopy} roughness={0.7} />
-      {/* short curtain (noren) along the canopy's front edge */}
-      {[-1, 0, 1].map((i) => (
-        <mesh key={i} position={[i * (width / 3), roofHeight - 0.32, depth + 0.62]}>
-          <planeGeometry args={[width / 3 - 0.08, 0.5]} />
-          <meshStandardMaterial color={stall.canopy} side={THREE.DoubleSide} roughness={0.9} />
-        </mesh>
-      ))}
-      {/* lanterns at the outer corners, clear of the painting and its label */}
-      <HangingLantern position={[-width / 2 - 0.15, roofHeight - 0.6, depth + 0.45]} color="#ff4b3e" />
-      <HangingLantern position={[width / 2 + 0.15, roofHeight - 0.6, depth + 0.45]} color="#fff0d2" />
-    </group>
-  );
-};
-
-// The drum tower (櫓) in the middle of the square.
-const Yagura = () => {
-  const {center, size, deck, roof} = YAGURA;
-  const skirt = React.useMemo(() => {
-    const texture = stripeTexture();
-    texture.repeat.set(4, 1);
-    return texture;
-  }, []);
-  return (
-    <group position={[center[0], 0, center[1]]}>
-      {[-1, 1].map((sx) => [-1, 1].map((sz) => (
-        <Box key={`${sx}${sz}`} position={[sx * size / 2, roof / 2, sz * size / 2]} size={[0.16, roof, 0.16]} color={DARK_WOOD} />
-      )))}
-      {/* red and white curtain around the base */}
-      {[0, 1, 2, 3].map((side) => (
-        <mesh key={side} rotation={[0, (side * Math.PI) / 2, 0]} position={[Math.sin((side * Math.PI) / 2) * (size / 2 + 0.02), deck / 2, Math.cos((side * Math.PI) / 2) * (size / 2 + 0.02)]}>
-          <planeGeometry args={[size, deck]} />
-          <meshStandardMaterial map={skirt} roughness={0.9} side={THREE.DoubleSide} />
-        </mesh>
-      ))}
-      <Box position={[0, deck + 0.06, 0]} size={[size + 0.5, 0.12, size + 0.5]} color={WOOD} />
-      {/* railing */}
-      {[0, 1, 2, 3].map((side) => (
-        <Box key={side} position={[Math.sin((side * Math.PI) / 2) * (size / 2 + 0.22), deck + 0.55, Math.cos((side * Math.PI) / 2) * (size / 2 + 0.22)]}
-          rotation={[0, (side * Math.PI) / 2, 0]} size={[size + 0.5, 0.08, 0.08]} color={SHRINE_RED} />
-      ))}
-      {/* taiko drum */}
-      <mesh position={[0, deck + 0.75, 0]} rotation={[Math.PI / 2, 0, 0]} castShadow>
-        <cylinderGeometry args={[0.6, 0.6, 0.8, 24]} />
-        <meshStandardMaterial color="#7a3b1e" roughness={0.6} />
-      </mesh>
-      {[-1, 1].map((side) => (
-        <mesh key={side} position={[0, deck + 0.75, side * 0.41]}>
-          <circleGeometry args={[0.6, 24]} />
-          <meshStandardMaterial color="#e9dcc0" side={THREE.DoubleSide} />
-        </mesh>
-      ))}
-      {/* pyramid roof */}
-      <mesh position={[0, roof + 0.55, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
-        <coneGeometry args={[size * 0.95, 1.1, 4]} />
-        <meshStandardMaterial color="#26201c" roughness={0.8} />
-      </mesh>
-      {[0, 1, 2, 3].map((side) => {
-        const angle = (side * Math.PI) / 2 + Math.PI / 4;
-        return <HangingLantern key={side} position={[Math.sin(angle) * size * 0.7, deck - 0.35, Math.cos(angle) * size * 0.7]} color={LANTERN_COLORS[side]} />;
-      })}
-    </group>
-  );
-};
-
-// The kagura stage at the north end, with the signboard that holds a painting in front.
-const Stage = () => {
-  const {center, width, depth, height} = STAGE;
-  return (
-    <group>
-      <group position={[center[0], 0, center[1]]}>
-        <Box position={[0, height / 2, 0]} size={[width, height, depth]} color={WOOD} />
-        {[-1, 1].map((sx) => [-1, 1].map((sz) => (
-          <mesh key={`${sx}${sz}`} position={[sx * (width / 2 - 0.3), height + 1.6, sz * (depth / 2 - 0.3)]} castShadow>
-            <cylinderGeometry args={[0.15, 0.15, 3.2, 12]} />
-            <meshStandardMaterial color={SHRINE_RED} roughness={0.6} />
-          </mesh>
-        )))}
-        <Box position={[0, height + 1.6, -depth / 2 + 0.1]} size={[width - 0.6, 3.2, 0.12]} color="#2b1d14" />
-        {/* gable roof */}
-        {[-1, 1].map((side) => (
-          <Box key={side} position={[0, height + 3.65, side * depth * 0.3]} rotation={[side * -0.42, 0, 0]} size={[width + 1.2, 0.14, depth * 0.72]} color="#26201c" />
-        ))}
-        {[-1, 0, 1].map((i) => <HangingLantern key={i} position={[i * 2.6, height + 2.75, depth / 2 - 0.1]} color="#fff0d2" scale={1.2} />)}
-      </group>
-      {/* signboard */}
-      <group position={[SIGNBOARD.center[0], 0, SIGNBOARD.center[1]]}>
-        <Box position={[0, 2.1, -0.04]} size={[SIGNBOARD.width, SIGNBOARD.height, 0.12]} color={WOOD} />
-        <Box position={[0, 3.75, 0.02]} size={[SIGNBOARD.width + 0.5, 0.2, 0.4]} color={SHRINE_RED} />
-        {[-1, 1].map((side) => (
-          <Box key={side} position={[side * (SIGNBOARD.width / 2 + 0.05), 1.9, 0]} size={[0.14, 3.8, 0.14]} color={DARK_WOOD} />
-        ))}
-      </group>
-    </group>
-  );
-};
-
-// --- lanterns, sky and fireworks --------------------------------------------------------
-
-// Paper lanterns strung from the top of the yagura out to poles around the square.
-const LanternStrings = () => {
-  const mesh = React.useRef();
-  const {lanterns, lines} = React.useMemo(() => {
-    const top = new THREE.Vector3(YAGURA.center[0], YAGURA.roof + 0.4, YAGURA.center[1]);
-    const lanterns = [];
-    const lines = [];
-    POLES.forEach(([x, z], p) => {
-      const end = new THREE.Vector3(x, POLE_HEIGHT, z);
-      const count = Math.max(4, Math.round(top.distanceTo(end) / 1.25));
-      let previous = top.clone();
-      for (let i = 1; i <= count; i++) {
-        const t = i / count;
-        const point = new THREE.Vector3().lerpVectors(top, end, t);
-        point.y -= Math.sin(t * Math.PI) * 0.9; // the string sags
-        lines.push(previous.x, previous.y, previous.z, point.x, point.y, point.z);
-        previous = point;
-        if (i < count) lanterns.push({position: point.clone().setY(point.y - 0.3), color: LANTERN_COLORS[(i + p) % LANTERN_COLORS.length]});
-      }
-    });
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute("position", new THREE.Float32BufferAttribute(lines, 3));
-    return {lanterns, lines: geometry};
-  }, []);
-
-  React.useLayoutEffect(() => {
-    const matrix = new THREE.Matrix4();
-    const color = new THREE.Color();
-    lanterns.forEach((lantern, i) => {
-      matrix.compose(lantern.position, new THREE.Quaternion(), new THREE.Vector3(1, 1.25, 1));
-      mesh.current.setMatrixAt(i, matrix);
-      mesh.current.setColorAt(i, color.set(lantern.color));
-    });
-    mesh.current.instanceMatrix.needsUpdate = true;
-    mesh.current.instanceColor.needsUpdate = true;
-  }, [lanterns]);
-
-  return (
-    <group>
-      <lineSegments geometry={lines}>
-        <lineBasicMaterial color="#2a211a" />
-      </lineSegments>
-      <instancedMesh ref={mesh} args={[null, null, lanterns.length]}>
-        <sphereGeometry args={[0.2, 12, 10]} />
-        <meshBasicMaterial toneMapped={false} />
-      </instancedMesh>
-      {POLES.map(([x, z], i) => (
-        <mesh key={i} position={[x, POLE_HEIGHT / 2, z]}>
-          <cylinderGeometry args={[0.07, 0.09, POLE_HEIGHT, 8]} />
-          <meshStandardMaterial color={DARK_WOOD} />
-        </mesh>
-      ))}
-    </group>
-  );
-};
-
-const NightSky = () => {
+const Sky = () => {
   const stars = React.useMemo(() => {
+    const random = seeded(7);
     const positions = [];
-    for (let i = 0; i < 700; i++) {
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.random() * Math.PI * 0.42;
-      const r = 90;
-      positions.push(Math.sin(phi) * Math.cos(theta) * r, Math.cos(phi) * r * 0.6 + 6, Math.sin(phi) * Math.sin(theta) * r);
+    for (let i = 0; i < 400; i++) {
+      const theta = random() * Math.PI * 2;
+      const phi = 0.15 + random() * 0.9;
+      positions.push(Math.cos(theta) * Math.sin(phi) * 110, Math.cos(phi) * 110, Math.sin(theta) * Math.sin(phi) * 110);
     }
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
@@ -348,13 +156,13 @@ const NightSky = () => {
   }, []);
   return (
     <group>
-      <points geometry={stars}>
-        <pointsMaterial color="#e6ecff" size={0.22} sizeAttenuation toneMapped={false} fog={false} />
-      </points>
-      <mesh position={[-34, 38, -52]}>
-        <sphereGeometry args={[2.6, 24, 16]} />
-        <meshBasicMaterial color="#fff3d6" toneMapped={false} fog={false} />
+      <mesh>
+        <sphereGeometry args={[130, 32, 16]} />
+        <shaderMaterial vertexShader={SKY_VERTEX} fragmentShader={SKY_FRAGMENT} side={THREE.BackSide} depthWrite={false} fog={false} />
       </mesh>
+      <points geometry={stars}>
+        <pointsMaterial color="#e6ecff" size={0.25} sizeAttenuation transparent opacity={0.8} toneMapped={false} fog={false} />
+      </points>
     </group>
   );
 };
@@ -364,7 +172,7 @@ const SPARKS = 150;
 const FIREWORK_COLORS = ["#ff6b6b", "#ffd166", "#7bdff2", "#cdb4db", "#f4a261", "#b8f2a8"];
 const BURST_SECONDS = 2.6;
 
-// A few firework shells over the north sky, reused one after another.
+// A few firework shells over the courtyard wall, reused one after another.
 const Fireworks = () => {
   const shells = React.useMemo(() => Array.from({length: SHELLS}, () => {
     const directions = new Float32Array(SPARKS * 3);
@@ -389,8 +197,9 @@ const Fireworks = () => {
     const now = clock.elapsedTime;
     if (now > next.current) {
       const shell = shells.find((item) => now - item.start > BURST_SECONDS) || shells[0];
+      const angle = Math.random() * Math.PI * 2;
       shell.start = now;
-      shell.origin.set((Math.random() - 0.5) * 50, 20 + Math.random() * 10, -36 - Math.random() * 14);
+      shell.origin.set(Math.sin(angle) * (30 + Math.random() * 12), 24 + Math.random() * 10, -Math.cos(angle) * (30 + Math.random() * 12));
       shell.radius = 6 + Math.random() * 5;
       shell.material.color.set(FIREWORK_COLORS[Math.floor(Math.random() * FIREWORK_COLORS.length)]);
       next.current = now + 1.6 + Math.random() * 3;
@@ -417,14 +226,373 @@ const Fireworks = () => {
   return shells.map((shell, i) => <points key={i} geometry={shell.geometry} material={shell.material} frustumCulled={false} />);
 };
 
-// Warm light from the lanterns, kept to a few lights so it stays cheap.
+// Dark tree tops beyond the wall, so the horizon isn't empty.
+const Treeline = () => {
+  const mesh = React.useRef();
+  const trees = React.useMemo(() => {
+    const random = seeded(11);
+    return Array.from({length: 60}, (_, i) => {
+      const angle = (i / 60) * Math.PI * 2 + random() * 0.05;
+      const radius = 19 + random() * 7;
+      return {x: Math.sin(angle) * radius, z: -Math.cos(angle) * radius, scale: 0.9 + random() * 0.8};
+    });
+  }, []);
+  React.useLayoutEffect(() => {
+    const matrix = new THREE.Matrix4();
+    trees.forEach((tree, i) => {
+      matrix.compose(new THREE.Vector3(tree.x, 4 * tree.scale, tree.z), new THREE.Quaternion(), new THREE.Vector3(tree.scale, tree.scale, tree.scale));
+      mesh.current.setMatrixAt(i, matrix);
+    });
+    mesh.current.instanceMatrix.needsUpdate = true;
+  }, [trees]);
+  return (
+    <instancedMesh ref={mesh} args={[null, null, trees.length]}>
+      <coneGeometry args={[3, 9, 7]} />
+      <meshStandardMaterial color="#1b2420" roughness={1} />
+    </instancedMesh>
+  );
+};
+
+// --- the walkway -----------------------------------------------------------------------
+
+const Walkway = () => {
+  const paving = React.useMemo(pavingTexture, []);
+  const slats = React.useMemo(slatTexture, []);
+  const roof = React.useMemo(() => new THREE.LatheGeometry([
+    new THREE.Vector2(ROOF.inner, ROOF.innerHeight),
+    new THREE.Vector2(ROOF.outer, ROOF.outerHeight),
+  ], 96), []);
+  return (
+    <group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
+        <ringGeometry args={[GARDEN_RADIUS + 0.2, WALL_RADIUS + 0.4, 128, 1]} />
+        <meshStandardMaterial map={paving} roughness={0.9} />
+      </mesh>
+      {/* the back wall, open to the south for the torii */}
+      <mesh position={[0, WALL_HEIGHT / 2, 0]} receiveShadow>
+        <cylinderGeometry args={[WALL_RADIUS, WALL_RADIUS, WALL_HEIGHT, 128, 1, true, GATE_HALF_ANGLE, Math.PI * 2 - GATE_HALF_ANGLE * 2]} />
+        <meshStandardMaterial color="#2c2622" roughness={0.9} side={THREE.DoubleSide} />
+      </mesh>
+      {/* roof slats and the beam along its inner edge */}
+      <mesh geometry={roof}>
+        <meshStandardMaterial map={slats} roughness={0.8} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh position={[0, ROOF.innerHeight - 0.05, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[ROOF.inner, 0.12, 8, 128]} />
+        <meshStandardMaterial color={DARK_WOOD} roughness={0.8} />
+      </mesh>
+      <mesh position={[0, ROOF.innerHeight - 0.35, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[POST_RADIUS, 0.08, 8, 128]} />
+        <meshStandardMaterial color={POST_RED} roughness={0.7} />
+      </mesh>
+      {POST_ANGLES.map((angle) => {
+        const [x, z] = ringPoint(angle, POST_RADIUS);
+        return (
+          <mesh key={angle} position={[x, ROOF.innerHeight / 2, z]} castShadow>
+            <cylinderGeometry args={[0.14, 0.16, ROOF.innerHeight, 10]} />
+            <meshStandardMaterial color={POST_RED} roughness={0.7} />
+          </mesh>
+        );
+      })}
+      {/* paper lanterns under the roof */}
+      {POST_ANGLES.filter((_, i) => i % 2).map((angle) => {
+        const [x, z] = ringPoint(angle + 0.17, 12.4);
+        return (
+          <group key={angle} position={[x, 4.05, z]}>
+            <mesh scale={[1, 1.25, 1]}>
+              <sphereGeometry args={[0.22, 16, 12]} />
+              <meshBasicMaterial color="#ffb347" toneMapped={false} />
+            </mesh>
+            <mesh position={[0, 0.5, 0]}>
+              <cylinderGeometry args={[0.01, 0.01, 0.7, 4]} />
+              <meshBasicMaterial color="#1a1412" />
+            </mesh>
+          </group>
+        );
+      })}
+    </group>
+  );
+};
+
+// Shoji screens between the paintings, and a red frame around each painting and its label.
+const WallDressing = () => {
+  const shoji = React.useMemo(shojiTexture, []);
+  const slotAngles = Object.values(SLOT_ANGLES).sort((a, b) => a - b);
+  const between = slotAngles.slice(0, -1).map((angle, i) => (angle + slotAngles[i + 1]) / 2);
+  return (
+    <group>
+      {between.map((angle) => (
+        <OnRing key={angle} angle={angle} radius={WALL_RADIUS - 0.06} y={1.7}>
+          <mesh>
+            <planeGeometry args={[2.4, 3.1]} />
+            <meshBasicMaterial map={shoji} toneMapped={false} />
+          </mesh>
+        </OnRing>
+      ))}
+      {slotAngles.map((angle) => (
+        <OnRing key={angle} angle={angle} radius={WALL_RADIUS - 0.35}>
+          {/* wide enough for a landscape painting and the label beside it */}
+          {[-1, 1].map((side) => (
+            <Box key={side} position={[side * 3.3, 1.75, 0]} size={[0.14, 3.5, 0.14]} color={SHRINE_RED} roughness={0.6} />
+          ))}
+          <Box position={[0, 3.55, 0]} size={[7.2, 0.16, 0.18]} color={SHRINE_RED} roughness={0.6} />
+          <Box position={[0, 3.25, 0]} size={[6.7, 0.08, 0.1]} color={SHRINE_RED} roughness={0.6} />
+          {/* a thin teal line glowing under the beam */}
+          <mesh position={[0, 3.18, 0.06]}>
+            <planeGeometry args={[6.4, 0.03]} />
+            <meshBasicMaterial color="#38c9b8" toneMapped={false} />
+          </mesh>
+        </OnRing>
+      ))}
+    </group>
+  );
+};
+
+const Benches = () => BENCH_ANGLES.map((angle) => (
+  <OnRing key={angle} angle={angle} radius={BENCH_RADIUS}>
+    <Box position={[0, BENCH.height, 0]} size={[BENCH.length, 0.08, BENCH.depth]} color="#8a5a34" roughness={0.6} />
+    {[-1, 1].map((side) => (
+      <Box key={side} position={[side * (BENCH.length / 2 - 0.25), BENCH.height / 2, 0]} size={[0.12, BENCH.height, BENCH.depth - 0.1]} color="#4a4440" />
+    ))}
+  </OnRing>
+));
+
+const Torii = () => {
+  const [x, z] = TORII.center;
+  const half = TORII.width / 2;
+  return (
+    <group position={[x, 0, z]}>
+      {[-half, half].map((offset) => (
+        <mesh key={offset} position={[offset, TORII.height / 2, 0]} castShadow>
+          <cylinderGeometry args={[0.22, 0.26, TORII.height, 16]} />
+          <meshStandardMaterial color={SHRINE_RED} roughness={0.6} />
+        </mesh>
+      ))}
+      <Box position={[0, TORII.height - 0.9, 0]} size={[TORII.width + 0.8, 0.24, 0.22]} color={SHRINE_RED} roughness={0.6} />
+      <Box position={[0, TORII.height + 0.05, 0]} size={[TORII.width + 1.8, 0.32, 0.44]} color={SHRINE_RED} roughness={0.6} />
+      <Box position={[0, TORII.height + 0.28, 0]} size={[TORII.width + 2.2, 0.16, 0.56]} color="#1a1412" />
+    </group>
+  );
+};
+
+// --- the garden --------------------------------------------------------------------------
+
+const Garden = () => {
+  const gravel = React.useMemo(gravelTexture, []);
+  const {moss, rocks} = React.useMemo(() => {
+    const random = seeded(23);
+    const moss = Array.from({length: 7}, (_, i) => {
+      const angle = (i / 7) * Math.PI * 2 + random() * 0.4;
+      const radius = 3.2 + random() * 3;
+      return {position: ringPoint(angle, radius), scale: [1.2 + random() * 1.4, 1, 0.8 + random()], rotation: random() * Math.PI};
+    });
+    const rocks = Array.from({length: 9}, (_, i) => {
+      const angle = (i / 9) * Math.PI * 2 + 0.3;
+      const radius = 4 + random() * 2.6;
+      return {position: ringPoint(angle, radius), scale: [0.5 + random() * 0.8, 0.4 + random() * 0.9, 0.5 + random() * 0.7], rotation: random() * Math.PI};
+    });
+    return {moss, rocks};
+  }, []);
+  return (
+    <group>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02, 0]} receiveShadow>
+        <circleGeometry args={[GARDEN_RADIUS, 128]} />
+        <meshStandardMaterial map={gravel} roughness={1} />
+      </mesh>
+      {/* stone curb */}
+      <mesh position={[0, 0.14, 0]}>
+        <cylinderGeometry args={[GARDEN_RADIUS + 0.2, GARDEN_RADIUS + 0.2, 0.28, 128, 1, true]} />
+        <meshStandardMaterial color="#77716a" roughness={0.9} side={THREE.DoubleSide} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.28, 0]}>
+        <ringGeometry args={[GARDEN_RADIUS, GARDEN_RADIUS + 0.2, 128]} />
+        <meshStandardMaterial color="#8d867d" roughness={0.9} />
+      </mesh>
+      {moss.map((item, i) => (
+        <mesh key={i} position={[item.position[0], 0.05, item.position[1]]} rotation={[0, item.rotation, 0]} scale={[item.scale[0], 0.12, item.scale[2]]} receiveShadow>
+          <sphereGeometry args={[1, 20, 10]} />
+          <meshStandardMaterial color="#5f7233" roughness={1} />
+        </mesh>
+      ))}
+      {rocks.map((item, i) => (
+        <mesh key={i} position={[item.position[0], item.scale[1] * 0.4, item.position[1]]} rotation={[0.2, item.rotation, 0.1]} scale={item.scale} castShadow>
+          <dodecahedronGeometry args={[0.8, 0]} />
+          <meshStandardMaterial color="#4a4743" roughness={0.95} flatShading />
+        </mesh>
+      ))}
+      <StoneLantern position={[3.4, 0, 3.6]} />
+      <StoneLantern position={[-4.2, 0, -2.6]} />
+    </group>
+  );
+};
+
+// 石燈籠
+const StoneLantern = ({position}) => (
+  <group position={position}>
+    <Box position={[0, 0.1, 0]} size={[0.7, 0.2, 0.7]} color="#8a857c" />
+    <mesh position={[0, 0.6, 0]}>
+      <cylinderGeometry args={[0.12, 0.16, 0.8, 8]} />
+      <meshStandardMaterial color="#8a857c" roughness={0.95} />
+    </mesh>
+    <Box position={[0, 1.05, 0]} size={[0.6, 0.12, 0.6]} color="#8a857c" />
+    <Box position={[0, 1.3, 0]} size={[0.42, 0.38, 0.42]} color="#8a857c" />
+    <mesh position={[0, 1.3, 0]}>
+      <boxGeometry args={[0.44, 0.2, 0.2]} />
+      <meshBasicMaterial color="#ffcf7a" toneMapped={false} />
+    </mesh>
+    <mesh position={[0, 1.65, 0]} rotation={[0, Math.PI / 4, 0]}>
+      <coneGeometry args={[0.6, 0.35, 4]} />
+      <meshStandardMaterial color="#7d786f" roughness={0.95} />
+    </mesh>
+  </group>
+);
+
+const Bamboo = () => {
+  const mesh = React.useRef();
+  const stalks = React.useMemo(() => {
+    const random = seeded(31);
+    const list = [];
+    while (list.length < 90) {
+      const angle = random() * Math.PI * 2;
+      const radius = BAMBOO.inner + random() * (BAMBOO.outer - BAMBOO.inner);
+      // keep a clear view from the gate to the tree
+      if (Math.abs(Math.atan2(Math.sin(angle - Math.PI), Math.cos(angle - Math.PI))) < 0.22) continue;
+      list.push({position: ringPoint(angle, radius), height: 7 + random() * 5, radius: 0.06 + random() * 0.05, tint: random()});
+    }
+    return list;
+  }, []);
+  React.useLayoutEffect(() => {
+    const matrix = new THREE.Matrix4();
+    const color = new THREE.Color();
+    stalks.forEach((stalk, i) => {
+      matrix.compose(new THREE.Vector3(stalk.position[0], stalk.height / 2, stalk.position[1]), new THREE.Quaternion(),
+          new THREE.Vector3(stalk.radius / 0.08, stalk.height, stalk.radius / 0.08));
+      mesh.current.setMatrixAt(i, matrix);
+      mesh.current.setColorAt(i, color.setHSL(0.2 + stalk.tint * 0.08, 0.42, 0.3 + stalk.tint * 0.12));
+    });
+    mesh.current.instanceMatrix.needsUpdate = true;
+    mesh.current.instanceColor.needsUpdate = true;
+  }, [stalks]);
+  return (
+    <instancedMesh ref={mesh} args={[null, null, stalks.length]} castShadow>
+      <cylinderGeometry args={[0.08, 0.08, 1, 8]} />
+      <meshStandardMaterial roughness={0.6} />
+    </instancedMesh>
+  );
+};
+
+// A crape myrtle (百日紅), which flowers pink through the summer.
+const FloweringTree = () => {
+  const blossoms = React.useRef();
+  const {branches, clusters} = React.useMemo(() => {
+    const random = seeded(47);
+    const [cx, cz] = TREE.center;
+    const trunk = [[cx, 0, cz], [cx + 0.2, 1.1, cz - 0.1], [cx - 0.1, 2.1, cz + 0.15], [cx + 0.1, 2.8, cz]];
+    const branches = [{points: trunk, radius: 0.32}];
+    const tips = [];
+    for (let i = 0; i < 7; i++) {
+      const angle = (i / 7) * Math.PI * 2 + random() * 0.4;
+      const reach = 2 + random() * 1.3;
+      const lift = 1 + random() * 1.3;
+      const tip = [cx + Math.sin(angle) * reach, 2.8 + lift, cz - Math.cos(angle) * reach];
+      const mid = [cx + Math.sin(angle) * reach * 0.45, 2.8 + lift * 0.4 + 0.35, cz - Math.cos(angle) * reach * 0.45];
+      branches.push({points: [[cx + 0.1, 2.5, cz], mid, tip], radius: 0.12 + random() * 0.05});
+      tips.push(tip);
+    }
+    const clusters = [];
+    tips.forEach((tip) => {
+      for (let i = 0; i < 34; i++) {
+        const offset = new THREE.Vector3().randomDirection().multiplyScalar(Math.cbrt(random()) * 1.5);
+        clusters.push({position: [tip[0] + offset.x, tip[1] + offset.y * 0.65 + 0.2, tip[2] + offset.z], scale: 0.28 + random() * 0.32, tint: random()});
+      }
+    });
+    return {branches, clusters};
+  }, []);
+  const geometries = React.useMemo(() => branches.map(({points, radius}) =>
+    new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points.map((point) => new THREE.Vector3(...point))), 24, radius, 8, false)), [branches]);
+  React.useLayoutEffect(() => {
+    const matrix = new THREE.Matrix4();
+    const color = new THREE.Color();
+    clusters.forEach((cluster, i) => {
+      matrix.compose(new THREE.Vector3(...cluster.position), new THREE.Quaternion(), new THREE.Vector3(cluster.scale, cluster.scale * 0.8, cluster.scale));
+      blossoms.current.setMatrixAt(i, matrix);
+      blossoms.current.setColorAt(i, color.setHSL(0.93 + cluster.tint * 0.05, 0.62, 0.62 + cluster.tint * 0.14));
+    });
+    blossoms.current.instanceMatrix.needsUpdate = true;
+    blossoms.current.instanceColor.needsUpdate = true;
+  }, [clusters]);
+  return (
+    <group>
+      {geometries.map((geometry, i) => (
+        <mesh key={i} geometry={geometry} castShadow>
+          <meshStandardMaterial color="#6b4a3a" roughness={0.85} />
+        </mesh>
+      ))}
+      <instancedMesh ref={blossoms} args={[null, null, clusters.length]} castShadow>
+        <icosahedronGeometry args={[1, 0]} />
+        <meshStandardMaterial roughness={0.8} flatShading />
+      </instancedMesh>
+    </group>
+  );
+};
+
+const UMBRELLA_COLORS = [
+  ["#c8323c", "#f3e6d2"], ["#f2c14e", "#f7e3b0"], ["#e7848f", "#f6d5d8"],
+  ["#c8323c", "#c8323c", "#f3e6d2"], ["#f3e6d2", "#e9b872"], ["#e06c4f", "#f3e6d2"],
+];
+
+// Paper umbrellas (和傘) floating over the garden, turning slowly.
+const Umbrellas = () => {
+  const group = React.useRef();
+  const umbrellas = React.useMemo(() => {
+    const random = seeded(59);
+    return Array.from({length: 10}, (_, i) => {
+      const angle = (i / 10) * Math.PI * 2 + random() * 0.3;
+      const radius = 2.5 + random() * 4.5;
+      return {
+        position: [...ringPoint(angle, radius)], height: 5.4 + random() * 2.4, size: 1.2 + random() * 0.7,
+        tilt: [(random() - 0.5) * 0.5, 0, (random() - 0.5) * 0.5], texture: umbrellaTexture(UMBRELLA_COLORS[i % UMBRELLA_COLORS.length]), phase: random() * 6,
+      };
+    });
+  }, []);
+  useFrame(({clock}) => {
+    const time = clock.elapsedTime;
+    group.current.children.forEach((child, i) => {
+      const umbrella = umbrellas[i];
+      child.position.y = umbrella.height + Math.sin(time * 0.5 + umbrella.phase) * 0.25;
+      child.rotation.y = time * 0.08 + umbrella.phase;
+    });
+  });
+  return (
+    <group ref={group}>
+      {umbrellas.map((umbrella, i) => (
+        <group key={i} position={[umbrella.position[0], umbrella.height, umbrella.position[1]]}>
+          <group rotation={umbrella.tilt}>
+            <mesh>
+              <coneGeometry args={[umbrella.size, umbrella.size * 0.32, 32, 1, true]} />
+              <meshStandardMaterial map={umbrella.texture} roughness={0.8} side={THREE.DoubleSide} transparent opacity={0.94} />
+            </mesh>
+            <mesh position={[0, -0.55, 0]}>
+              <cylinderGeometry args={[0.02, 0.02, 1.2, 6]} />
+              <meshStandardMaterial color="#5a3a22" />
+            </mesh>
+          </group>
+        </group>
+      ))}
+    </group>
+  );
+};
+
+// Warm evening light: the lanterns along the walkway and a glow under the tree.
 const FestivalLights = () => (
   <group>
-    <pointLight position={[YAGURA.center[0], YAGURA.deck + 1.2, YAGURA.center[1]]} color="#ffb36b" intensity={28} distance={20} decay={1.6} />
-    <pointLight position={[-8, 3.2, -2.5]} color="#ff9a5c" intensity={14} distance={14} decay={1.6} />
-    <pointLight position={[8, 3.2, -2.5]} color="#ff9a5c" intensity={14} distance={14} decay={1.6} />
-    <pointLight position={[0, 3.4, STAGE.center[1] + 2.5]} color="#ffd9a0" intensity={14} distance={12} decay={1.6} />
-    <pointLight position={[0, 4, TORII.center[1] - 1.5]} color="#ffb36b" intensity={8} distance={10} decay={1.6} />
+    <hemisphereLight args={["#f6b48a", "#3a2a2a", 0.6]} />
+    <directionalLight position={[-20, 9, 18]} color="#ffb27a" intensity={0.9} />
+    <pointLight position={[0, 2.5, 0]} color="#ffc3d0" intensity={22} distance={14} decay={1.6} />
+    {[45, 135, 225, 315].map((degrees) => {
+      const [x, z] = ringPoint((degrees * Math.PI) / 180, 12.3);
+      return <pointLight key={degrees} position={[x, 3.1, z]} color="#ffb36b" intensity={12} distance={11} decay={1.6} />;
+    })}
   </group>
 );
 
@@ -437,16 +605,21 @@ const Festival = () => {
 
   return (
     <group>
-      <Ground />
-      <Fence />
-      <Trees />
-      <Torii />
-      {STALLS.map((stall) => <Stall key={stall.slot} stall={stall} />)}
-      <Yagura />
-      <Stage />
-      <LanternStrings />
-      <NightSky />
+      <Sky />
       <Fireworks />
+      <Treeline />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]}>
+        <planeGeometry args={[200, 200]} />
+        <meshStandardMaterial color="#2a2620" roughness={1} />
+      </mesh>
+      <Walkway />
+      <WallDressing />
+      <Benches />
+      <Torii />
+      <Garden />
+      <Bamboo />
+      <FloweringTree />
+      <Umbrellas />
       <FestivalLights />
       <Portal placement={PORTAL} colors={["#7a2a3b", "#ffb36b"]} label="← 回到主展廳" />
       <React.Suspense fallback={null}>

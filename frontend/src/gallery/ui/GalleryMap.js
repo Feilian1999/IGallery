@@ -16,7 +16,7 @@ import {travelToArtwork} from "../actions";
 const VIEW = {
   main: {x: -15.5, y: -15.5, width: 31, height: 27},
   annex: {x: -11.5, y: -11.5, width: 23, height: 23},
-  festival: {x: -14.5, y: -16.5, width: 29, height: 29.5},
+  festival: {x: -15.5, y: -15.5, width: 31, height: 31},
 };
 const ART_RADIUS = 0.95;
 
@@ -84,32 +84,22 @@ const AnnexPlan = ({id}) => (
 );
 
 const FestivalPlan = ({id}) => {
-  const {minX, maxX, minZ, maxZ} = festival.SQUARE;
-  const outline = toPath([[minX, minZ], [maxX, minZ], [maxX, maxZ], [minX, maxZ]]);
-  const {STALL, STAGE, SIGNBOARD, YAGURA, TORII} = festival;
+  const {WALL_RADIUS, GARDEN_RADIUS, BAMBOO, TORII, GATE_HALF_ANGLE} = festival;
+  // the back wall as an arc, open to the south
+  const [sx, sz] = festival.ringPoint(Math.PI + GATE_HALF_ANGLE, WALL_RADIUS);
+  const [ex, ez] = festival.ringPoint(Math.PI - GATE_HALF_ANGLE, WALL_RADIUS);
+  const wall = `M${sx.toFixed(2)} ${sz.toFixed(2)} A${WALL_RADIUS} ${WALL_RADIUS} 0 1 1 ${ex.toFixed(2)} ${ez.toFixed(2)}`;
   return (
     <g>
-      <path d={outline} fill={`url(#${id}-wash)`} />
-      <path d={outline} fill="none" stroke="var(--g-accent)" strokeWidth="0.16" strokeLinejoin="round" filter={`url(#${id}-ink)`} />
-      {/* lantern strings */}
-      {festival.POLES.map(([x, z], i) => (
-        <line key={i} x1={YAGURA.center[0]} y1={YAGURA.center[1]} x2={x} y2={z} stroke="#ffb36b" strokeOpacity="0.25" strokeWidth="0.06" strokeDasharray="0.15 0.5" />
-      ))}
-      {festival.STALLS.map((stall) => (
-        <rect key={stall.slot} x={stall.facing > 0 ? stall.x : stall.x - STALL.depth - 0.3} y={stall.z - STALL.width / 2} width={STALL.depth + 0.3} height={STALL.width}
-          rx="0.15" fill={stall.canopy} fillOpacity="0.35" stroke="#f2ede4" strokeOpacity="0.4" strokeWidth="0.06" />
-      ))}
-      <rect x={YAGURA.center[0] - YAGURA.size / 2} y={YAGURA.center[1] - YAGURA.size / 2} width={YAGURA.size} height={YAGURA.size}
-        fill="#c62f37" fillOpacity="0.3" stroke="#f2ede4" strokeOpacity="0.6" strokeWidth="0.08" />
-      <text x={YAGURA.center[0]} y={YAGURA.center[1] + 0.25} className="map-svg__note" textAnchor="middle">櫓</text>
-      <rect x={STAGE.center[0] - STAGE.width / 2} y={STAGE.center[1] - STAGE.depth / 2} width={STAGE.width} height={STAGE.depth}
-        fill="#f2ede4" fillOpacity="0.12" stroke="#f2ede4" strokeOpacity="0.5" strokeWidth="0.08" />
-      <text x={STAGE.center[0]} y={STAGE.center[1] + 0.25} className="map-svg__note" textAnchor="middle">神樂殿</text>
-      <line x1={SIGNBOARD.center[0] - SIGNBOARD.width / 2} y1={SIGNBOARD.center[1]} x2={SIGNBOARD.center[0] + SIGNBOARD.width / 2} y2={SIGNBOARD.center[1]}
-        stroke="#f2ede4" strokeOpacity="0.75" strokeWidth="0.2" strokeLinecap="round" />
+      <circle r={WALL_RADIUS} fill={`url(#${id}-wash)`} />
+      <path d={wall} fill="none" stroke="var(--g-accent)" strokeWidth="0.16" strokeLinecap="round" filter={`url(#${id}-ink)`} />
+      <circle r={GARDEN_RADIUS} fill="#d8d1c3" fillOpacity="0.08" stroke="#f2ede4" strokeOpacity="0.5" strokeWidth="0.08" />
+      <circle r={(BAMBOO.inner + BAMBOO.outer) / 2} fill="none" stroke="#8fbf6a" strokeOpacity="0.4" strokeWidth={BAMBOO.outer - BAMBOO.inner} strokeDasharray="0.2 0.6" />
+      <circle r="1.8" fill="#e7848f" fillOpacity="0.35" />
+      <text y="0.25" className="map-svg__note" textAnchor="middle">庭園</text>
       <g transform={`translate(${TORII.center[0]} ${TORII.center[1]})`}>
         <circle r="1.1" fill="#ffb36b" fillOpacity="0.2" filter={`url(#${id}-glow)`} />
-        <line x1={-TORII.width / 2 - 0.6} y1="0" x2={TORII.width / 2 + 0.6} y2="0" stroke="#c0392b" strokeWidth="0.3" strokeLinecap="round" />
+        <line x1={-TORII.width / 2} y1="0" x2={TORII.width / 2} y2="0" stroke="#c0392b" strokeWidth="0.3" strokeLinecap="round" />
         <text y="-0.8" className="map-svg__note" textAnchor="middle">鳥居・回主展廳</text>
       </g>
     </g>

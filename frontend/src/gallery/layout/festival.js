@@ -1,62 +1,63 @@
-import {placeOn, viewingSpot, capsule, boxCapsule} from "./geometry";
+import {placeOn, viewingSpot, normalize} from "./geometry";
 
-// Summer festival: an open-air shrine square at night (meters, +x east, +z south).
+// Summer festival: a round courtyard gallery at dusk (meters, +x east, +z south).
+// A covered walkway runs around the outside, with the paintings on its back wall;
+// the middle is a raked-gravel garden with a ring of bamboo and a flowering tree,
+// paper umbrellas floating above. The torii in the south gap leads back to the main hall.
 //
-//                 stage  ▭▭▭▭  (fn on the signboard in front)
-//      fw1  ┃                          ┃  fe1
-//      fw2  ┃          [yagura]        ┃  fe2      stalls along both sides,
-//      fw3  ┃                          ┃  fe3      paintings on their back boards
-//                      ⛩ torii (portal back to the main hall)
-export const SQUARE = {minX: -13, maxX: 13, minZ: -15, maxZ: 11};
+//                    fn
+//          fw1   ╭────────╮   fe1
+//        fw2    │  garden  │    fe2       walkway between GARDEN_RADIUS and WALL_RADIUS
+//          fw3   ╰────────╯   fe3
+//                    ⛩
+export const WALL_RADIUS = 14;
+export const WALL_HEIGHT = 5.4;
+// the garden is not walkable; its stone curb is at this radius
+export const GARDEN_RADIUS = 10;
+export const POST_RADIUS = 10.6;
+export const BENCH_RADIUS = 10.95;
+export const ROOF = {inner: 10.2, outer: 14.4, innerHeight: 4.8, outerHeight: 5.5};
+// the south gap in the wall, where the torii stands (half-width, radians)
+export const GATE_HALF_ANGLE = 0.32;
+export const BAMBOO = {inner: 7.2, outer: 9.4};
+export const TREE = {center: [0, 0], height: 6.5, crown: 3.4};
 
-const STALL_ROWS = [-8, -2.5, 3];
-export const STALL = {width: 4.2, depth: 1.5, counterHeight: 0.95, roofHeight: 3.7, boardInset: 0.15};
-const BOARD_X = 11;
+// angle 0 is north, growing clockwise (east)
+export const ringPoint = (angle, radius) => [Math.sin(angle) * radius, -Math.cos(angle) * radius];
+const inward = (angle) => normalize([-Math.sin(angle), Math.cos(angle)]);
 
-// One stall per slot: x of its back board, which way it faces, and the canopy color.
-export const STALLS = [
-  ...STALL_ROWS.map((z, i) => ({slot: `fw${i + 1}`, x: -BOARD_X, z, facing: 1, canopy: ["#c8323c", "#2d4a8a", "#e07a2a"][i]})),
-  ...STALL_ROWS.map((z, i) => ({slot: `fe${i + 1}`, x: BOARD_X, z, facing: -1, canopy: ["#2d6a4f", "#c8323c", "#6a3d9a"][i]})),
-];
+const DEG = Math.PI / 180;
+// where each slot hangs on the back wall
+export const SLOT_ANGLES = {fn: 0, fe1: 50 * DEG, fe2: 100 * DEG, fe3: 150 * DEG, fw1: -50 * DEG, fw2: -100 * DEG, fw3: -150 * DEG};
 
-export const YAGURA = {center: [0, -1.5], size: 2.6, deck: 2.6, roof: 4.3};
-export const STAGE = {center: [0, -12.6], width: 9, depth: 3.6, height: 0.7};
-export const SIGNBOARD = {center: [0, -9.4], width: 3.4, height: 3.1};
-export const TORII = {center: [0, 9.6], width: 5.2, height: 5};
+export const SLOT_PLACEMENTS = Object.fromEntries(Object.entries(SLOT_ANGLES).map(([slot, angle]) => [
+  slot,
+  // the wall curves toward the label beside the painting, so hold it further out (as on the main hall's arc)
+  {...placeOn(ringPoint(angle, WALL_RADIUS - 0.08), inward(angle), 0), labelDepth: 0.26},
+]));
 
-export const SLOT_PLACEMENTS = {
-  ...Object.fromEntries(STALLS.map((stall) => [stall.slot, placeOn([stall.x, stall.z], [stall.facing, 0], STALL.boardInset)])),
-  fn: placeOn([SIGNBOARD.center[0], SIGNBOARD.center[1]], [0, 1], 0.12),
-};
+// Posts holding up the walkway roof, every 20° except in the gate gap.
+export const POST_ANGLES = Array.from({length: 18}, (_, i) => i * 20 * DEG).filter((angle) => Math.abs(angle - Math.PI) > GATE_HALF_ANGLE + 0.05);
+// Benches sit between posts along the garden edge.
+export const BENCH_ANGLES = POST_ANGLES.slice(0, -1).map((angle, i) => (angle + POST_ANGLES[i + 1]) / 2).filter((angle, i) => i % 2 === 0);
+export const BENCH = {length: 2.4, depth: 0.5, height: 0.45};
 
-// the portal stands inside the torii and leads back to the main hall
-export const PORTAL = {...placeOn([TORII.center[0], TORII.center[1]], [0, -1], 0, 0), target: "main"};
-export const SPAWN = {position: [0, 4.2], heading: Math.PI};
-
-// Lantern strings: from the top of the yagura out to poles around the square.
-export const POLES = [[-12.4, -13.8], [0, -15.2], [12.4, -13.8], [-12.4, -5.2], [12.4, -5.2], [-12.4, 5.8], [12.4, 5.8], [-4.2, 10.4], [4.2, 10.4]];
-export const POLE_HEIGHT = 4.4;
-
-const stallCollider = (stall) => boxCapsule([stall.x + stall.facing * (STALL.depth / 2 + 0.05), stall.z], Math.PI / 2, STALL.width, STALL.depth);
+export const TORII = {center: [0, WALL_RADIUS - 0.2], width: 4.2, height: 4.6};
+export const PORTAL = {...placeOn([0, WALL_RADIUS - 0.35], [0, -1], 0, 0), target: "main"};
+export const SPAWN = {position: [0, 12.1], heading: Math.PI};
 
 export const COLLIDERS = {
-  segments: [
-    capsule([SQUARE.minX, SQUARE.minZ], [SQUARE.maxX, SQUARE.minZ], 0.1),
-    capsule([SQUARE.maxX, SQUARE.minZ], [SQUARE.maxX, SQUARE.maxZ], 0.1),
-    capsule([SQUARE.minX, SQUARE.maxZ], [SQUARE.maxX, SQUARE.maxZ], 0.1),
-    capsule([SQUARE.minX, SQUARE.minZ], [SQUARE.minX, SQUARE.maxZ], 0.1),
-    ...STALLS.map(stallCollider),
-    boxCapsule(STAGE.center, 0, STAGE.width, STAGE.depth),
-    boxCapsule(SIGNBOARD.center, 0, SIGNBOARD.width, 0.3),
-  ],
+  segments: [],
   circles: [
-    [YAGURA.center[0], YAGURA.center[1], YAGURA.size * 0.72],
+    // the garden, its curb and the benches along it
+    [0, 0, BENCH_RADIUS + BENCH.depth / 2 + 0.05],
+    ...POST_ANGLES.map((angle) => [...ringPoint(angle, POST_RADIUS), 0.2]),
     // torii pillars
-    [TORII.center[0] - TORII.width / 2, TORII.center[1], 0.4],
-    [TORII.center[0] + TORII.width / 2, TORII.center[1], 0.4],
-    ...POLES.map(([x, z]) => [x, z, 0.2]),
+    [TORII.center[0] - TORII.width / 2, TORII.center[1], 0.35],
+    [TORII.center[0] + TORII.width / 2, TORII.center[1], 0.35],
   ],
-  rings: [],
+  // stay inside the back wall
+  rings: [[0, 0, WALL_RADIUS - 0.35]],
 };
 
 export const INTERACTABLES = [
@@ -64,4 +65,8 @@ export const INTERACTABLES = [
   {id: "portal", type: "portal", position: viewingSpot(PORTAL, 1.2), radius: 1.6, label: "回到主展廳", target: "main", arrival: {position: [-0.75, 7.6], heading: Math.PI}},
 ];
 
-export const BOUNDS = {minX: SQUARE.minX, maxX: SQUARE.maxX, minZ: SQUARE.minZ, maxZ: SQUARE.maxZ};
+// the third person camera stays under the walkway roof and inside the wall
+export const CAMERA_CEILING = 4.3;
+export const CAMERA_RADIUS = WALL_RADIUS - 0.3;
+
+export const BOUNDS = {minX: -WALL_RADIUS, maxX: WALL_RADIUS, minZ: -WALL_RADIUS, maxZ: WALL_RADIUS};

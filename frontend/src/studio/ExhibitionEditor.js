@@ -34,18 +34,14 @@ const MainHallPlan = () => {
 };
 
 const FestivalPlan = () => {
-  const {SQUARE, STALL, STALLS, STAGE, YAGURA, TORII} = festival;
+  const {WALL_RADIUS, GARDEN_RADIUS, TORII} = festival;
   return (
     <>
-      <path d={toPath([[SQUARE.minX, SQUARE.minZ], [SQUARE.maxX, SQUARE.minZ], [SQUARE.maxX, SQUARE.maxZ], [SQUARE.minX, SQUARE.maxZ]])} className="admin-plan__floor" />
-      {STALLS.map((stall) => (
-        <rect key={stall.slot} x={stall.facing > 0 ? stall.x : stall.x - STALL.depth - 0.3} y={stall.z - STALL.width / 2} width={STALL.depth + 0.3} height={STALL.width} className="admin-plan__platform" />
-      ))}
-      <rect x={YAGURA.center[0] - YAGURA.size / 2} y={YAGURA.center[1] - YAGURA.size / 2} width={YAGURA.size} height={YAGURA.size} className="admin-plan__platform" />
-      <text x={YAGURA.center[0]} y={YAGURA.center[1] + 0.35} className="admin-plan__note">櫓</text>
-      <rect x={STAGE.center[0] - STAGE.width / 2} y={STAGE.center[1] - STAGE.depth / 2} width={STAGE.width} height={STAGE.depth} className="admin-plan__platform" />
+      <circle r={WALL_RADIUS} className="admin-plan__floor" />
+      <circle r={GARDEN_RADIUS} className="admin-plan__platform" />
+      <text y="0.35" className="admin-plan__note">庭園</text>
       <line x1={TORII.center[0] - TORII.width / 2} y1={TORII.center[1]} x2={TORII.center[0] + TORII.width / 2} y2={TORII.center[1]} className="admin-plan__door" />
-      <text x={TORII.center[0]} y={TORII.center[1] + 1.3} className="admin-plan__note">鳥居</text>
+      <text x={TORII.center[0]} y={TORII.center[1] - 0.8} className="admin-plan__note">鳥居</text>
     </>
   );
 };
@@ -58,7 +54,7 @@ const HALLS = {
     marker: (slotId) => (slotId === slots.feature.id ? mainHall.PLATFORM.center : inFront(mainHall.SLOT_PLACEMENTS[slotId])),
   },
   festival: {
-    name: "夏日祭典", eyebrow: "Summer Festival", viewBox: "-14.5 -16.5 29 29.5", Plan: FestivalPlan,
+    name: "夏日祭典", eyebrow: "Summer Festival", viewBox: "-15.5 -15.5 31 31", Plan: FestivalPlan,
     slots: slots.festival,
     marker: (slotId) => inFront(festival.SLOT_PLACEMENTS[slotId]),
   },

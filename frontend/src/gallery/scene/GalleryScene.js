@@ -15,7 +15,7 @@ const Annex = React.lazy(() => import("./Annex"));
 const Festival = React.lazy(() => import("./Festival"));
 
 const ANNEX_FOG = ["#07070c", 14, 30];
-const FESTIVAL_FOG = ["#0b1026", 26, 70];
+const FESTIVAL_FOG = ["#4a3550", 30, 90];
 
 const GalleryScene = () => {
   const themeId = useGalleryStore((state) => state.theme);
