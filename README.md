@@ -1,15 +1,70 @@
+<div align="center">
+
 # IGallery
 
-一座可以走進去逛的線上美術館：作品由你在管理頁上傳與編排，訪客可以在首頁瀏覽，或走進 3D 展廳欣賞。
+**一座可以走進去逛的線上美術館**
 
-整個專案都在 [`frontend/`](frontend)，部署成同一個 Vercel 專案：
+創作者上傳作品、經過審核後公開；觀眾可以像逛社群一樣瀏覽作品、按愛心收藏、看作者的個人頁，<br>
+也可以操控角色走進 3D 展廳，在畫作前停下來細看。
+
+### [👉 立即參觀 i-gallery-seven.vercel.app](https://i-gallery-seven.vercel.app/)
+
+不用註冊，點「以訪客身分進入」就能逛；註冊會員即可上傳作品、按愛心收藏。
+
+<br>
+
+![首頁](docs/screenshots/home.jpg)
+
+</div>
+
+## 走進 3D 展廳
+
+![3D 展廳](docs/screenshots/gallery.jpg)
+
+- **自由漫步**：WASD 走路、拖曳轉視角，靠近畫作會自動聚焦，牆上說明牌顯示作品名稱、作者、角色與描述
+- **細看作品**：點擊進入細節頁，看原圖、作者標記的細節熱點與作品背後的故事
+- **導覽地圖**：左下角小地圖顯示位置與足跡，`M` 開啟完整地圖，點作品直接前往；看過的作品會點亮並記錄參觀進度
+- **多個展廳**：穿過傳送門前往懸浮展廳，還有一面可以留下自己塗鴉的牆
+- **氛圍**：夜間美術館／白盒／暖木三種主題，即時合成的背景音樂與腳步聲，進場運鏡與聚光燈
+- **小機器人**：可以換裝、揮手、跳舞、跳躍；攝影模式能調整景深拍下自己的參觀照
+
+## 像社群一樣探索作品
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/artist.jpg" alt="作者個人頁"></td>
+<td width="50%"><img src="docs/screenshots/studio-dark.jpg" alt="工作室"></td>
+</tr>
+<tr>
+<td><b>作者個人頁</b>：作品、約稿方案與收藏一頁看完，收藏可以設為不公開</td>
+<td><b>工作室</b>：上傳作品、追蹤審核狀態與收到的喜歡，預設深色模式，也可以切換成淺色</td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/exhibition.jpg" alt="展場配置"></td>
+<td width="50%" align="center"><img src="docs/screenshots/phone.jpg" alt="手機版" width="260"></td>
+</tr>
+<tr>
+<td><b>展場配置</b>：管理者在平面圖上決定每面牆掛哪一幅畫</td>
+<td><b>手機版</b>：側欄收進選單，每一頁都能在手機上使用</td>
+</tr>
+</table>
+
+- **首頁**：精選與最新作品、依收到的喜歡數排行的藝術家、搜尋作品／作者／角色
+- **AI 標註**：每件作品上傳時都必須標明「未使用 AI／AI 輔助／AI 生成」，並顯示在作品上
+- **審核制度**：會員送審、管理者核准或附原因退回，只有通過的作品會公開
+- **通知**：作品被喜歡、審核結果、角色變更都會收到站內通知
+- **帳號**：訪客一鍵進入、隨時升級成會員且保留同一個帳號
+
+## 技術架構
 
 | 位置 | 內容 | 技術 |
 |---|---|---|
-| `frontend/src/` | 首頁、3D 畫廊（`#gallery`）、管理頁（`#admin`） | React 19、Three.js（React Three Fiber） |
+| `frontend/src/` | 網站、3D 畫廊（`#gallery`）、工作室（`#me`、`#admin`） | React 19、MUI、Three.js（React Three Fiber） |
 | `frontend/api/` | 後端 API，部署成 Vercel Function | Node.js、TypeScript、Hono |
-| 資料庫 | 作品、展位、管理者帳號 | PostgreSQL（正式環境用 Neon） |
+| 資料庫 | 使用者、作品、喜歡、通知、展位 | PostgreSQL（正式環境 Neon，本機內嵌 PGlite） |
 | 圖片 | 原圖與預覽圖 | Vercel Blob（瀏覽器直接上傳） |
+
+整個專案都在 [`frontend/`](frontend)，前端與 API 部署成同一個 Vercel 專案。
 
 ## 本機開發
 
@@ -40,7 +95,7 @@ npm run dev
 1. 在 Vercel 匯入這個 GitHub repo，**Root Directory 設成 `frontend`**，Framework 會自動偵測為 Create React App。
 2. 在專案的 **Storage** 分頁建立兩個資源，Vercel 會自動加入對應的環境變數：
    - **Neon**（Postgres）→ `DATABASE_URL`
-   - **Blob** → `BLOB_READ_WRITE_TOKEN`。建立時選擇 **Public** 存取，3D 畫廊需要直接讀取圖片。
+   - **Blob** → `BLOB_STORE_ID`（透過 Vercel OIDC 授權，也支援舊的 `BLOB_READ_WRITE_TOKEN`）。建立時選擇 **Public** 存取，3D 畫廊需要直接讀取圖片。
 3. 在 **Settings → Environment Variables** 加入第一個管理者帳號：
    - `ADMIN_USERNAME`
    - `ADMIN_PASSWORD`（請用夠長的密碼）

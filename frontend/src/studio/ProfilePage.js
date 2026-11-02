@@ -37,6 +37,7 @@ const Feedback = ({status}) => (
   </>
 );
 
+// The profile settings, shown in ProfileDialog.
 const ProfilePage = () => {
   const {session, refresh} = useSession();
   const user = session.user;
@@ -49,14 +50,7 @@ const ProfilePage = () => {
   const setPlan = (index, key) => (event) => setPage("plans", page.values.plans.map((plan, i) => (i === index ? {...plan, [key]: event.target.value} : plan)));
 
   return (
-    <div className="admin-page admin-page--narrow">
-      <div className="admin-page__head">
-        <div>
-          <div className="admin-eyebrow">Profile</div>
-          <h1 className="admin-title">個人資料</h1>
-        </div>
-        {isMember(session) && <a className="admin-button" href={`#users/${user.id}`}>查看我的個人頁</a>}
-      </div>
+    <>
 
       {!isMember(session) && (
         <Section title="註冊成為會員">
@@ -153,7 +147,7 @@ const ProfilePage = () => {
           <p className="admin-muted">忘記密碼時，請聯絡管理者幫你重設。</p>
         </Section>
       )}
-    </div>
+    </>
   );
 };
 

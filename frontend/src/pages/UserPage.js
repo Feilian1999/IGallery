@@ -71,9 +71,14 @@ const UserPage = ({userId, tab: requestedTab}) => {
 
   // reloaded when the viewer signs in or out: "self", liked hearts and private favorites depend on who is looking
   const viewerId = session?.user.id;
+  // the viewer's own account, as text, so editing your profile in the dialog refreshes the header
+  const viewerProfile = session ? JSON.stringify(session.user) : "";
+  React.useEffect(() => {
+    api(`/users/${encodeURIComponent(userId)}`).then(setProfile).catch((failure) => setError(failure.message));
+  }, [userId, viewerProfile]);
+
   React.useEffect(() => {
     setFavorites(null);
-    api(`/users/${encodeURIComponent(userId)}`).then(setProfile).catch((failure) => setError(failure.message));
     api(`/users/${encodeURIComponent(userId)}/artworks`).then((data) => setWorks(data.artworks)).catch(() => setWorks([]));
   }, [userId, viewerId]);
 
@@ -117,7 +122,7 @@ const UserPage = ({userId, tab: requestedTab}) => {
           {self ? (
             <>
               <Button href="#me/profile" variant="outlined" startIcon={<EditOutlinedIcon />} sx={{borderRadius: 20}}>編輯個人資料</Button>
-              <Button href="#me" variant="contained" disableElevation startIcon={<AddPhotoAlternateOutlinedIcon />} sx={{borderRadius: 20}}>發布作品</Button>
+              <Button href="#me/new" variant="contained" disableElevation startIcon={<AddPhotoAlternateOutlinedIcon />} sx={{borderRadius: 20}}>發布作品</Button>
             </>
           ) : (
             <>

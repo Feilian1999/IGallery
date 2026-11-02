@@ -56,10 +56,9 @@ export const checkFile = (file) => {
   return null;
 };
 
-// Resizes, uploads both versions, and registers the artwork as a draft owned by the uploader.
-// `session` is the /api/auth/me response, which says how uploads are stored;
-// `aiUsage` is the uploader's AI disclosure for this file.
-export const uploadArtwork = async (file, session, aiUsage, onProgress) => {
+// Resizes and uploads both versions; resolves to the fields /me/artworks needs for the image.
+// `session` is the /api/auth/me response, which says how uploads are stored.
+export const uploadImage = async (file, session, onProgress) => {
   const problem = checkFile(file);
   if (problem) throw new Error(problem);
   const bitmap = await createImageBitmap(file);
@@ -71,11 +70,17 @@ export const uploadArtwork = async (file, session, aiUsage, onProgress) => {
   const send = (blob, name, progress) => (session.storage === "blob" ? sendToBlob(blob, name, session.blobAuth, progress) : sendLocal(blob, progress));
   const imageUrl = await send(large.blob, `${id}.jpg`, (p) => onProgress(p * 0.85));
   const previewUrl = await send(preview.blob, `${id}-preview.jpg`, (p) => onProgress(0.85 + p * 0.15));
+  return {imageUrl, previewUrl, width: large.width, height: large.height};
+};
 
+// Uploads the image and registers the artwork as a draft owned by the uploader.
+// `aiUsage` is the uploader's AI disclosure for this file.
+export const uploadArtwork = async (file, session, aiUsage, onProgress) => {
+  const image = await uploadImage(file, session, onProgress);
   const title = file.name.replace(/\.[^.]+$/, "").slice(0, limits.title);
   const {artwork} = await api("/me/artworks", {
     method: "POST",
-    body: {imageUrl, previewUrl, width: large.width, height: large.height, title, aiUsage},
+    body: {...image, title, aiUsage},
   });
   return artwork;
 };

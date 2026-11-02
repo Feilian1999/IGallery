@@ -36,6 +36,7 @@ const Dashboard = () => {
           <div className="admin-eyebrow">Dashboard</div>
           <h1 className="admin-title">嗨，{session.user.displayName}</h1>
         </div>
+        {member && <a className="admin-button admin-button--primary" href="#me/new">＋ 發布作品</a>}
       </div>
 
       {stats && (
@@ -49,7 +50,7 @@ const Dashboard = () => {
       )}
 
       {member ? (
-        <Uploader onUploaded={(artwork) => {
+        <Uploader batch onUploaded={(artwork) => {
           setArtworks((current) => [...(current || []), artwork]);
           loadStats();
         }} />

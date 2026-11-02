@@ -1,9 +1,9 @@
 import * as React from "react";
+import PropTypes from "prop-types";
 import {useTheme} from "@mui/material/styles";
 import {useSession, isMember, isAdmin} from "../session";
 import LoginPage from "./LoginPage";
 import Dashboard from "./Dashboard";
-import ProfilePage from "./ProfilePage";
 import ArtworkEditor from "./ArtworkEditor";
 import ReviewQueue from "./ReviewQueue";
 import AllArtworks from "./AllArtworks";
@@ -15,30 +15,25 @@ import "./admin.css";
 // The studio pages, shown inside the site shell (top bar and sidebar come from AppShell).
 //   #login                 sign in, sign up, or continue as a guest
 //   #me                    dashboard: stats, upload, my artworks
-//   #me/profile            profile, favorites privacy, commissions, password
 //   #me/notifications      notification list
+//   #me/new                publish a new artwork (the editor, before it exists)
 //   #me/artwork/<id>       edit one artwork
 //   #admin/review | artworks | exhibition | users   (admin)
 export const parseStudioRoute = (hash) => {
   const [area, page, id] = hash.replace(/^#\/?/, "").split("/");
   if (area === "login") return {page: "login"};
   if (area === "admin") return {page: ["artworks", "exhibition", "users"].includes(page) ? page : "review", admin: true};
-  if (page === "profile") return {page: "profile"};
   if (page === "notifications") return {page: "notifications"};
+  if (page === "new") return {page: "new"};
   if (page === "artwork" && id) return {page: "edit", id: decodeURIComponent(id)};
   return {page: "dashboard"};
 };
 
-const StudioApp = () => {
+// `hash` is the page under any open dialog (App keeps it while #me/profile is showing).
+const StudioApp = ({hash}) => {
   const {session} = useSession();
   const theme = useTheme();
-  const [route, setRoute] = React.useState(() => parseStudioRoute(window.location.hash));
-
-  React.useEffect(() => {
-    const onHashChange = () => setRoute(parseStudioRoute(window.location.hash));
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
-  }, []);
+  const route = parseStudioRoute(hash);
 
   // signed-in users skip the login page
   React.useEffect(() => {
@@ -68,8 +63,8 @@ const StudioApp = () => {
           </div>
         )}
         {route.page === "dashboard" && <Dashboard />}
-        {route.page === "profile" && <ProfilePage />}
         {route.page === "notifications" && <NotificationsPage />}
+        {route.page === "new" && (isMember(session) ? <ArtworkEditor /> : <Dashboard />)}
         {route.page === "edit" && <ArtworkEditor key={route.id} id={route.id} />}
         {route.page === "review" && <ReviewQueue />}
         {route.page === "artworks" && <AllArtworks />}
@@ -81,5 +76,7 @@ const StudioApp = () => {
 
   return <div className="admin" data-mode={theme.palette.mode}>{content}</div>;
 };
+
+StudioApp.propTypes = {hash: PropTypes.string.isRequired};
 
 export default StudioApp;

@@ -14,6 +14,10 @@ import UserPage from "./pages/UserPage";
 // three.js and the whole 3D gallery are only downloaded when someone opens it
 const GalleryPage = React.lazy(() => import("./pages/GalleryPage"));
 const StudioApp = React.lazy(() => import("./studio/StudioApp"));
+const ProfileDialog = React.lazy(() => import("./studio/ProfileDialog"));
+
+// #me/profile opens a dialog over the current page instead of replacing it
+const PROFILE = /^#\/?me\/profile\/?$/;
 
 const MODE_KEY = "igallery:color-mode";
 
@@ -35,9 +39,9 @@ const getDesignTokens = (mode) => ({
 
 const readMode = () => {
   try {
-    return window.localStorage.getItem(MODE_KEY) || "light";
+    return window.localStorage.getItem(MODE_KEY) || "dark";
   } catch (error) {
-    return "light";
+    return "dark";
   }
 };
 
@@ -48,9 +52,10 @@ const readMode = () => {
 //   #ranking, #likes, #inbox
 //   #users/<id>[/<tab>]    an artist's public page: works, commissions or favorites
 //   #login, #me…, #admin…  the studio
+//   #me/profile            profile dialog over the previous page
 //   #gallery               the 3D gallery (full screen)
 const STUDIO_NAV = {
-  "login": "login", "me": "me", "me/profile": "profile", "me/notifications": "notifications", "me/artwork": "me",
+  "login": "login", "me": "me", "me/notifications": "notifications", "me/artwork": "me", "me/new": "me",
   "admin": "review", "admin/review": "review", "admin/artworks": "artworks", "admin/exhibition": "exhibition", "admin/users": "users",
 };
 
@@ -95,15 +100,26 @@ const App = () => {
   const theme = React.useMemo(() => createTheme(getDesignTokens(mode)), [mode]);
 
   const [hash, setHash] = React.useState(window.location.hash);
+  // the page shown behind the profile dialog; home when the dialog is opened directly
+  const [background, setBackground] = React.useState(() => (PROFILE.test(window.location.hash) ? "" : window.location.hash));
   React.useEffect(() => {
-    const handleHashChange = () => {
-      setHash(window.location.hash);
-      window.scrollTo(0, 0);
+    const handleHashChange = (event) => {
+      const next = window.location.hash;
+      setHash(next);
+      if (PROFILE.test(next)) return;
+      setBackground(next);
+      // closing the dialog returns to the same scroll position
+      if (!PROFILE.test(new URL(event.oldURL).hash)) window.scrollTo(0, 0);
     };
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
-  const route = parseHash(hash);
+  const profileOpen = PROFILE.test(hash);
+  const pageHash = profileOpen ? background : hash;
+  const route = parseHash(pageHash);
+  // kept mounted after the first open so the dialog can animate closed
+  const [profileUsed, setProfileUsed] = React.useState(profileOpen);
+  if (profileOpen && !profileUsed) setProfileUsed(true);
   const ShellPage = SHELL_PAGES[route.page];
 
   return (
@@ -121,10 +137,17 @@ const App = () => {
               <AppShell page={route.nav} userId={route.userId} query={route.query}>
                 {ShellPage ? <ShellPage query={route.query} userId={route.userId} tab={route.tab} key={route.userId} /> : (
                   <React.Suspense fallback={null}>
-                    <StudioApp />
+                    <StudioApp hash={pageHash} />
                   </React.Suspense>
                 )}
               </AppShell>
+            )}
+            {profileUsed && (
+              <React.Suspense fallback={null}>
+                <ProfileDialog open={profileOpen} onClose={() => {
+                  window.location.hash = background || "#";
+                }} />
+              </React.Suspense>
             )}
           </div>
         </ThemeProvider>

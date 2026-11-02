@@ -50,7 +50,7 @@ const readCollapsed = () => {
 };
 
 // Where the "post" button goes depends on who is looking.
-const postHref = (session) => (!session ? "#login" : isMember(session) ? "#me" : "#me/profile");
+const postHref = (session) => (!session ? "#login" : isMember(session) ? "#me/new" : "#me/profile");
 
 /* eslint-disable react/prop-types */
 
@@ -105,7 +105,6 @@ const SideNav = ({page, userId, collapsed, onNavigate}) => {
             active: page === "user" && String(session.user.id) === userId,
           })}
           {item({icon: <DashboardOutlinedIcon />, label: "我的作品", href: "#me", active: page === "me"})}
-          {item({icon: <PersonOutlineIcon />, label: "個人資料", href: "#me/profile", active: page === "profile"})}
         </Section>
       )}
       {isAdmin(session) && (
@@ -192,7 +191,7 @@ const TopBar = ({query, onMenu}) => {
                 <MenuItem component="a" href={`#users/${session.user.id}`} onClick={() => setMenu(null)}><ListItemIcon><AccountBoxOutlinedIcon fontSize="small" /></ListItemIcon>我的個人頁</MenuItem>
               )}
               <MenuItem component="a" href="#me" onClick={() => setMenu(null)}><ListItemIcon><DashboardOutlinedIcon fontSize="small" /></ListItemIcon>我的作品</MenuItem>
-              <MenuItem component="a" href="#me/profile" onClick={() => setMenu(null)}><ListItemIcon><PersonOutlineIcon fontSize="small" /></ListItemIcon>個人資料</MenuItem>
+              <MenuItem component="a" href="#me/profile" onClick={() => setMenu(null)}><ListItemIcon><PersonOutlineIcon fontSize="small" /></ListItemIcon>編輯個人資料</MenuItem>
               <MenuItem component="a" href="#likes" onClick={() => setMenu(null)}><ListItemIcon><FavoriteBorderIcon fontSize="small" /></ListItemIcon>喜歡的作品</MenuItem>
               <Divider />
               <MenuItem onClick={() => {

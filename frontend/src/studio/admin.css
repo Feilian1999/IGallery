@@ -1141,3 +1141,11 @@ a.admin-notification:hover {
   font: inherit; color: var(--a-text); background: var(--a-raised); border: 1px solid var(--a-border); border-radius: 8px; padding: 8px 10px; resize: vertical;
 }
 @media (max-width: 600px) { .admin-offer__row { grid-template-columns: 1fr; } }
+
+/* the image slot on the new-artwork page */
+.admin-drop--tall { min-height: 420px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+/* profile settings inside the dialog: sections separated by rules instead of cards */
+.admin--dialog .admin-panel { margin: 0; border: 0; border-radius: 0; border-bottom: 1px solid var(--a-border); background: transparent; padding: 20px 24px; }
+.admin--dialog .admin-panel:last-child { border-bottom: 0; }
+.admin--dialog .admin-panel .admin-subtitle { margin-top: 0; }

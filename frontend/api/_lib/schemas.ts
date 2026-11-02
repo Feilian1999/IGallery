@@ -65,6 +65,10 @@ export const createArtwork = z.object({
   height: z.number().int().positive().max(20000),
   title: z.string().trim().max(limits.title).default(""),
   author: z.string().trim().max(limits.author).default(""),
+  character: z.string().trim().max(limits.character).optional(),
+  description: z.string().trim().max(limits.description).optional(),
+  story: z.string().trim().max(limits.story).optional(),
+  hotspots: z.array(hotspot).max(limits.hotspots).optional(),
   aiUsage: z.enum(AI_USAGES, {message: "請標註這件作品是否使用 AI"}),
 });
 

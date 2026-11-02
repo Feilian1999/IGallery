@@ -17,7 +17,8 @@ export const STATUS = {
 const PARALLEL_UPLOADS = 2;
 
 // Drop zone. The uploader must say whether the work used AI before choosing files.
-export const Uploader = ({onUploaded}) => {
+// `batch` is the dashboard's many-at-once version; single works go through #me/new.
+export const Uploader = ({onUploaded, batch}) => {
   const {session} = useSession();
   const [aiUsage, setAiUsage] = React.useState(null);
   const [jobs, setJobs] = React.useState([]);
@@ -51,7 +52,7 @@ export const Uploader = ({onUploaded}) => {
   return (
     <section>
       <div className="admin-ai">
-        <div className="admin-ai__label">這批作品是否使用 AI？<em>必填</em></div>
+        <div className="admin-ai__label">{batch ? "批次上傳：" : ""}這批作品是否使用 AI？<em>必填</em></div>
         <div className="admin-ai__choices">
           {AI_CHOICES.map((id) => (
             <button key={id} type="button" className={`admin-ai__choice${aiUsage === id ? " admin-ai__choice--active" : ""}`} onClick={() => setAiUsage(id)}>
@@ -99,7 +100,7 @@ export const Uploader = ({onUploaded}) => {
   );
 };
 
-Uploader.propTypes = {onUploaded: PropTypes.func.isRequired};
+Uploader.propTypes = {onUploaded: PropTypes.func.isRequired, batch: PropTypes.bool};
 
 // Artwork cards. "mine" shows the owner's actions (submit / withdraw); "all" is the
 // admin view with publish / unpublish, owners, and drag-to-reorder.
