@@ -10,40 +10,89 @@ import {hashPassword} from "./password";
 type Row = Record<string, any>;
 type Query = (text: string, params?: unknown[]) => Promise<Row[]>;
 
-const SCHEMA = `
-create table if not exists users (
-  id serial primary key,
-  username text unique not null,
-  password_hash text not null,
-  created_at timestamptz not null default now()
-);
-create table if not exists sessions (
-  token_hash text primary key,
-  user_id integer not null references users(id) on delete cascade,
-  expires_at timestamptz not null
-);
-create table if not exists artworks (
-  id text primary key,
-  title text not null default '',
-  author text not null default '',
-  character_name text not null default '',
-  description text not null default '',
-  story text not null default '',
-  image_url text not null,
-  preview_url text not null,
-  width integer not null,
-  height integer not null,
-  hotspots jsonb not null default '[]',
-  status text not null default 'draft' check (status in ('draft', 'published')),
-  sort_order integer not null default 0,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-create table if not exists placements (
-  slot text primary key,
-  artwork_id text not null references artworks(id) on delete cascade
-);
-`;
+// Schema changes, applied in order and recorded in schema_migrations. Never edit a
+// shipped migration; add a new one. Every statement is safe to run twice, because two
+// cold-starting instances can race to apply the same migration.
+const MIGRATIONS: string[][] = [
+  // 1. the original tables
+  [
+    `create table if not exists users (
+      id serial primary key,
+      username text unique not null,
+      password_hash text not null,
+      created_at timestamptz not null default now()
+    )`,
+    `create table if not exists sessions (
+      token_hash text primary key,
+      user_id integer not null references users(id) on delete cascade,
+      expires_at timestamptz not null
+    )`,
+    `create table if not exists artworks (
+      id text primary key,
+      title text not null default '',
+      author text not null default '',
+      character_name text not null default '',
+      description text not null default '',
+      story text not null default '',
+      image_url text not null,
+      preview_url text not null,
+      width integer not null,
+      height integer not null,
+      hotspots jsonb not null default '[]',
+      status text not null default 'draft' check (status in ('draft', 'published')),
+      sort_order integer not null default 0,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )`,
+    `create table if not exists placements (
+      slot text primary key,
+      artwork_id text not null references artworks(id) on delete cascade
+    )`,
+  ],
+  // 2. member accounts, guests, review workflow, AI disclosure and likes
+  [
+    `alter table users add column if not exists role text not null default 'member'`,
+    `alter table users add column if not exists display_name text not null default ''`,
+    `alter table users add column if not exists bio text not null default ''`,
+    // the only account before this migration was the bootstrap admin
+    `update users set role = 'admin' where id = (select min(id) from users) and not exists (select 1 from users where role = 'admin')`,
+    `update users set display_name = username where display_name = ''`,
+    `alter table artworks add column if not exists owner_id integer references users(id) on delete cascade`,
+    `update artworks set owner_id = (select min(id) from users where role = 'admin') where owner_id is null`,
+    `alter table artworks add column if not exists ai_usage text not null default 'unspecified'`,
+    `alter table artworks add column if not exists review_note text not null default ''`,
+    `alter table artworks drop constraint if exists artworks_status_check`,
+    `alter table artworks add constraint artworks_status_check check (status in ('draft', 'pending', 'published', 'rejected'))`,
+    `alter table artworks drop constraint if exists artworks_ai_usage_check`,
+    `alter table artworks add constraint artworks_ai_usage_check check (ai_usage in ('unspecified', 'none', 'assisted', 'generated'))`,
+    `alter table users drop constraint if exists users_role_check`,
+    `alter table users add constraint users_role_check check (role in ('admin', 'member', 'guest'))`,
+    `create table if not exists likes (
+      user_id integer not null references users(id) on delete cascade,
+      artwork_id text not null references artworks(id) on delete cascade,
+      created_at timestamptz not null default now(),
+      primary key (user_id, artwork_id)
+    )`,
+    `create index if not exists likes_artwork_idx on likes (artwork_id)`,
+    `create index if not exists artworks_owner_idx on artworks (owner_id)`,
+  ],
+  // 3. in-app notifications
+  [
+    `create table if not exists notifications (
+      id serial primary key,
+      user_id integer not null references users(id) on delete cascade,
+      type text not null,
+      artwork_id text references artworks(id) on delete cascade,
+      actor_id integer references users(id) on delete set null,
+      message text not null default '',
+      read_at timestamptz,
+      created_at timestamptz not null default now()
+    )`,
+    `create index if not exists notifications_user_idx on notifications (user_id, created_at desc)`,
+    // liking, unliking and liking again notifies the owner only once
+    `create unique index if not exists notifications_like_once on notifications (user_id, artwork_id, actor_id) where type = 'like'`,
+  ],
+];
 
 // Neon's Vercel integration names it DATABASE_URL; some setups use POSTGRES_URL.
 const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
@@ -63,29 +112,47 @@ const createDriver = async (): Promise<Query> => {
   return async (text, params = []) => (await db.query<Row>(text, params)).rows;
 };
 
-// The first admin comes from ADMIN_USERNAME / ADMIN_PASSWORD. Locally, without
-// those, a development-only account is created so the admin page works out of the box.
+const migrate = async (query: Query) => {
+  await query("create table if not exists schema_migrations (version integer primary key, applied_at timestamptz not null default now())");
+  const [{current}] = await query("select coalesce(max(version), 0)::int as current from schema_migrations");
+  for (let version = current + 1; version <= MIGRATIONS.length; version++) {
+    for (const statement of MIGRATIONS[version - 1]) await query(statement);
+    await query("insert into schema_migrations (version) values ($1) on conflict do nothing", [version]);
+    console.log(`[igallery] applied database migration ${version}`);
+  }
+};
+
+// The admin account comes from ADMIN_USERNAME / ADMIN_PASSWORD: created if missing,
+// and always kept an admin. Locally, without those, a development-only admin is created.
 const ensureAdmin = async (query: Query) => {
-  const [{count}] = await query("select count(*)::int as count from users");
-  if (count > 0) return;
   let username = process.env.ADMIN_USERNAME;
   let password = process.env.ADMIN_PASSWORD;
   if (!username || !password) {
     if (process.env.VERCEL) return;
     username = "admin";
     password = "igallery-dev";
-    console.warn(`[igallery] no ADMIN_USERNAME / ADMIN_PASSWORD set, created local account ${username} / ${password}`);
   }
-  await query("insert into users (username, password_hash) values ($1, $2)", [username, await hashPassword(password)]);
+  const [existing] = await query("select id from users where username = $1", [username]);
+  if (existing) {
+    await query("update users set role = 'admin' where id = $1 and role <> 'admin'", [existing.id]);
+    return;
+  }
+  const [{count}] = await query("select count(*)::int as count from users where role = 'admin'");
+  // only bootstrap when there is no admin yet; afterwards admins are managed in the app
+  if (count > 0) return;
+  await query(
+      "insert into users (username, password_hash, role, display_name) values ($1, $2, 'admin', $1)",
+      [username, await hashPassword(password)],
+  );
+  if (!process.env.ADMIN_USERNAME) console.warn(`[igallery] created local admin account ${username} / ${password}`);
 };
 
 let ready: Promise<Query> | null = null;
 
-// Connects, creates the tables if needed, and bootstraps the admin, once per instance.
+// Connects, migrates the schema, and bootstraps the admin, once per instance.
 const init = async () => {
   const query = await createDriver();
-  // both drivers take one statement per parameterised query call
-  for (const statement of SCHEMA.split(";").map((s) => s.trim()).filter(Boolean)) await query(statement);
+  await migrate(query);
   await ensureAdmin(query);
   return query;
 };

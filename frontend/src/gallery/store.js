@@ -1,5 +1,5 @@
 import {create} from "zustand";
-import {sampleExhibition, fetchExhibition} from "./exhibition";
+import {sampleExhibition, fetchExhibition, buildExhibition} from "./exhibition";
 
 const STORAGE_KEY = "igallery:preferences";
 // Only these keys survive a reload; everything else is session state.
@@ -66,6 +66,12 @@ export const useGalleryStore = create((set, get) => ({
   setOutfit: (partial) => set((state) => ({outfit: {...state.outfit, ...partial}})),
   setGraffiti: (partial) => set((state) => ({graffiti: {...state.graffiti, ...partial}})),
   setPhoto: (partial) => set((state) => ({photo: {...state.photo, ...partial}})),
+  // e.g. after a like, so every view of the artwork shows the new count
+  patchArtwork: (id, patch) => set((state) => {
+    const {artworks, placements, source} = state.exhibition;
+    const updated = artworks.map((artwork) => (artwork.id === id ? {...artwork, ...patch} : artwork));
+    return {exhibition: buildExhibition({artworks: updated, placements}, source)};
+  }),
   loadExhibition: async () => {
     try {
       const exhibition = await fetchExhibition();

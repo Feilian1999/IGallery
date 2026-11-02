@@ -108,6 +108,14 @@ const GalleryPage = () => {
     getGalleryState().loadExhibition();
   }, []);
 
+  // Music belongs to the gallery only: stop it on the way out. Coming back after the
+  // entrance has already been passed starts it again (the click that got us here counts
+  // as the user gesture browsers require for audio).
+  React.useEffect(() => {
+    if (getGalleryState().phase !== "gate") audio.start();
+    return () => audio.stop();
+  }, []);
+
   // development-only handle for poking at the scene from the console or browser tests
   React.useEffect(() => {
     if (process.env.NODE_ENV !== "development") return undefined;

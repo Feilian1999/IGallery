@@ -22,15 +22,25 @@ class AudioEngine {
     this.musicOn = true;
     this.volume = 0.6;
     this.rainOn = false;
-    this.timers = [];
+    // true while the gallery is open; nothing plays anywhere else on the site
+    this.active = false;
+    this.chordTimer = null;
+    this.melodyTimer = null;
   }
 
-  // Must be called from a user gesture handler.
+  // Must be called from a user gesture handler (or after one, on returning to the gallery).
   start() {
     if (this.context) {
+      if (this.active) return;
+      this.active = true;
       this.context.resume();
+      this.scheduleChords();
+      this.scheduleMelody();
+      this.setMusicOn(this.musicOn, 3);
+      this.setRain(this.rainOn);
       return;
     }
+    this.active = true;
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     if (!AudioContext) return;
     const context = new AudioContext();
@@ -63,8 +73,24 @@ class AudioEngine {
 
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) context.suspend();
-      else context.resume();
+      else if (this.active) context.resume();
     });
+  }
+
+  // Leaving the gallery: fade everything out and pause the audio engine.
+  stop() {
+    if (!this.context || !this.active) return;
+    this.active = false;
+    clearTimeout(this.chordTimer);
+    clearTimeout(this.melodyTimer);
+    const now = this.context.currentTime;
+    [this.music.gain, this.rainGain.gain].forEach((gain) => {
+      gain.cancelScheduledValues(now);
+      gain.setTargetAtTime(0, now, 0.1);
+    });
+    setTimeout(() => {
+      if (!this.active) this.context.suspend();
+    }, 500);
   }
 
   impulseResponse(seconds) {
@@ -91,7 +117,7 @@ class AudioEngine {
     const playNext = () => {
       this.playChord(CHORDS[index % CHORDS.length]);
       index++;
-      this.timers.push(setTimeout(playNext, CHORD_SECONDS * 1000));
+      this.chordTimer = setTimeout(playNext, CHORD_SECONDS * 1000);
     };
     playNext();
   }
@@ -134,9 +160,9 @@ class AudioEngine {
   scheduleMelody() {
     const playNext = () => {
       if (Math.random() < 0.75) this.bell(MELODY[Math.floor(Math.random() * MELODY.length)], 0.035, this.music);
-      this.timers.push(setTimeout(playNext, 1400 + Math.random() * 3200));
+      this.melodyTimer = setTimeout(playNext, 1400 + Math.random() * 3200);
     };
-    this.timers.push(setTimeout(playNext, 3000));
+    this.melodyTimer = setTimeout(playNext, 3000);
   }
 
   bell(note, level, destination = this.sfx) {
@@ -199,13 +225,13 @@ class AudioEngine {
 
   setRain(on) {
     this.rainOn = on;
-    if (!this.context) return;
+    if (!this.context || !this.active) return;
     this.rainGain.gain.setTargetAtTime(on ? 0.12 : 0, this.context.currentTime, 1.2);
   }
 
   setMusicOn(on, fadeSeconds = 1.5) {
     this.musicOn = on;
-    if (!this.context) return;
+    if (!this.context || !this.active) return;
     const now = this.context.currentTime;
     this.music.gain.cancelScheduledValues(now);
     this.music.gain.setValueAtTime(this.music.gain.value, now);

@@ -8,5 +8,12 @@
   "hotspotLabel": 40,
   "hotspotNote": 200,
   "maxUploadMB": 25,
-  "imageTypes": ["image/jpeg", "image/png", "image/webp"]
+  "imageTypes": [
+    "image/jpeg",
+    "image/png",
+    "image/webp"
+  ],
+  "displayName": 40,
+  "bio": 300,
+  "reviewNote": 300
 }

@@ -15,6 +15,7 @@ const sampleData = () => {
 export const buildExhibition = ({artworks, placements}, source) => ({
   source,
   artworks,
+  placements,
   byId: Object.fromEntries(artworks.map((artwork) => [artwork.id, artwork])),
   feature: artworks.find((artwork) => artwork.id === placements.feature) || null,
   rooms: buildRooms(artworks, placements),

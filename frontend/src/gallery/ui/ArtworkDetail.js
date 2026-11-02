@@ -6,7 +6,11 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import CenterFocusWeakIcon from "@mui/icons-material/CenterFocusWeak";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import {ROOM_INFO} from "../layout";
+import {AI_USAGE} from "../../shared/aiUsage";
+import {useSession, isMember, toggleLike} from "../../session";
 import {useGalleryStore} from "../store";
 
 const TABS = [
@@ -144,6 +148,14 @@ const Meta = ({artwork}) => (
     <dd>{artwork.author || EMPTY}</dd>
     <dt>角色</dt>
     <dd>{artwork.character || EMPTY}</dd>
+    <dt>AI</dt>
+    <dd>{AI_USAGE[artwork.aiUsage]?.name || AI_USAGE.unspecified.name}</dd>
+    {artwork.owner && (
+      <>
+        <dt>上傳者</dt>
+        <dd>{artwork.owner.displayName}</dd>
+      </>
+    )}
   </dl>
 );
 
@@ -174,6 +186,8 @@ const ArtworkDetail = () => {
   const roomId = useGalleryStore((state) => state.room);
   const set = useGalleryStore((state) => state.set);
   const markVisited = useGalleryStore((state) => state.markVisited);
+  const patchArtwork = useGalleryStore((state) => state.patchArtwork);
+  const {session} = useSession();
   const [tab, setTab] = React.useState("original");
   const [hotspot, setHotspot] = React.useState(null);
 
@@ -227,6 +241,22 @@ const ArtworkDetail = () => {
           ))}
         </div>
         <div className="detail__actions">
+          {artwork.owner && artwork.owner.id !== session?.user.id && (
+            <button
+              className={`detail__like${artwork.liked ? " detail__like--active" : ""}`}
+              title={isMember(session) ? "" : "註冊會員後就能按喜歡"}
+              onClick={async () => {
+                if (!isMember(session)) {
+                  window.location.hash = session ? "#me/profile" : "#login";
+                  return;
+                }
+                patchArtwork(artwork.id, await toggleLike(artwork));
+              }}
+            >
+              {artwork.liked ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
+              {artwork.likes}
+            </button>
+          )}
           <button className="icon-button" onClick={() => go(-1)} aria-label="上一件"><ChevronLeftIcon /></button>
           <button className="icon-button" onClick={() => go(1)} aria-label="下一件"><ChevronRightIcon /></button>
           <button className="icon-button" onClick={() => set({detailId: null})} aria-label="關閉"><CloseIcon /></button>
@@ -250,14 +280,20 @@ const ArtworkDetail = () => {
             <>
               <h2 className="detail__heading">描述</h2>
               <p className="detail__text">{artwork.description || EMPTY}</p>
-              <h2 className="detail__heading">細節熱點</h2>
-              <HotspotList artwork={artwork} active={null} onSelect={selectHotspot} />
+              {artwork.hotspots.length > 0 && (
+                <>
+                  <h2 className="detail__heading">細節熱點</h2>
+                  <HotspotList artwork={artwork} active={null} onSelect={selectHotspot} />
+                </>
+              )}
             </>
           )}
           {tab === "zoom" && (
             <>
               <h2 className="detail__heading">細節熱點</h2>
-              <HotspotList artwork={artwork} active={hotspot} onSelect={setHotspot} />
+              {artwork.hotspots.length ? (
+                <HotspotList artwork={artwork} active={hotspot} onSelect={setHotspot} />
+              ) : <p className="detail__placeholder">這件作品沒有標註細節熱點。</p>}
             </>
           )}
           {tab === "about" && (

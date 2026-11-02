@@ -1,6 +1,9 @@
 import * as React from "react";
 import PropTypes from "prop-types";
-import {api} from "./api";
+import {api} from "../api";
+import {useSession, isAdmin} from "../session";
+import {AI_USAGE, AI_CHOICES} from "../shared/aiUsage";
+import {STATUS} from "./ArtworkGrid";
 import limits from "../shared/artworkLimits.json";
 import {drawLabelCanvas, labelRows} from "../gallery/labelCanvas";
 import THEMES from "../gallery/themes";
@@ -12,7 +15,7 @@ const FIELDS = [
   {key: "description", name: "描述", multiline: 3},
   {key: "story", name: "作品背後的故事", multiline: 8},
 ];
-const EDITABLE = [...FIELDS.map((field) => field.key), "hotspots", "status"];
+const EDITABLE = [...FIELDS.map((field) => field.key), "hotspots", "aiUsage"];
 
 const pick = (artwork) => Object.fromEntries(EDITABLE.map((key) => [key, artwork[key]]));
 const clamp = (value) => Math.min(1, Math.max(0, value));
@@ -77,6 +80,7 @@ HotspotCanvas.propTypes = {
 };
 
 const ArtworkEditor = ({id}) => {
+  const {session, refresh} = useSession();
   const [artwork, setArtwork] = React.useState(null);
   const [draft, setDraft] = React.useState(null);
   const [selected, setSelected] = React.useState(null);
@@ -85,7 +89,7 @@ const ArtworkEditor = ({id}) => {
   const [savedAt, setSavedAt] = React.useState(null);
 
   React.useEffect(() => {
-    api(`/admin/artworks/${encodeURIComponent(id)}`)
+    api(`/me/artworks/${encodeURIComponent(id)}`)
         .then(({artwork}) => {
           setArtwork(artwork);
           setDraft(pick(artwork));
@@ -112,7 +116,7 @@ const ArtworkEditor = ({id}) => {
     return drawLabelCanvas({title: draft.title, rows: labelRows(draft), colors: THEMES.night.label}).toDataURL();
   }, [draft]);
 
-  if (error && !artwork) return <div className="admin-page"><div className="admin-error">{error}</div><a className="admin-link" href="#admin">← 回到作品列表</a></div>;
+  if (error && !artwork) return <div className="admin-page"><div className="admin-error">{error}</div><a className="admin-link" href="#me">← 回到我的作品</a></div>;
   if (!artwork || !draft) return <div className="admin-page"><div className="admin-spinner" /></div>;
 
   const set = (patch) => setDraft((current) => ({...current, ...patch}));
@@ -122,7 +126,9 @@ const ArtworkEditor = ({id}) => {
     setSaving(true);
     setError("");
     try {
-      const {artwork: updated} = await api(`/admin/artworks/${encodeURIComponent(id)}`, {method: "PATCH", body: draft});
+      // the API rejects "unspecified", so only send the label once one is chosen
+      const body = draft.aiUsage === "unspecified" ? {...draft, aiUsage: undefined} : draft;
+      const {artwork: updated} = await api(`/me/artworks/${encodeURIComponent(id)}`, {method: "PATCH", body});
       setArtwork(updated);
       setDraft(pick(updated));
       setSavedAt(new Date());
@@ -132,6 +138,22 @@ const ArtworkEditor = ({id}) => {
     setSaving(false);
   };
 
+  // submit / withdraw, saving any pending edits first
+  const transition = async (action) => {
+    if (dirty) await save();
+    setError("");
+    try {
+      const {artwork: updated} = await api(`/me/artworks/${encodeURIComponent(id)}/${action}`, {method: "POST"});
+      setArtwork(updated);
+      setDraft(pick(updated));
+      refresh();
+    } catch (failure) {
+      setError(failure.message);
+    }
+  };
+  const admin = isAdmin(session);
+  const mine = artwork.owner?.id === session.user.id;
+
   const leave = (event) => {
     if (dirty && !window.confirm("還有未儲存的修改，確定要離開嗎？")) event.preventDefault();
   };
@@ -140,20 +162,26 @@ const ArtworkEditor = ({id}) => {
     <div className="admin-page">
       <div className="admin-page__head">
         <div>
-          <a className="admin-link" href="#admin" onClick={leave}>← 作品列表</a>
+          <a className="admin-link" href={mine ? "#me" : "#admin/artworks"} onClick={leave}>← {mine ? "我的作品" : "所有作品"}</a>
           <h1 className="admin-title">{draft.title || "未命名"}</h1>
         </div>
         <div className="admin-actions">
-          <div className="admin-segmented">
-            {[["draft", "草稿"], ["published", "已發佈"]].map(([value, name]) => (
-              <button key={value} className={draft.status === value ? "admin-segmented--active" : ""} onClick={() => set({status: value})}>{name}</button>
-            ))}
-          </div>
+          <span className={`admin-status admin-status--${artwork.status} admin-status--inline`}>{STATUS[artwork.status]}</span>
+          {(artwork.status === "draft" || artwork.status === "rejected") && (
+            <button className="admin-button" onClick={() => transition("submit")}>{admin ? "公開" : "送出審核"}</button>
+          )}
+          {(artwork.status === "pending" || artwork.status === "published") && (
+            <button className="admin-button" onClick={() => transition("withdraw")}>{artwork.status === "pending" ? "撤回審核" : "下架"}</button>
+          )}
           <span className="admin-muted">{dirty ? "有未儲存的修改" : savedAt ? `已儲存 ${savedAt.toLocaleTimeString("zh-TW")}` : ""}</span>
           <button className="admin-button admin-button--primary" onClick={save} disabled={!dirty || saving}>{saving ? "儲存中…" : "儲存"}</button>
         </div>
       </div>
       {error && <div className="admin-error">{error}</div>}
+      {artwork.status === "rejected" && artwork.reviewNote && (
+        <div className="admin-review-note admin-review-note--banner">管理者退回了這件作品：{artwork.reviewNote}。修改後可以再次送出審核。</div>
+      )}
+      {artwork.status === "pending" && <div className="admin-notice admin-notice--inline">審核中，管理者核准後就會公開在首頁和畫廊。</div>}
       <div className="admin-editor">
         <HotspotCanvas
           artwork={artwork}
@@ -163,6 +191,17 @@ const ArtworkEditor = ({id}) => {
           onChange={(hotspots) => set({hotspots})}
         />
         <div className="admin-editor__form">
+          <div className="admin-ai">
+            <div className="admin-ai__label">AI 使用標註<em>必填</em></div>
+            <div className="admin-ai__choices">
+              {AI_CHOICES.map((choice) => (
+                <button key={choice} type="button" className={`admin-ai__choice${draft.aiUsage === choice ? " admin-ai__choice--active" : ""}`} onClick={() => set({aiUsage: choice})}>
+                  <strong>{AI_USAGE[choice].name}</strong>
+                  <span>{AI_USAGE[choice].hint}</span>
+                </button>
+              ))}
+            </div>
+          </div>
           {FIELDS.map((field) => {
             const Input = field.multiline ? "textarea" : "input";
             const value = draft[field.key] || "";

@@ -14,9 +14,10 @@ import MenuItem from "@mui/material/MenuItem";
 import AdbIcon from "@mui/icons-material/Adb";
 import ColorModeContext from "../themes/ToggleContext";
 import WbSunnyIcon from "@mui/icons-material/WbSunny";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import Badge from "@mui/material/Badge";
+import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
+import {useSession, isAdmin} from "../session";
 const pages = [{label: "Home", href: "#"}, {label: "3D Gallery", href: "#gallery"}];
-const settings = ["Profile", "Account", "Dashboard", "Logout"];
 
 /**
  * @return {AppBar} app bar
@@ -25,6 +26,7 @@ const ResponsiveAppBar=()=> {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
   const colorMode = React.useContext(ColorModeContext);
+  const {session, logout} = useSession();
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
   };
@@ -39,6 +41,14 @@ const ResponsiveAppBar=()=> {
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
+
+  // what the signed-in user can open from their avatar
+  const userMenu = session ? [
+    {label: "Dashboard", href: "#me"},
+    {label: "Profile", href: "#me/profile"},
+    ...(isAdmin(session) ? [{label: `審核${session.pendingReviews ? `（${session.pendingReviews}）` : ""}`, href: "#admin/review"}] : []),
+    {label: "Logout", onClick: logout},
+  ] : [];
 
 
   return (
@@ -113,20 +123,27 @@ const ResponsiveAppBar=()=> {
               </Button>
             ))}
           </Box>
-          <Tooltip title="管理作品">
-            <IconButton href="#admin" sx={{marginRight: 2}} aria-label="管理作品">
-              <AdminPanelSettingsIcon/>
-            </IconButton>
-          </Tooltip>
           <IconButton onClick={colorMode.toggleColorMode} sx={{marginRight: 2}}>
             <WbSunnyIcon/>
           </IconButton>
 
 
-          <Box sx={{flexGrow: 0}}>
-            <Tooltip title="Open settings">
-              <IconButton onClick={handleOpenUserMenu} sx={{p: 0}}>
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+          {session === null && (
+            <Button href="#login" variant="outlined" color="inherit">登入</Button>
+          )}
+          {session && (
+            <Tooltip title="通知">
+              <IconButton href="#me/notifications" sx={{marginRight: 2, color: "inherit"}} aria-label="通知">
+                <Badge badgeContent={session.unreadNotifications} color="error" max={99}>
+                  <NotificationsNoneIcon />
+                </Badge>
+              </IconButton>
+            </Tooltip>
+          )}
+          {session && <Box sx={{flexGrow: 0}}>
+            <Tooltip title={session.user.displayName}>
+              <IconButton onClick={handleOpenUserMenu} sx={{p: 0}} aria-label="帳號選單">
+                <Avatar sx={{bgcolor: "secondary.main"}}>{session.user.displayName.slice(0, 1)}</Avatar>
               </IconButton>
             </Tooltip>
 
@@ -146,13 +163,21 @@ const ResponsiveAppBar=()=> {
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
             >
-              {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                  <Typography textAlign="center">{setting}</Typography>
+              {userMenu.map((item) => (
+                <MenuItem
+                  key={item.label}
+                  component={item.href ? "a" : "li"}
+                  href={item.href}
+                  onClick={() => {
+                    handleCloseUserMenu();
+                    if (item.onClick) item.onClick();
+                  }}
+                >
+                  <Typography textAlign="center">{item.label}</Typography>
                 </MenuItem>
               ))}
             </Menu>
-          </Box>
+          </Box>}
         </Toolbar>
       </Container>
     </AppBar>

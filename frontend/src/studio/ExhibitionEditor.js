@@ -1,5 +1,5 @@
 import * as React from "react";
-import {api} from "./api";
+import {api} from "../api";
 import slots from "../shared/exhibitionSlots.json";
 import {BOUNDARY, PARTITIONS, PLATFORM, SLOT_PLACEMENTS, SOUTH_WALL} from "../gallery/layout/mainHall";
 import {MAX_PIECES} from "../gallery/layout/annex";

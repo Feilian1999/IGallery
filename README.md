@@ -23,7 +23,7 @@ npm run dev
 
 - 網站：http://localhost:3000
 - 3D 畫廊：http://localhost:3000/#gallery
-- 管理頁：http://localhost:3000/#admin（本機預設帳號 `admin`／`igallery-dev`）
+- 登入／工作室：http://localhost:3000/#login（本機預設管理者 `admin`／`igallery-dev`）
 
 第一次啟動會自動匯入 `public/artworks/` 裡的 7 件範例作品。想重來的話，刪掉 `frontend/.data/` 再啟動即可。
 
@@ -51,19 +51,42 @@ npm run dev
 
 完整的環境變數說明見 [`frontend/.env.example`](frontend/.env.example)。
 
+## 帳號與權限
+
+| 角色 | 可以做什麼 |
+|---|---|
+| 訪客 | 從登入頁一鍵進入，有自己的 dashboard 與 profile，只能瀏覽；可以隨時升級成會員（同一個帳號） |
+| 會員 | 註冊帳號＋密碼；上傳作品（必須標註是否使用 AI）、編輯、送出審核、對別人的作品按喜歡 |
+| 管理者 | 會員的所有功能，加上審核、所有作品排序、展場配置、使用者管理（改角色、重設密碼、刪除） |
+
+第一個管理者由 `ADMIN_USERNAME`／`ADMIN_PASSWORD` 建立，之後可以在「使用者」頁把會員設為管理者。會員忘記密碼時由管理者重設。
+
+作品狀態：草稿 → 送審（審核中）→ 管理者核准（已公開）或退回（附原因，修改後可再送審）。只有已公開的作品會出現在首頁、排行與畫廊。
+
 ## API
 
-| 方法 | 路徑 | 說明 |
-|---|---|---|
-| GET | `/api/artworks` | 已發佈的作品 |
-| GET | `/api/artworks/:id` | 單一已發佈作品 |
-| GET | `/api/exhibition` | 3D 畫廊用：已發佈作品與展位配置 |
-| POST | `/api/auth/login`、`/api/auth/logout` | 登入、登出（HttpOnly cookie） |
-| GET | `/api/auth/me` | 目前登入的管理者 |
-| GET／POST | `/api/admin/artworks` | 所有作品（含草稿）／新增作品 |
-| GET／PATCH／DELETE | `/api/admin/artworks/:id` | 讀取／修改／刪除作品（連同圖片檔） |
-| PUT | `/api/admin/artworks/order` | 調整排序 |
-| GET／PUT | `/api/admin/exhibition` | 讀取／儲存展位配置 |
-| POST | `/api/admin/blob` | 核發 Vercel Blob 的瀏覽器直傳授權 |
+| 方法 | 路徑 | 權限 | 說明 |
+|---|---|---|---|
+| GET | `/api/artworks`、`/api/artworks/:id` | 公開 | 已公開的作品（含上傳者、AI 標註、喜歡數） |
+| POST／DELETE | `/api/artworks/:id/like` | 會員 | 喜歡／取消喜歡（不能對自己的作品） |
+| GET | `/api/artists/ranking` | 公開 | 依作品收到的喜歡數排名 |
+| GET | `/api/exhibition` | 公開 | 3D 畫廊用：已公開作品與展位配置 |
+| POST | `/api/auth/register`、`login`、`guest`、`logout` | 公開 | 註冊、登入、訪客進入、登出（HttpOnly cookie） |
+| GET | `/api/auth/me` | 登入 | 目前的使用者 |
+| POST | `/api/auth/upgrade` | 訪客 | 升級成會員 |
+| PUT | `/api/auth/password` | 會員 | 變更密碼 |
+| PATCH | `/api/me/profile` | 登入 | 顯示名稱、自我介紹 |
+| GET | `/api/me/dashboard` | 登入 | 自己的作品統計 |
+| GET | `/api/me/notifications`、`/api/me/notifications/unread` | 登入 | 通知列表／未讀數（前端每分鐘輪詢） |
+| POST | `/api/me/notifications/read` | 登入 | 標為已讀（帶 `ids` 只標指定的，不帶就全部） |
+| GET／POST | `/api/me/artworks` | 會員 | 自己的作品／新增作品 |
+| GET／PATCH／DELETE | `/api/me/artworks/:id` | 擁有者或管理者 | 讀取／修改／刪除 |
+| POST | `/api/me/artworks/:id/submit`、`withdraw` | 擁有者 | 送審／撤回（管理者送出即公開） |
+| POST | `/api/uploads/blob`、`/api/uploads/local` | 會員 | 圖片上傳授權（正式環境）／本機上傳 |
+| GET／PATCH／DELETE | `/api/admin/artworks[/:id]` | 管理者 | 所有作品 |
+| POST | `/api/admin/artworks/:id/approve`、`reject` | 管理者 | 核准／退回 |
+| PUT | `/api/admin/artworks/order` | 管理者 | 排序 |
+| GET／PUT | `/api/admin/exhibition` | 管理者 | 展位配置 |
+| GET／PATCH／DELETE | `/api/admin/users[/:id]`、POST `/:id/password` | 管理者 | 使用者管理 |
 
-管理 API 需要登入，而且所有修改請求都必須帶 `x-igallery: 1` 標頭（防 CSRF）。欄位長度等限制放在 `src/shared/artworkLimits.json`，前端表單和後端驗證共用同一份。
+所有修改請求都必須是 JSON 並帶 `x-igallery: 1` 標頭（防 CSRF）。資料庫結構變更寫在 `api/_lib/db.ts` 的 `MIGRATIONS`，部署後第一次呼叫 API 時自動套用。欄位長度等限制放在 `src/shared/artworkLimits.json`，前端表單和後端驗證共用同一份。

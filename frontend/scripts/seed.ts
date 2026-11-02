@@ -9,9 +9,13 @@ import {insertArtwork, setPlacements} from "../api/_lib/artworks";
 export const seedIfEmpty = async () => {
   const [{count}] = await query("select count(*)::int as count from artworks");
   if (count > 0) return false;
+  // the samples belong to the first admin
+  const [admin] = await query("select id from users where role = 'admin' order by id limit 1");
+  if (!admin) throw new Error("no admin account to own the sample artworks; set ADMIN_USERNAME / ADMIN_PASSWORD");
   const placements: Record<string, string> = {};
   for (const item of sample.artworks) {
-    const artwork = await insertArtwork({...item, status: "published"});
+    // AI use is unknown for these, so they stay "unspecified" (shown as 未標註)
+    const artwork = await insertArtwork({...item, ownerId: admin.id, status: "published"});
     placements[item.slot] = artwork.id;
     if (item.featured) placements.feature = artwork.id;
   }

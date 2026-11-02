@@ -721,6 +721,27 @@
   gap: 6px;
 }
 
+.detail__like {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  margin-right: 8px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--g-border);
+  background: var(--g-surface);
+  color: var(--g-text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.detail__like--active {
+  color: #ff6b81;
+  border-color: rgba(255, 107, 129, 0.5);
+}
+
 .detail__body {
   display: grid;
   grid-template-columns: 1fr 380px;

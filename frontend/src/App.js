@@ -5,10 +5,11 @@ import HomePage from "./pages/HomePage";
 import Footer from "./layout/Footer";
 import {ThemeProvider, createTheme} from "@mui/material/styles";
 import ColorModeContext from "./themes/ToggleContext";
+import {SessionProvider} from "./session";
 
 // three.js and the whole 3D gallery are only downloaded when someone opens it
 const GalleryPage = React.lazy(() => import("./pages/GalleryPage"));
-const AdminApp = React.lazy(() => import("./admin/AdminApp"));
+const StudioApp = React.lazy(() => import("./studio/StudioApp"));
 
 
 const getDesignTokens = (mode) => ({
@@ -91,21 +92,24 @@ const App=()=> {
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
   const isGallery = hash === "#gallery";
-  const isAdmin = hash.startsWith("#admin");
+  // the studio: login, the member dashboard and profile, and the admin pages
+  const isStudio = /^#(login|me|admin)\b/.test(hash);
 
   return (
-    <ColorModeContext.Provider value={colorMode}>
-      <ThemeProvider theme={theme}>
-        <div className="App">
-          {/* the gallery is full screen with its own controls */}
-          {isGallery || isAdmin ? (
-            <React.Suspense fallback={<div style={{position: "fixed", inset: 0, background: "#050505"}} />}>
-              {isGallery ? <GalleryPage/> : <AdminApp/>}
-            </React.Suspense>
-          ) : <><ResponsiveAppBar /><HomePage/><Footer/></>}
-        </div>
-      </ThemeProvider>
-    </ColorModeContext.Provider>
+    <SessionProvider>
+      <ColorModeContext.Provider value={colorMode}>
+        <ThemeProvider theme={theme}>
+          <div className="App">
+            {/* the gallery is full screen with its own controls */}
+            {isGallery || isStudio ? (
+              <React.Suspense fallback={<div style={{position: "fixed", inset: 0, background: "#050505"}} />}>
+                {isGallery ? <GalleryPage/> : <StudioApp/>}
+              </React.Suspense>
+            ) : <><ResponsiveAppBar /><HomePage/><Footer/></>}
+          </div>
+        </ThemeProvider>
+      </ColorModeContext.Provider>
+    </SessionProvider>
   );
 };
 

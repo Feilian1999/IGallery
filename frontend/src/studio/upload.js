@@ -1,5 +1,5 @@
 import limits from "../shared/artworkLimits.json";
-import {api, ApiError, CSRF_HEADERS} from "./api";
+import {api, ApiError, CSRF_HEADERS} from "../api";
 
 // Images are resized in the browser before upload: a large version for viewing
 // and a small preview for the gallery and lists. Production uploads go straight
@@ -24,7 +24,7 @@ const toJpeg = (bitmap, maxSize, quality) => new Promise((resolve, reject) => {
 
 const sendLocal = (blob, onProgress) => new Promise((resolve, reject) => {
   const request = new XMLHttpRequest();
-  request.open("POST", "/api/admin/uploads/local");
+  request.open("POST", "/api/uploads/local");
   Object.entries({...CSRF_HEADERS, "content-type": blob.type}).forEach(([key, value]) => request.setRequestHeader(key, value));
   request.upload.onprogress = (event) => event.lengthComputable && onProgress(event.loaded / event.total);
   request.onload = () => {
@@ -43,7 +43,7 @@ const sendToBlob = async (blob, name, blobAuth, onProgress) => {
   const result = await send(`artworks/${name}`, blob, {
     access: "public",
     contentType: blob.type,
-    handleUploadUrl: "/api/admin/blob",
+    handleUploadUrl: "/api/uploads/blob",
     headers: CSRF_HEADERS,
     onUploadProgress: ({percentage}) => onProgress(percentage / 100),
   });
@@ -56,9 +56,10 @@ export const checkFile = (file) => {
   return null;
 };
 
-// Resizes, uploads both versions, and registers the artwork as a draft.
-// `session` is the /api/auth/me response, which says how uploads are stored.
-export const uploadArtwork = async (file, session, onProgress) => {
+// Resizes, uploads both versions, and registers the artwork as a draft owned by the uploader.
+// `session` is the /api/auth/me response, which says how uploads are stored;
+// `aiUsage` is the uploader's AI disclosure for this file.
+export const uploadArtwork = async (file, session, aiUsage, onProgress) => {
   const problem = checkFile(file);
   if (problem) throw new Error(problem);
   const bitmap = await createImageBitmap(file);
@@ -72,9 +73,9 @@ export const uploadArtwork = async (file, session, onProgress) => {
   const previewUrl = await send(preview.blob, `${id}-preview.jpg`, (p) => onProgress(0.85 + p * 0.15));
 
   const title = file.name.replace(/\.[^.]+$/, "").slice(0, limits.title);
-  const {artwork} = await api("/admin/artworks", {
+  const {artwork} = await api("/me/artworks", {
     method: "POST",
-    body: {imageUrl, previewUrl, width: large.width, height: large.height, title},
+    body: {imageUrl, previewUrl, width: large.width, height: large.height, title, aiUsage},
   });
   return artwork;
 };
