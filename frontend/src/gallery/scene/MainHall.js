@@ -3,7 +3,7 @@ import * as React from "react";
 import * as THREE from "three";
 import {useFrame} from "@react-three/fiber";
 import THEMES, {SEASONS} from "../themes";
-import {PLATFORM, PORTAL} from "../layout/mainHall";
+import {PLATFORM, PORTAL, FESTIVAL_PORTAL} from "../layout/mainHall";
 import {useGalleryStore} from "../store";
 import Painting from "./Painting";
 import Portal from "./Portal";
@@ -63,6 +63,7 @@ const MainHall = () => {
         </React.Suspense>
       )}
       <Portal placement={PORTAL} colors={["#3b2a7a", "#7fd8ff"]} label="→ 懸浮展廳" />
+      <Portal placement={FESTIVAL_PORTAL} colors={["#7a2a3b", "#ffb36b"]} label="→ 夏日祭典" />
       <GraffitiWall />
       <Ball />
       <Outdoors />

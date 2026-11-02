@@ -60,8 +60,8 @@ export const COLLIDERS = {
 };
 
 export const INTERACTABLES = [
-  // arrive just inside the main hall's south door, where the visitor left
-  {id: "portal", type: "portal", position: viewingSpot(PORTAL, 1.2), radius: 1.6, label: "回到主展廳", target: "main", arrival: {position: [3, 7.6], heading: Math.PI}},
+  // arrive in front of the main hall's festival portal, where the visitor left
+  {id: "portal", type: "portal", position: viewingSpot(PORTAL, 1.2), radius: 1.6, label: "回到主展廳", target: "main", arrival: {position: [-0.75, 7.6], heading: Math.PI}},
 ];
 
 export const BOUNDS = {minX: SQUARE.minX, maxX: SQUARE.maxX, minZ: SQUARE.minZ, maxZ: SQUARE.maxZ};

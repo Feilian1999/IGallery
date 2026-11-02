@@ -37,7 +37,7 @@ const MainHallPlan = ({id}) => {
       {/* window and door openings in the south wall */}
       <line x1={mainHall.SOUTH_WALL.window.from} y1="10" x2={mainHall.SOUTH_WALL.window.to} y2="10" stroke="#9fd2ff" strokeWidth="0.32" strokeLinecap="round" strokeOpacity="0.8" />
       <line x1={mainHall.SOUTH_WALL.door.from} y1="10" x2={mainHall.SOUTH_WALL.door.to} y2="10" stroke="#15131a" strokeWidth="0.4" />
-      <text x={(mainHall.SOUTH_WALL.door.from + mainHall.SOUTH_WALL.door.to) / 2} y="11.4" className="map-svg__note" textAnchor="middle">大門・往夏日祭典</text>
+      <text x={(mainHall.SOUTH_WALL.door.from + mainHall.SOUTH_WALL.door.to) / 2} y="11.4" className="map-svg__note" textAnchor="middle">入口</text>
       {mainHall.PARTITIONS.map((partition, i) => (
         <line key={i} x1={partition.start[0]} y1={partition.start[1]} x2={partition.end[0]} y2={partition.end[1]}
           stroke="#f2ede4" strokeOpacity="0.75" strokeWidth="0.26" strokeLinecap="round" filter={`url(#${id}-ink)`} />
@@ -52,6 +52,11 @@ const MainHallPlan = ({id}) => {
         <circle r="1.1" fill="#7fd8ff" fillOpacity="0.18" filter={`url(#${id}-glow)`} />
         <circle r="0.5" fill="none" stroke="#7fd8ff" strokeWidth="0.12" />
         <text y="1.9" className="map-svg__note" textAnchor="middle">傳送門</text>
+      </g>
+      <g transform={`translate(${mainHall.FESTIVAL_PORTAL.position[0]} ${mainHall.FESTIVAL_PORTAL.position[2]})`}>
+        <circle r="1.1" fill="#ffb36b" fillOpacity="0.2" filter={`url(#${id}-glow)`} />
+        <circle r="0.5" fill="none" stroke="#ffb36b" strokeWidth="0.12" />
+        <text y="-1.3" className="map-svg__note" textAnchor="middle">往夏日祭典</text>
       </g>
       <g transform={`translate(${mainHall.GRAFFITI.position[0]} ${mainHall.GRAFFITI.position[2]}) rotate(${(-mainHall.GRAFFITI.rotationY * 180) / Math.PI})`}>
         {["#ff5a5f", "#f2c94c", "#5aa9e6", "#7bc47f"].map((color, i) => (

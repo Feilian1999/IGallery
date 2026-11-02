@@ -20,9 +20,12 @@ export const buildRooms = (artworks, placements) => {
   const mainArtworks = slots.main
       .filter((slot) => byId[placements[slot.id]])
       .map((slot) => entry(byId[placements[slot.id]], mainHall.SLOT_PLACEMENTS[slot.id]));
+  // until an admin arranges the festival, it shows the published works in order
+  const arranged = slots.festival.some((slot) => byId[placements[slot.id]]);
   const festivalArtworks = slots.festival
-      .filter((slot) => byId[placements[slot.id]])
-      .map((slot) => entry(byId[placements[slot.id]], festival.SLOT_PLACEMENTS[slot.id]));
+      .map((slot, i) => [slot, arranged ? byId[placements[slot.id]] : artworks[i]])
+      .filter(([, artwork]) => artwork)
+      .map(([slot, artwork]) => entry(artwork, festival.SLOT_PLACEMENTS[slot.id]));
   const ring = annex.ringPlacements(artworks.length);
   return {
     main: {
