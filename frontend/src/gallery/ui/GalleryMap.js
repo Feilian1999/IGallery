@@ -2,7 +2,7 @@
 import * as React from "react";
 import PropTypes from "prop-types";
 import CloseIcon from "@mui/icons-material/Close";
-import {ROOMS} from "../layout";
+import {ROOM_INFO} from "../layout";
 import * as mainHall from "../layout/mainHall";
 import * as annex from "../layout/annex";
 import {runtime} from "../runtime";
@@ -83,7 +83,7 @@ export const MapSvg = ({roomId, interactive, showTitles}) => {
   const player = React.useRef();
   const trail = React.useRef();
   const view = VIEW[roomId];
-  const room = ROOMS[roomId];
+  const room = useGalleryStore((state) => state.exhibition.rooms[roomId]);
   const here = currentRoom === roomId;
 
   // move the player marker and redraw the trail outside React, a few times a second
@@ -216,10 +216,14 @@ const GalleryMap = () => {
     if (open) setRoomId(currentRoom);
   }, [open, currentRoom]);
 
+  const rooms = useGalleryStore((state) => state.exhibition.rooms);
+  const artworks = useGalleryStore((state) => state.exhibition.artworks);
+
+  // hooks must all run before this early return
   if (!open) return null;
-  const room = ROOMS[roomId];
-  const total = ROOMS.main.artworks.length;
-  const seen = ROOMS.main.artworks.filter(({artwork}) => visited.includes(artwork.id)).length;
+  const room = rooms[roomId];
+  const total = artworks.length;
+  const seen = artworks.filter((artwork) => visited.includes(artwork.id)).length;
 
   return (
     <div className="map-overlay" onClick={() => set({mapOpen: false})}>
@@ -233,7 +237,7 @@ const GalleryMap = () => {
             <div className="map-card__title">導覽地圖</div>
           </div>
           <div className="map-tabs">
-            {Object.values(ROOMS).map((item) => (
+            {Object.values(ROOM_INFO).map((item) => (
               <button key={item.id} className={`map-tab${item.id === roomId ? " map-tab--active" : ""}`} onClick={() => setRoomId(item.id)}>
                 {item.name}
               </button>

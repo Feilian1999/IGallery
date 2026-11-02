@@ -61,7 +61,8 @@ const onArc = (angle) => {
   return {...placeOn(point, normalize([-Math.sin(angle), Math.cos(angle)]), 0), labelDepth: 0.26};
 };
 
-export const ARTWORK_PLACEMENTS = {
+// Where each wall slot is. Which artwork hangs in a slot is decided in the admin page.
+export const SLOT_PLACEMENTS = {
   n1: onArc(-0.42),
   n2: onArc(0),
   n3: onArc(0.42),

@@ -1,10 +1,8 @@
-/* eslint-disable react/no-unknown-property */
+/* eslint-disable react/no-unknown-property, react/prop-types */
 import * as React from "react";
 import * as THREE from "three";
 import {useFrame} from "@react-three/fiber";
 import THEMES, {SEASONS} from "../themes";
-import ARTWORKS from "../artworks";
-import {ROOMS} from "../layout";
 import {PLATFORM, PORTAL} from "../layout/mainHall";
 import {useGalleryStore} from "../store";
 import Painting from "./Painting";
@@ -14,14 +12,13 @@ import Ball from "./Ball";
 import Outdoors from "./Outdoors";
 import {Floor, Ceiling, PerimeterWalls, SouthWall, WindowLight, Partitions, Benches, Platform} from "./Architecture";
 
-const FEATURED = ARTWORKS.find((artwork) => artwork.featured) || ARTWORKS[0];
 const FLOAT_HEIGHT = 2.35;
 const FEATURE_ANCHOR = [PLATFORM.center[0], FLOAT_HEIGHT, PLATFORM.center[1]];
 const FEATURE_PLACEMENT = {position: [0, 0, 0], rotationY: 0};
 
 // The featured piece hovers and slowly turns above the central platform.
 // It stops animating while it is off screen.
-const FloatingFeature = () => {
+const FloatingFeature = ({artwork}) => {
   const group = React.useRef();
   const frustum = React.useMemo(() => new THREE.Frustum(), []);
   const matrix = React.useMemo(() => new THREE.Matrix4(), []);
@@ -36,7 +33,7 @@ const FloatingFeature = () => {
   });
   return (
     <group ref={group} position={FEATURE_ANCHOR}>
-      <Painting artwork={FEATURED} placement={FEATURE_PLACEMENT} anchor={FEATURE_ANCHOR} floating />
+      <Painting artwork={artwork} placement={FEATURE_PLACEMENT} anchor={FEATURE_ANCHOR} floating />
     </group>
   );
 };
@@ -47,7 +44,8 @@ const MainHall = () => {
   const weather = useGalleryStore((state) => state.weather);
   const quality = useGalleryStore((state) => state.resolvedQuality());
   const theme = THEMES[themeId];
-  const room = ROOMS.main;
+  const room = useGalleryStore((state) => state.exhibition.rooms.main);
+  const feature = useGalleryStore((state) => state.exhibition.feature);
 
   return (
     <group>
@@ -59,7 +57,11 @@ const MainHall = () => {
       <Partitions theme={theme} />
       <Benches themeId={themeId} />
       <Platform theme={theme} />
-      <FloatingFeature />
+      {feature && (
+        <React.Suspense fallback={null}>
+          <FloatingFeature artwork={feature} />
+        </React.Suspense>
+      )}
       <Portal placement={PORTAL} colors={["#3b2a7a", "#7fd8ff"]} label="→ 懸浮展廳" />
       <GraffitiWall />
       <Ball />

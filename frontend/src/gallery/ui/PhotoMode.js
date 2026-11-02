@@ -1,7 +1,7 @@
 import * as React from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
-import {ROOMS} from "../layout";
+import {ROOM_INFO} from "../layout";
 import {EMOTES} from "../outfits";
 import {runtime} from "../runtime";
 import {useGalleryStore} from "../store";
@@ -68,7 +68,7 @@ const PhotoMode = () => {
 
   const shoot = () => {
     audio.shutter();
-    setResult(capture(photo.filter, photo.frame, ROOMS[roomId].name));
+    setResult(capture(photo.filter, photo.frame, ROOM_INFO[roomId].name));
     setFlash((n) => n + 1);
   };
 

@@ -8,6 +8,7 @@ import ColorModeContext from "./themes/ToggleContext";
 
 // three.js and the whole 3D gallery are only downloaded when someone opens it
 const GalleryPage = React.lazy(() => import("./pages/GalleryPage"));
+const AdminApp = React.lazy(() => import("./admin/AdminApp"));
 
 
 const getDesignTokens = (mode) => ({
@@ -90,15 +91,16 @@ const App=()=> {
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
   const isGallery = hash === "#gallery";
+  const isAdmin = hash.startsWith("#admin");
 
   return (
     <ColorModeContext.Provider value={colorMode}>
       <ThemeProvider theme={theme}>
         <div className="App">
           {/* the gallery is full screen with its own controls */}
-          {isGallery ? (
+          {isGallery || isAdmin ? (
             <React.Suspense fallback={<div style={{position: "fixed", inset: 0, background: "#050505"}} />}>
-              <GalleryPage/>
+              {isGallery ? <GalleryPage/> : <AdminApp/>}
             </React.Suspense>
           ) : <><ResponsiveAppBar /><HomePage/><Footer/></>}
         </div>

@@ -32,7 +32,7 @@ const usePaintingTexture = (artwork, anchor) => {
     const near = Math.hypot(runtime.player.position.x - anchor[0], runtime.player.position.z - anchor[2]) < SHARP_DISTANCE;
     if (!near && getGalleryState().detailId !== artwork.id) return;
     requested.current = true;
-    textureLoader.load(artwork.url, (texture) => {
+    textureLoader.load(artwork.imageUrl, (texture) => {
       texture.colorSpace = THREE.SRGBColorSpace;
       texture.anisotropy = 8;
       setSharp(texture);

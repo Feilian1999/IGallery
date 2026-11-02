@@ -40,9 +40,6 @@ const ResponsiveAppBar=()=> {
     setAnchorElUser(null);
   };
 
-  const getAuthToken = () => {
-    window.location.href = "https://api.instagram.com/oauth/authorize?client_id=226106916475206&redirect_uri=https://zx123497.github.io/IGallery/&scope=user_profile,user_media&response_type=code";
-  };
 
   return (
     <AppBar position="static">
@@ -116,9 +113,11 @@ const ResponsiveAppBar=()=> {
               </Button>
             ))}
           </Box>
-          <IconButton onClick={getAuthToken} sx={{marginRight: 2}}>
-            <AdminPanelSettingsIcon/>
-          </IconButton>
+          <Tooltip title="管理作品">
+            <IconButton href="#admin" sx={{marginRight: 2}} aria-label="管理作品">
+              <AdminPanelSettingsIcon/>
+            </IconButton>
+          </Tooltip>
           <IconButton onClick={colorMode.toggleColorMode} sx={{marginRight: 2}}>
             <WbSunnyIcon/>
           </IconButton>

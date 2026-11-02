@@ -1,4 +1,5 @@
 import {create} from "zustand";
+import {sampleExhibition, fetchExhibition} from "./exhibition";
 
 const STORAGE_KEY = "igallery:preferences";
 // Only these keys survive a reload; everything else is session state.
@@ -51,6 +52,8 @@ export const useGalleryStore = create((set, get) => ({
   graffitiClearToken: 0,
 
   photo: {filter: "none", depthOfField: true, frame: false},
+  // artworks and rooms; starts with the bundled samples until the API answers
+  exhibition: sampleExhibition(),
   ...preferences,
 
   resolvedQuality: () => {
@@ -63,6 +66,15 @@ export const useGalleryStore = create((set, get) => ({
   setOutfit: (partial) => set((state) => ({outfit: {...state.outfit, ...partial}})),
   setGraffiti: (partial) => set((state) => ({graffiti: {...state.graffiti, ...partial}})),
   setPhoto: (partial) => set((state) => ({photo: {...state.photo, ...partial}})),
+  loadExhibition: async () => {
+    try {
+      const exhibition = await fetchExhibition();
+      // an empty exhibition would leave the rooms bare; keep the samples instead
+      if (exhibition.artworks.length) set({exhibition});
+    } catch (error) {
+      console.warn("[igallery] showing sample artworks, the API is unavailable:", error.message);
+    }
+  },
 }));
 
 useGalleryStore.subscribe((state) => {

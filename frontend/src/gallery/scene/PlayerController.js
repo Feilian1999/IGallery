@@ -4,7 +4,6 @@ import {useFrame, useThree} from "@react-three/fiber";
 import {useKeyboardControls} from "@react-three/drei";
 import {runtime, markActive} from "../runtime";
 import {getGalleryState} from "../store";
-import {ROOMS} from "../layout";
 import {GRAFFITI, WALL_HEIGHT} from "../layout/mainHall";
 import {resolveCircle} from "../collision";
 import {enterPortal, openDetail} from "../actions";
@@ -72,7 +71,7 @@ const PlayerController = () => {
   };
 
   React.useEffect(() => {
-    const room = ROOMS[getGalleryState().room];
+    const room = getGalleryState().exhibition.rooms[getGalleryState().room];
     placeAt(room.spawn.position, room.spawn.heading);
   }, []);
 
@@ -92,7 +91,7 @@ const PlayerController = () => {
     const dt = Math.min(delta, 0.1);
     const now = performance.now();
     const state = getGalleryState();
-    const room = ROOMS[state.room];
+    const room = state.exhibition.rooms[state.room];
     const player = runtime.player;
     const l = local.current;
 

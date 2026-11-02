@@ -1,7 +1,6 @@
 // Imperative actions shared by the keyboard handler, the overlay UI and the scene.
 import {runtime, markActive} from "./runtime";
 import {getGalleryState} from "./store";
-import {ROOMS} from "./layout";
 import audio from "./audio/AudioEngine";
 
 const FADE_MS = 380;
@@ -43,7 +42,7 @@ export const fadeTransition = (label, midway, kind = "fade") => {
 const headingToward = (normal) => Math.atan2(-normal[0], -normal[1]);
 
 export const travelToArtwork = (roomId, artworkId) => {
-  const entry = ROOMS[roomId].artworks.find((item) => item.artwork.id === artworkId);
+  const entry = getGalleryState().exhibition.rooms[roomId].artworks.find((item) => item.artwork.id === artworkId);
   if (!entry) return;
   getGalleryState().set({mapOpen: false});
   fadeTransition(entry.artwork.title, () => {
@@ -57,10 +56,11 @@ export const travelToArtwork = (roomId, artworkId) => {
 export const enterPortal = (target) => {
   if (getGalleryState().transition) return;
   audio.whoosh();
-  fadeTransition(ROOMS[target].name, () => {
+  const {name, spawn} = getGalleryState().exhibition.rooms[target];
+  fadeTransition(name, () => {
     getGalleryState().set({room: target, focusedId: null, prompt: null, hoveredId: null});
     runtime.player.seat = null;
-    runtime.teleport = {position: ROOMS[target].spawn.position, heading: ROOMS[target].spawn.heading};
+    runtime.teleport = {position: spawn.position, heading: spawn.heading};
     runtime.spawnedAt = performance.now();
   }, "portal");
 };

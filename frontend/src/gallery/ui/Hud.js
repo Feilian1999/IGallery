@@ -11,7 +11,7 @@ import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import {ROOMS} from "../layout";
+import {ROOM_INFO} from "../layout";
 import {EMOTES} from "../outfits";
 import {useGalleryStore} from "../store";
 import {playEmote} from "../actions";
@@ -38,9 +38,10 @@ const Hud = () => {
   const set = useGalleryStore((state) => state.set);
   const togglePanel = useGalleryStore((state) => state.togglePanel);
 
-  const room = ROOMS[roomId];
-  const total = ROOMS.main.artworks.length;
-  const seen = ROOMS.main.artworks.filter(({artwork}) => visited.includes(artwork.id)).length;
+  const artworks = useGalleryStore((state) => state.exhibition.artworks);
+  const room = ROOM_INFO[roomId];
+  const total = artworks.length;
+  const seen = artworks.filter((artwork) => visited.includes(artwork.id)).length;
   const hidden = phase !== "explore" || mode !== "explore" || detailId;
 
   return (

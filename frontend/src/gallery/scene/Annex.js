@@ -3,8 +3,6 @@ import * as React from "react";
 import * as THREE from "three";
 import {useFrame, useThree} from "@react-three/fiber";
 import {MeshReflectorMaterial, useTexture} from "@react-three/drei";
-import ARTWORKS, {ARTWORKS_BY_ID} from "../artworks";
-import {ROOMS} from "../layout";
 import {RADIUS, PROJECTION, PORTAL} from "../layout/annex";
 import {useGalleryStore, getGalleryState} from "../store";
 import {markActive} from "../runtime";
@@ -50,8 +48,9 @@ const Projector = () => {
   const spot = React.useRef();
   const target = React.useMemo(() => new THREE.Object3D(), []);
   const focusedId = useGalleryStore((state) => state.focusedId);
+  const exhibition = useGalleryStore((state) => state.exhibition);
   const [cycleIndex, setCycleIndex] = React.useState(0);
-  const artwork = focusedId ? ARTWORKS_BY_ID[focusedId] : ARTWORKS[cycleIndex % ARTWORKS.length];
+  const artwork = exhibition.byId[focusedId] || exhibition.artworks[cycleIndex % exhibition.artworks.length];
   const texture = useTexture(artwork.previewUrl, (loaded) => {
     loaded.colorSpace = THREE.SRGBColorSpace;
   });
@@ -124,7 +123,7 @@ const Stars = () => {
 
 const Annex = () => {
   const quality = useGalleryStore((state) => state.resolvedQuality());
-  const room = ROOMS.annex;
+  const room = useGalleryStore((state) => state.exhibition.rooms.annex);
 
   React.useEffect(() => {
     getGalleryState().set({focusedId: null});

@@ -1,0 +1,12 @@
+{
+  "title": 80,
+  "author": 60,
+  "character": 60,
+  "description": 400,
+  "story": 4000,
+  "hotspots": 12,
+  "hotspotLabel": 40,
+  "hotspotNote": 200,
+  "maxUploadMB": 25,
+  "imageTypes": ["image/jpeg", "image/png", "image/webp"]
+}

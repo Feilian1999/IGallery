@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "create-react-app",
+  "rewrites": [
+    {"source": "/api/(.*)", "destination": "/api"}
+  ]
+}

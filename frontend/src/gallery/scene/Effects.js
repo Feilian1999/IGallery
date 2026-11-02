@@ -3,7 +3,6 @@ import * as THREE from "three";
 import {useFrame} from "@react-three/fiber";
 import {EffectComposer, Bloom, DepthOfField, Vignette, SMAA} from "@react-three/postprocessing";
 import {useGalleryStore, getGalleryState} from "../store";
-import {ROOMS} from "../layout";
 import {runtime} from "../runtime";
 
 const FOCUS_RANGE = {explore: 1.6, photo: 1.2};
@@ -25,7 +24,7 @@ const Effects = () => {
     const effect = depth.current;
     if (!effect) return;
     const state = getGalleryState();
-    const entry = state.focusedId && ROOMS[state.room].artworks.find((item) => item.artwork.id === state.focusedId);
+    const entry = state.focusedId && state.exhibition.rooms[state.room].artworks.find((item) => item.artwork.id === state.focusedId);
     if (state.mode === "photo" || !entry) subject.set(runtime.player.position.x, 1.1, runtime.player.position.z);
     else subject.fromArray(entry.placement.position);
     effect.cocMaterial.worldFocusDistance = camera.position.distanceTo(subject);

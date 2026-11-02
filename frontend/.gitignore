@@ -21,3 +21,8 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# local API data (PGlite database, uploads) and env files
+/.data
+.env.local
+.vercel

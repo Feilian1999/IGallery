@@ -3,7 +3,6 @@ import * as React from "react";
 import * as THREE from "three";
 import {useFrame} from "@react-three/fiber";
 import THEMES from "../themes";
-import {ROOMS} from "../layout";
 import {useGalleryStore, getGalleryState} from "../store";
 import {markActive} from "../runtime";
 
@@ -41,7 +40,7 @@ const Lighting = () => {
     hemisphere.current.intensity = theme.hemisphere[2] * dim.current * roomScale;
     key.current.intensity = theme.key * dim.current * roomScale;
 
-    const entry = state.focusedId && ROOMS[roomId].artworks.find((item) => item.artwork.id === state.focusedId);
+    const entry = state.focusedId && state.exhibition.rooms[roomId].artworks.find((item) => item.artwork.id === state.focusedId);
     if (entry) {
       const {position, normal} = entry.placement;
       spot.current.position.set(position[0] + normal[0] * 2.4, position[1] + 2.6, position[2] + normal[1] * 2.4);

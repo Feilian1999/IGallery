@@ -6,8 +6,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import CenterFocusWeakIcon from "@mui/icons-material/CenterFocusWeak";
-import {ARTWORKS_BY_ID} from "../artworks";
-import {ROOMS} from "../layout";
+import {ROOM_INFO} from "../layout";
 import {useGalleryStore} from "../store";
 
 const TABS = [
@@ -45,7 +44,7 @@ const ZoomViewer = ({artwork, activeHotspot, onHotspot}) => {
       observer = new ResizeObserver(measure);
       observer.observe(container.current);
     };
-    image.src = artwork.url;
+    image.src = artwork.imageUrl;
     setView({scale: 1, x: 0, y: 0, animated: false});
     return () => observer?.disconnect();
   }, [artwork]);
@@ -100,7 +99,7 @@ const ZoomViewer = ({artwork, activeHotspot, onHotspot}) => {
           className={`zoom__layer${view.animated ? " zoom__layer--animated" : ""}`}
           style={{width: fit.width, height: fit.height, left: fit.left, top: fit.top, transform: `translate(${view.x}px, ${view.y}px) scale(${view.scale})`}}
         >
-          <img src={artwork.url} alt={artwork.title} />
+          <img src={artwork.imageUrl} alt={artwork.title} />
           {artwork.hotspots.map((spot, index) => (
             <div key={index} className="zoom__spot" style={{left: `${spot.x * 100}%`, top: `${spot.y * 100}%`, transform: `scale(${1 / view.scale})`}}>
               <button
@@ -178,17 +177,18 @@ const ArtworkDetail = () => {
   const [tab, setTab] = React.useState("original");
   const [hotspot, setHotspot] = React.useState(null);
 
-  const ids = ROOMS[roomId].artworks.map(({artwork}) => artwork.id);
-  const artwork = detailId && ARTWORKS_BY_ID[detailId];
+  const exhibition = useGalleryStore((state) => state.exhibition);
+  const ids = exhibition.rooms[roomId].artworks.map(({artwork}) => artwork.id);
+  const artwork = detailId && exhibition.byId[detailId];
 
   const go = React.useCallback((step) => {
-    const list = ROOMS[roomId].artworks.map((entry) => entry.artwork.id);
+    const list = exhibition.rooms[roomId].artworks.map((entry) => entry.artwork.id);
     const index = list.indexOf(detailId);
     const next = list[(index + step + list.length) % list.length];
     set({detailId: next});
     markVisited(next);
     setHotspot(null);
-  }, [detailId, roomId, set, markVisited]);
+  }, [detailId, roomId, exhibition, set, markVisited]);
 
   React.useEffect(() => {
     if (!detailId) return undefined;
@@ -216,7 +216,7 @@ const ArtworkDetail = () => {
     <div className="detail">
       <header className="detail__bar">
         <div className="detail__crumbs">
-          <span className="eyebrow">{ROOMS[roomId].subtitle}</span>
+          <span className="eyebrow">{ROOM_INFO[roomId].subtitle}</span>
           <span>{position >= 0 ? `${position + 1} / ${ids.length}` : "精選作品"}</span>
         </div>
         <div className="segmented">
@@ -238,7 +238,7 @@ const ArtworkDetail = () => {
             <ZoomViewer artwork={artwork} activeHotspot={hotspot} onHotspot={setHotspot} />
           ) : (
             <div className="detail__original">
-              <img src={artwork.url} alt={artwork.title} />
+              <img src={artwork.imageUrl} alt={artwork.title} />
             </div>
           )}
         </div>

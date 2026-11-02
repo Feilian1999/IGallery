@@ -104,6 +104,10 @@ const GalleryPage = () => {
   const theme = THEMES[themeId];
   const drag = React.useRef(null);
 
+  React.useEffect(() => {
+    getGalleryState().loadExhibition();
+  }, []);
+
   // development-only handle for poking at the scene from the console or browser tests
   React.useEffect(() => {
     if (process.env.NODE_ENV !== "development") return undefined;
