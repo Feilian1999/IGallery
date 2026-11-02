@@ -5,6 +5,8 @@ using System.IO;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Xml.Linq;
+using Microsoft.Extensions.Options;
+using WebApplication1.Helpers;
 using WebApplication1.Models;
 using static System.Net.WebRequestMethods;
 
@@ -12,15 +14,22 @@ namespace WebApplication1.Services
 {
     public class GetTokenService : IGetTokenService
     {
+        private readonly InstagramOptions _instagram;
+
+        public GetTokenService(IOptions<InstagramOptions> instagram)
+        {
+            _instagram = instagram.Value;
+        }
+
         public async Task<GetTokenRs> GetToken(string oauthToken)
         {
 
             var formContent = new FormUrlEncodedContent(
                 new Dictionary<string, string> {
-                    { "client_id", "226106916475206" },
-                    { "client_secret", "23a689c6abea0de7774b2c7d4e1a1609" },
+                    { "client_id", _instagram.ClientId ?? "" },
+                    { "client_secret", _instagram.ClientSecret ?? "" },
                     { "grant_type", "authorization_code" },
-                    { "redirect_uri", "https://zx123497.github.io/IGallery/" },
+                    { "redirect_uri", _instagram.RedirectUri ?? "" },
                     { "code", oauthToken}
                 });
             using (var client = new HttpClient() { BaseAddress = new Uri("https://api.instagram.com") })
@@ -43,7 +52,7 @@ namespace WebApplication1.Services
         {
             using (var client = new HttpClient { BaseAddress = new Uri("https://graph.instagram.com") })
             {
-                string url = $"/access_token?grant_type=ig_exchange_token&client_secret=23a689c6abea0de7774b2c7d4e1a1609&access_token={accessToken}";
+                string url = $"/access_token?grant_type=ig_exchange_token&client_secret={_instagram.ClientSecret}&access_token={accessToken}";
 
                 HttpResponseMessage response = await client.GetAsync(url);
                 var responseContent = response.Content.ReadAsStringAsync().Result;

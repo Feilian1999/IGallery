@@ -64,7 +64,8 @@ namespace WebApplication1.Services
         {
             var builder = new ConfigurationBuilder()
               .SetBasePath(Directory.GetCurrentDirectory())
-              .AddJsonFile("appsettings.json");
+              .AddJsonFile("appsettings.json")
+              .AddEnvironmentVariables();
             var config = builder.Build();
             if (config["Token:access_token"] != null) {
                 return config["Token:access_token"];

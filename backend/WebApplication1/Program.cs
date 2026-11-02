@@ -8,9 +8,9 @@ using WebApplication1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
-var config = new ConfigurationBuilder()
-        .AddJsonFile("appsettings.json", optional: false)
-        .Build();
+// builder.Configuration reads appsettings.json, then user secrets (Development) and
+// environment variables, so secrets never have to live in appsettings.json.
+var config = builder.Configuration;
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(name: MyAllowSpecificOrigins,
@@ -24,6 +24,7 @@ builder.Services.AddDbContext<DBContext>();
 
 // add options configuation
 builder.Services.Configure<DatabaseConnectionOptions>(config.GetSection("ConnectionStrings"));
+builder.Services.Configure<InstagramOptions>(config.GetSection("Instagram"));
 
 
 builder.Services.AddControllers();
