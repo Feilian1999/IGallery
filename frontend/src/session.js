@@ -21,6 +21,7 @@ export const SessionProvider = ({children}) => {
 
   const logout = React.useCallback(async () => {
     await api("/auth/logout", {method: "POST"}).catch(() => {});
+    window.location.hash = "";
     setSession(null);
   }, []);
 

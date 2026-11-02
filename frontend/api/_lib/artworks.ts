@@ -176,11 +176,17 @@ export const unlike = async (userId: number, artworkId: string) => {
   await query("delete from likes where user_id = $1 and artwork_id = $2", [userId, artworkId]);
 };
 
-// Registered artists with published work, ranked by the likes their published works received.
+// Registered artists with published work, ranked by the likes their published works
+// received, with previews of up to three of their most liked works.
 export const artistRanking = async (limit = 10) => {
   const rows = await query(
       `select u.id, coalesce(nullif(u.display_name, ''), u.username) as name,
-         count(distinct a.id)::int as works, count(l.user_id)::int as likes
+         count(distinct a.id)::int as works, count(l.user_id)::int as likes,
+         (select coalesce(json_agg(t.preview_url), '[]') from (
+            select x.preview_url from artworks x
+            where x.owner_id = u.id and x.status = 'published'
+            order by (select count(*) from likes y where y.artwork_id = x.id) desc, x.sort_order
+            limit 3) t) as previews
        from users u
        join artworks a on a.owner_id = u.id and a.status = 'published'
        left join likes l on l.artwork_id = a.id
@@ -190,7 +196,21 @@ export const artistRanking = async (limit = 10) => {
        limit $1`,
       [limit],
   );
-  return rows.map((row) => ({id: row.id, name: row.name, works: row.works, likes: row.likes}));
+  return rows.map((row) => ({
+    id: row.id, name: row.name, works: row.works, likes: row.likes,
+    previews: (typeof row.previews === "string" ? JSON.parse(row.previews) : row.previews) as string[],
+  }));
+};
+
+// Published artworks `userId` has liked, most recently liked first. Hearts show
+// whether the viewer (who may be someone else) likes them.
+export const likedArtworks = async (userId: number, viewerId: number | null = userId) => {
+  const rows = await query(
+      `${SELECT} join likes theirs on theirs.artwork_id = a.id and theirs.user_id = $2
+       where a.status = 'published' order by theirs.created_at desc`,
+      [viewerId, userId],
+  );
+  return rows.map(toArtwork);
 };
 
 // Per-user numbers for the dashboard.

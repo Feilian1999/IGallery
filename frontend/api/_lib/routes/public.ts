@@ -38,7 +38,10 @@ const likeRoute = (liking: boolean) => async (c: any) => {
 publicRoutes.post("/artworks/:id/like", requireMember, likeRoute(true));
 publicRoutes.delete("/artworks/:id/like", requireMember, likeRoute(false));
 
-publicRoutes.get("/artists/ranking", async (c) => c.json({artists: await artworks.artistRanking()}));
+publicRoutes.get("/artists/ranking", async (c) => {
+  const limit = Math.min(50, Math.max(1, Math.floor(Number(c.req.query("limit"))) || 10));
+  return c.json({artists: await artworks.artistRanking(limit)});
+});
 
 // Everything the 3D gallery needs: published artworks and which slot each one hangs in.
 publicRoutes.get("/exhibition", async (c) => {

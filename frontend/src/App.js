@@ -1,111 +1,131 @@
 import * as React from "react";
 import "./App.css";
-import ResponsiveAppBar from "./layout/AppBar";
-import HomePage from "./pages/HomePage";
-import Footer from "./layout/Footer";
 import {ThemeProvider, createTheme} from "@mui/material/styles";
+import CssBaseline from "@mui/material/CssBaseline";
 import ColorModeContext from "./themes/ToggleContext";
 import {SessionProvider} from "./session";
+import AppShell from "./layout/AppShell";
+import HomePage from "./pages/HomePage";
+import RankingPage from "./pages/RankingPage";
+import LikesPage from "./pages/LikesPage";
+import InboxPage from "./pages/InboxPage";
+import UserPage from "./pages/UserPage";
 
 // three.js and the whole 3D gallery are only downloaded when someone opens it
 const GalleryPage = React.lazy(() => import("./pages/GalleryPage"));
 const StudioApp = React.lazy(() => import("./studio/StudioApp"));
 
+const MODE_KEY = "igallery:color-mode";
 
 const getDesignTokens = (mode) => ({
   palette: {
     mode,
+    primary: {main: mode === "light" ? "#6750A4" : "#b9a7f0", contrastText: mode === "light" ? "#ffffff" : "#1c1530"},
+    secondary: {main: "#625B71"},
     ...(mode === "light" ?
-      {
-        // palette values for light mode
-        primary: {
-          main: "#6750A4",
-          light: "#EADDFF",
-          dark: "#21005D",
-
-
-        },
-        secondary: {
-          main: "#625B71",
-          light: "#E8DEF8",
-          dark: "#1D192B",
-
-        },
-        background: {
-          paper: "#E7E0EC",
-          default: "#FFFBFE",
-        },
-
-        divider: "#E7E0EC",
-      } :
-      {
-        // palette values for dark mode
-        primary: {
-          main: "#6750A4",
-          light: "#EADDFF",
-          dark: "#21005D",
-
-
-        },
-        secondary: {
-          main: "#625B71",
-          light: "#E8DEF8",
-          dark: "#1D192B",
-
-        },
-        background: {
-          paper: "#49454F",
-          default: "#1C1B1F",
-        },
-
-        divider: "#E7E0EC",
-      }),
+      {background: {default: "#ffffff", paper: "#ffffff"}, divider: "rgba(0, 0, 0, 0.08)"} :
+      {background: {default: "#121214", paper: "#1b1b1f"}, divider: "rgba(255, 255, 255, 0.1)"}),
+  },
+  shape: {borderRadius: 8},
+  typography: {
+    fontFamily: "\"Noto Sans TC\", \"PingFang TC\", \"Microsoft JhengHei\", system-ui, sans-serif",
+    button: {textTransform: "none", fontWeight: 700},
   },
 });
 
+const readMode = () => {
+  try {
+    return window.localStorage.getItem(MODE_KEY) || "light";
+  } catch (error) {
+    return "light";
+  }
+};
+
+// Pages are picked from the URL hash. Everything except the 3D gallery sits inside
+// the shell; `nav` is the sidebar item to highlight.
+//   (empty) / #            home
+//   #search/<text>         search results
+//   #ranking, #likes, #inbox
+//   #users/<id>[/<tab>]    an artist's public page: works, commissions or favorites
+//   #login, #me…, #admin…  the studio
+//   #gallery               the 3D gallery (full screen)
+const STUDIO_NAV = {
+  "login": "login", "me": "me", "me/profile": "profile", "me/notifications": "notifications", "me/artwork": "me",
+  "admin": "review", "admin/review": "review", "admin/artworks": "artworks", "admin/exhibition": "exhibition", "admin/users": "users",
+};
+
+const decode = (text) => {
+  try {
+    return decodeURIComponent(text);
+  } catch (error) {
+    return text;
+  }
+};
+
+const parseHash = (hash) => {
+  if (hash === "#gallery") return {page: "gallery"};
+  const [name, ...rest] = hash.replace(/^#\/?/, "").split("/");
+  if (["login", "me", "admin"].includes(name)) {
+    return {page: "studio", nav: STUDIO_NAV[rest[0] ? `${name}/${rest[0]}` : name] || name};
+  }
+  if (name === "users" && rest[0]) return {page: "user", nav: "user", userId: rest[0], tab: rest[1]};
+  if (name === "search") return {page: "home", nav: "home", query: decode(rest.join("/"))};
+  if (["ranking", "likes", "inbox"].includes(name)) return {page: name, nav: name};
+  return {page: "home", nav: "home"};
+};
+
+const SHELL_PAGES = {home: HomePage, ranking: RankingPage, likes: LikesPage, inbox: InboxPage, user: UserPage};
 
 /**
  * @return {App} App object
  */
-const App=()=> {
-  const [mode, setMode] = React.useState("light");
-  const colorMode = React.useMemo(
-      () => ({
-        toggleColorMode: () => {
-          setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
-        },
-      }),
-      [],
-  );
+const App = () => {
+  const [mode, setMode] = React.useState(readMode);
+  const colorMode = React.useMemo(() => ({
+    toggleColorMode: () => setMode((previous) => {
+      const next = previous === "light" ? "dark" : "light";
+      try {
+        window.localStorage.setItem(MODE_KEY, next);
+      } catch (error) {
+        // remembering the choice is a nicety
+      }
+      return next;
+    }),
+  }), []);
+  const theme = React.useMemo(() => createTheme(getDesignTokens(mode)), [mode]);
 
-  const theme = React.useMemo(
-      () =>
-        createTheme(getDesignTokens(mode)),
-      [mode],
-  );
-
-  // simple hash routing: "#gallery" shows the 3D gallery, anything else the home page
   const [hash, setHash] = React.useState(window.location.hash);
   React.useEffect(() => {
-    const handleHashChange = () => setHash(window.location.hash);
+    const handleHashChange = () => {
+      setHash(window.location.hash);
+      window.scrollTo(0, 0);
+    };
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
-  const isGallery = hash === "#gallery";
-  // the studio: login, the member dashboard and profile, and the admin pages
-  const isStudio = /^#(login|me|admin)\b/.test(hash);
+  const route = parseHash(hash);
+  const ShellPage = SHELL_PAGES[route.page];
 
   return (
     <SessionProvider>
       <ColorModeContext.Provider value={colorMode}>
         <ThemeProvider theme={theme}>
+          <CssBaseline />
           <div className="App">
-            {/* the gallery is full screen with its own controls */}
-            {isGallery || isStudio ? (
+            {route.page === "gallery" ? (
+              // the gallery is full screen with its own controls
               <React.Suspense fallback={<div style={{position: "fixed", inset: 0, background: "#050505"}} />}>
-                {isGallery ? <GalleryPage/> : <StudioApp/>}
+                <GalleryPage />
               </React.Suspense>
-            ) : <><ResponsiveAppBar /><HomePage/><Footer/></>}
+            ) : (
+              <AppShell page={route.nav} userId={route.userId} query={route.query}>
+                {ShellPage ? <ShellPage query={route.query} userId={route.userId} tab={route.tab} key={route.userId} /> : (
+                  <React.Suspense fallback={null}>
+                    <StudioApp />
+                  </React.Suspense>
+                )}
+              </AppShell>
+            )}
           </div>
         </ThemeProvider>
       </ColorModeContext.Provider>

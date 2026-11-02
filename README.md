@@ -70,12 +70,15 @@ npm run dev
 | GET | `/api/artworks`、`/api/artworks/:id` | 公開 | 已公開的作品（含上傳者、AI 標註、喜歡數） |
 | POST／DELETE | `/api/artworks/:id/like` | 會員 | 喜歡／取消喜歡（不能對自己的作品） |
 | GET | `/api/artists/ranking` | 公開 | 依作品收到的喜歡數排名 |
+| GET | `/api/users/:id` | 公開 | 作者個人頁：資料、約稿資訊、統計 |
+| GET | `/api/users/:id/artworks` | 公開 | 作者已公開的作品 |
+| GET | `/api/users/:id/favorites` | 公開 | 作者的收藏（未公開時只有本人看得到） |
 | GET | `/api/exhibition` | 公開 | 3D 畫廊用：已公開作品與展位配置 |
 | POST | `/api/auth/register`、`login`、`guest`、`logout` | 公開 | 註冊、登入、訪客進入、登出（HttpOnly cookie） |
 | GET | `/api/auth/me` | 登入 | 目前的使用者 |
 | POST | `/api/auth/upgrade` | 訪客 | 升級成會員 |
 | PUT | `/api/auth/password` | 會員 | 變更密碼 |
-| PATCH | `/api/me/profile` | 登入 | 顯示名稱、自我介紹 |
+| PATCH | `/api/me/profile` | 登入 | 顯示名稱、自我介紹、收藏是否公開、約稿設定 |
 | GET | `/api/me/dashboard` | 登入 | 自己的作品統計 |
 | GET | `/api/me/notifications`、`/api/me/notifications/unread` | 登入 | 通知列表／未讀數（前端每分鐘輪詢） |
 | POST | `/api/me/notifications/read` | 登入 | 標為已讀（帶 `ids` 只標指定的，不帶就全部） |

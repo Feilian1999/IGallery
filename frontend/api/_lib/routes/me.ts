@@ -3,7 +3,7 @@ import * as artworks from "../artworks";
 import * as schemas from "../schemas";
 import {parse} from "../http";
 import {query} from "../db";
-import {requireUser, requireMember, toUser, type AuthEnv, type User} from "../auth";
+import {requireUser, requireMember, toUser, USER_COLUMNS, type AuthEnv, type User} from "../auth";
 import {removeImage} from "../storage";
 import {notifyAdmins, listNotifications, markRead, unreadCount} from "../notifications";
 
@@ -15,10 +15,19 @@ meRoutes.patch("/profile", async (c) => {
   const body = await parse(c.req.raw, schemas.profileBody);
   if (!body.data) return c.json({error: body.error}, 400);
   const user = c.get("user");
+  const {displayName, bio, likesPublic, commission} = body.data;
   const [row] = await query(
-      `update users set display_name = coalesce($2, display_name), bio = coalesce($3, bio) where id = $1
-       returning id, username, display_name, bio, role, created_at`,
-      [user.id, body.data.displayName ?? null, body.data.bio ?? null],
+      `update users set
+         display_name = coalesce($2, display_name), bio = coalesce($3, bio), likes_public = coalesce($4, likes_public),
+         commission_open = coalesce($5, commission_open), commission_info = coalesce($6, commission_info),
+         commission_contact = coalesce($7, commission_contact), commission_plans = coalesce($8::jsonb, commission_plans)
+       where id = $1
+       returning ${USER_COLUMNS.replace(/u\./g, "")}`,
+      [
+        user.id, displayName ?? null, bio ?? null, likesPublic ?? null,
+        commission?.open ?? null, commission?.info ?? null, commission?.contact ?? null,
+        commission ? JSON.stringify(commission.plans) : null,
+      ],
   );
   return c.json({user: toUser(row)});
 });
@@ -37,6 +46,8 @@ meRoutes.post("/notifications/read", async (c) => {
   await markRead(c.get("user").id, body.data.ids);
   return c.json({unread: await unreadCount(c.get("user").id)});
 });
+
+meRoutes.get("/likes", async (c) => c.json({artworks: await artworks.likedArtworks(c.get("user").id)}));
 
 meRoutes.get("/dashboard", async (c) => c.json({stats: await artworks.ownerStats(c.get("user").id)}));
 

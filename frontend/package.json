@@ -23,7 +23,6 @@
     "react": "~19.3.1",
     "react-dom": "~19.3.1",
     "react-scripts": "5.0.1",
-    "swiper": "^9.0.5",
     "three": "~0.186.1",
     "web-vitals": "^2.1.4",
     "zod": "^4.6.7",

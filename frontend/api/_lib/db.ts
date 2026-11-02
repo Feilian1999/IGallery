@@ -92,6 +92,14 @@ const MIGRATIONS: string[][] = [
     // liking, unliking and liking again notifies the owner only once
     `create unique index if not exists notifications_like_once on notifications (user_id, artwork_id, actor_id) where type = 'like'`,
   ],
+  // 4. public artist pages: favorites privacy and commission details
+  [
+    `alter table users add column if not exists likes_public boolean not null default true`,
+    `alter table users add column if not exists commission_open boolean not null default false`,
+    `alter table users add column if not exists commission_info text not null default ''`,
+    `alter table users add column if not exists commission_contact text not null default ''`,
+    `alter table users add column if not exists commission_plans jsonb not null default '[]'`,
+  ],
 ];
 
 // Neon's Vercel integration names it DATABASE_URL; some setups use POSTGRES_URL.

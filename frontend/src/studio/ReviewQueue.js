@@ -48,7 +48,7 @@ const ReviewQueue = () => {
           <div className="admin-review__body">
             <h2 className="admin-subtitle">{artwork.title || "未命名"}</h2>
             <dl className="admin-review__meta">
-              <dt>上傳者</dt><dd>{artwork.owner?.displayName}</dd>
+              <dt>上傳者</dt><dd>{artwork.owner ? <a className="admin-link" href={`#users/${artwork.owner.id}`}>{artwork.owner.displayName}</a> : "—"}</dd>
               <dt>作者</dt><dd>{artwork.author || "--"}</dd>
               <dt>角色</dt><dd>{artwork.character || "--"}</dd>
               <dt>AI</dt><dd>{AI_USAGE[artwork.aiUsage]?.name}</dd>

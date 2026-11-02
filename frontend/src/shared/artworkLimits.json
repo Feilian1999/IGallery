@@ -15,5 +15,11 @@
   ],
   "displayName": 40,
   "bio": 300,
-  "reviewNote": 300
+  "reviewNote": 300,
+  "commissionInfo": 1000,
+  "commissionContact": 200,
+  "commissionPlans": 5,
+  "planTitle": 40,
+  "planPrice": 40,
+  "planDescription": 300
 }

@@ -153,7 +153,7 @@ const Meta = ({artwork}) => (
     {artwork.owner && (
       <>
         <dt>上傳者</dt>
-        <dd>{artwork.owner.displayName}</dd>
+        <dd><a href={`#users/${artwork.owner.id}`} style={{color: "inherit"}}>{artwork.owner.displayName}</a></dd>
       </>
     )}
   </dl>

@@ -36,9 +36,22 @@ export const loginBody = z.object({
 
 export const registerBody = z.object({username, password, displayName: displayName.default("")});
 
+const commissionPlan = z.object({
+  title: z.string().trim().min(1, "請填寫方案名稱").max(limits.planTitle),
+  price: z.string().trim().max(limits.planPrice),
+  description: z.string().trim().max(limits.planDescription),
+});
+
 export const profileBody = z.object({
   displayName: displayName.min(1, "請填寫顯示名稱"),
   bio: z.string().trim().max(limits.bio),
+  likesPublic: z.boolean(),
+  commission: z.object({
+    open: z.boolean(),
+    info: z.string().trim().max(limits.commissionInfo),
+    contact: z.string().trim().max(limits.commissionContact),
+    plans: z.array(commissionPlan).max(limits.commissionPlans),
+  }),
 }).partial();
 
 export const passwordBody = z.object({current: z.string().min(1).max(200), next: password});

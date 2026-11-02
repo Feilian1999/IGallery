@@ -3,7 +3,7 @@ import type {ZodType} from "zod";
 const FIELD_NAMES: Record<string, string> = {
   title: "標題", author: "作者", character: "角色", description: "描述", story: "作品故事",
   hotspots: "細節熱點", imageUrl: "圖片", previewUrl: "預覽圖", username: "帳號", password: "密碼",
-  displayName: "顯示名稱", bio: "自我介紹", aiUsage: "AI 使用標註", next: "新密碼", reason: "退回原因",
+  displayName: "顯示名稱", bio: "自我介紹", commission: "約稿設定", likesPublic: "收藏公開設定", aiUsage: "AI 使用標註", next: "新密碼", reason: "退回原因",
 };
 
 // Parses and validates a JSON body; returns {data} or {error} with a readable message.

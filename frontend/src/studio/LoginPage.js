@@ -36,7 +36,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="admin admin--center">
+    <div className="admin--center">
       <form className="admin-login" onSubmit={submit}>
         <div className="admin-eyebrow">IGallery</div>
         <h1 className="admin-login__title">{tab === "login" ? "歡迎回來" : "加入 IGallery"}</h1>

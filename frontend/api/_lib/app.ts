@@ -5,6 +5,7 @@ import {authRoutes} from "./routes/auth";
 import {meRoutes} from "./routes/me";
 import {uploadRoutes} from "./routes/uploads";
 import {adminRoutes} from "./routes/admin";
+import {userRoutes} from "./routes/users";
 
 export const app = new Hono<AuthEnv>().basePath("/api");
 
@@ -18,5 +19,6 @@ app.route("/auth", authRoutes);
 app.route("/me", meRoutes);
 app.route("/uploads", uploadRoutes);
 app.route("/admin", adminRoutes);
+app.route("/users", userRoutes);
 
 app.notFound((c) => c.json({error: "找不到這個 API"}, 404));

@@ -12,10 +12,16 @@ const GUEST_DAYS = 7;
 export const CSRF_HEADER = "x-igallery";
 
 export type Role = "admin" | "member" | "guest";
-export type User = {id: number; username: string; displayName: string; bio: string; role: Role; createdAt: string};
+export type CommissionPlan = {title: string; price: string; description: string};
+export type User = {
+  id: number; username: string; displayName: string; bio: string; role: Role; createdAt: string;
+  likesPublic: boolean;
+  commission: {open: boolean; info: string; contact: string; plans: CommissionPlan[]};
+};
 export type AuthEnv = {Variables: {user: User}};
 
-const USER_COLUMNS = "u.id, u.username, u.display_name, u.bio, u.role, u.created_at";
+export const USER_COLUMNS = `u.id, u.username, u.display_name, u.bio, u.role, u.created_at, u.likes_public,
+  u.commission_open, u.commission_info, u.commission_contact, u.commission_plans`;
 
 export const toUser = (row: Record<string, any>): User => ({
   id: row.id,
@@ -24,6 +30,13 @@ export const toUser = (row: Record<string, any>): User => ({
   bio: row.bio,
   role: row.role,
   createdAt: new Date(row.created_at).toISOString(),
+  likesPublic: row.likes_public,
+  commission: {
+    open: row.commission_open,
+    info: row.commission_info,
+    contact: row.commission_contact,
+    plans: typeof row.commission_plans === "string" ? JSON.parse(row.commission_plans) : row.commission_plans,
+  },
 });
 
 const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
