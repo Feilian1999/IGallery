@@ -70,7 +70,7 @@ const LoginPage = () => {
         <button type="button" className="admin-button admin-login__submit" disabled={busy} onClick={() => run(() => api("/auth/guest", {method: "POST"}))}>
           以訪客身分進入
         </button>
-        <p className="admin-muted admin-login__hint">訪客可以先逛逛工作室，要上傳作品或按讚時再註冊即可，不會遺失帳號。</p>
+        <p className="admin-muted admin-login__hint">訪客可以先四處逛逛，想按讚收藏或成為藝術家時再註冊即可，不會遺失帳號。</p>
         <a className="admin-link admin-login__back" href="#">← 回到網站</a>
       </form>
     </div>

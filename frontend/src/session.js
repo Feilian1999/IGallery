@@ -59,6 +59,8 @@ export const useSession = () => React.useContext(SessionContext);
 
 export const isMember = (session) => Boolean(session && session.user.role !== "guest");
 export const isAdmin = (session) => session?.user.role === "admin";
+// artists (and admins) publish work; members apply to become one
+export const isArtist = (session) => session?.user.role === "artist" || isAdmin(session);
 
 // Likes go to published artworks by other members.
 export const toggleLike = (artwork) => api(`/artworks/${artwork.id}/like`, {method: artwork.liked ? "DELETE" : "POST"});

@@ -25,12 +25,15 @@ const Commissions = ({user, self}) => {
     return (
       <Empty>
         {self ? "你還沒有設定約稿資訊。" : `${user.displayName} 目前沒有開放約稿。`}
-        {self && <Box sx={{mt: 2}}><Button variant="contained" disableElevation href="#me/profile" sx={{borderRadius: 20}}>設定約稿</Button></Box>}
+        {self && <Box sx={{mt: 2}}><Button variant="contained" disableElevation href="#me/commissions" sx={{borderRadius: 20}}>設定約稿</Button></Box>}
       </Empty>
     );
   }
   return (
     <Box sx={{maxWidth: 860}}>
+      {self && (
+        <Button href="#me/commissions" variant="outlined" size="small" startIcon={<EditOutlinedIcon />} sx={{borderRadius: 20, float: "right"}}>編輯約稿設定</Button>
+      )}
       <Box sx={{display: "inline-flex", alignItems: "center", gap: 1, px: 1.5, py: 0.5, borderRadius: 20, fontSize: 13, fontWeight: 700,
         color: open ? "success.main" : "text.secondary", bgcolor: open ? "rgba(46, 160, 67, 0.12)" : "action.hover"}}>
         <Box sx={{width: 8, height: 8, borderRadius: "50%", bgcolor: open ? "success.main" : "text.disabled"}} />
@@ -62,8 +65,10 @@ Commissions.propTypes = {user: PropTypes.object.isRequired, self: PropTypes.bool
 
 // An artist's public page: profile header, then their works, commissions and favorites.
 const UserPage = ({userId, tab: requestedTab}) => {
-  const tab = TABS.includes(requestedTab) ? requestedTab : "works";
   const [profile, setProfile] = React.useState(null);
+  // only artists (and admins) have works and commissions; a member's page is just their favorites
+  const creator = !profile || ["artist", "admin"].includes(profile.user.role);
+  const tab = !creator ? "favorites" : TABS.includes(requestedTab) ? requestedTab : "works";
   const [error, setError] = React.useState("");
   const [works, setWorks] = React.useState(null);
   const [favorites, setFavorites] = React.useState(null);
@@ -113,6 +118,7 @@ const UserPage = ({userId, tab: requestedTab}) => {
         <Box sx={{flex: 1, minWidth: 180}}>
           <Box sx={{display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap"}}>
             <Box component="h1" sx={{m: 0, fontSize: {xs: 22, md: 28}, fontWeight: 800}}>{user.displayName}</Box>
+            {user.role === "artist" && <Box sx={{px: 1, py: 0.25, borderRadius: 1, fontSize: 11, fontWeight: 700, bgcolor: "action.selected", color: "primary.main"}}>藝術家</Box>}
             {user.role === "admin" && <Box sx={{px: 1, py: 0.25, borderRadius: 1, fontSize: 11, fontWeight: 700, bgcolor: "action.selected", color: "primary.main"}}>管理者</Box>}
             {user.commission.open && <Box sx={{px: 1, py: 0.25, borderRadius: 1, fontSize: 11, fontWeight: 700, color: "success.main", bgcolor: "rgba(46, 160, 67, 0.12)"}}>接受約稿</Box>}
           </Box>
@@ -122,7 +128,11 @@ const UserPage = ({userId, tab: requestedTab}) => {
           {self ? (
             <>
               <Button href="#me/profile" variant="outlined" startIcon={<EditOutlinedIcon />} sx={{borderRadius: 20}}>編輯個人資料</Button>
-              <Button href="#me/new" variant="contained" disableElevation startIcon={<AddPhotoAlternateOutlinedIcon />} sx={{borderRadius: 20}}>發布作品</Button>
+              {creator ? (
+                <Button href="#me/new" variant="contained" disableElevation startIcon={<AddPhotoAlternateOutlinedIcon />} sx={{borderRadius: 20}}>發布作品</Button>
+              ) : (
+                <Button href="#me/apply" variant="contained" disableElevation startIcon={<BrushOutlinedIcon />} sx={{borderRadius: 20}}>申請成為藝術家</Button>
+              )}
             </>
           ) : (
             <>
@@ -136,8 +146,8 @@ const UserPage = ({userId, tab: requestedTab}) => {
       <Box sx={{px: {xs: 1, md: 4}, mt: 2}}>
         {user.bio && <Box sx={{whiteSpace: "pre-wrap", lineHeight: 1.8, maxWidth: 760}}>{user.bio}</Box>}
         <Box sx={{display: "flex", gap: 3, mt: 1.5, fontSize: 14, color: "text.secondary"}}>
-          <span><Box component="b" sx={{color: "text.primary"}}>{stats.works}</Box> 件作品</span>
-          <span><Box component="b" sx={{color: "text.primary"}}>{stats.likes}</Box> 個喜歡</span>
+          {creator && <span><Box component="b" sx={{color: "text.primary"}}>{stats.works}</Box> 件作品</span>}
+          {creator && <span><Box component="b" sx={{color: "text.primary"}}>{stats.likes}</Box> 個喜歡</span>}
           {stats.favorites !== null && <span><Box component="b" sx={{color: "text.primary"}}>{stats.favorites}</Box> 件收藏</span>}
         </Box>
       </Box>
@@ -146,8 +156,8 @@ const UserPage = ({userId, tab: requestedTab}) => {
         <Tabs value={tab} onChange={(_, value) => {
           window.location.hash = `#users/${user.id}${value === "works" ? "" : `/${value}`}`;
         }}>
-          <Tab value="works" label={`作品 ${stats.works}`} />
-          <Tab value="commissions" label="約稿" />
+          {creator && <Tab value="works" label={`作品 ${stats.works}`} />}
+          {creator && <Tab value="commissions" label="約稿" />}
           <Tab value="favorites" label={stats.favorites === null ? <Box sx={{display: "flex", alignItems: "center", gap: 0.5}}><LockOutlinedIcon sx={{fontSize: 16}} />收藏</Box> : `收藏 ${stats.favorites}`} />
         </Tabs>
       </Box>

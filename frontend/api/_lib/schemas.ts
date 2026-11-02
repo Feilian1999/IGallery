@@ -106,5 +106,9 @@ export const markReadBody = z.object({ids: z.array(z.number().int()).max(200).op
 
 // --- users (admin) -----------------------------------------------------------------
 
-export const roleBody = z.object({role: z.enum(["admin", "member"])});
+export const roleBody = z.object({role: z.enum(["admin", "artist", "member"])});
+export const artistApplicationBody = z.object({
+  message: z.string().trim().min(1, "請介紹一下自己和你的創作").max(limits.applicationMessage),
+  links: z.string().trim().max(limits.applicationLinks).default(""),
+});
 export const resetPasswordBody = z.object({password});

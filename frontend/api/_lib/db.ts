@@ -100,6 +100,27 @@ const MIGRATIONS: string[][] = [
     `alter table users add column if not exists commission_contact text not null default ''`,
     `alter table users add column if not exists commission_plans jsonb not null default '[]'`,
   ],
+  // 5. artists: only approved artists publish; members apply to become one
+  [
+    `alter table users drop constraint if exists users_role_check`,
+    `alter table users add constraint users_role_check check (role in ('admin', 'artist', 'member', 'guest'))`,
+    // members who already have work keep publishing, as artists
+    `update users set role = 'artist' where role = 'member' and exists (select 1 from artworks a where a.owner_id = users.id)`,
+    `create table if not exists artist_applications (
+      id serial primary key,
+      user_id integer not null references users(id) on delete cascade,
+      message text not null,
+      links text not null default '',
+      status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+      review_note text not null default '',
+      reviewer_id integer references users(id) on delete set null,
+      created_at timestamptz not null default now(),
+      reviewed_at timestamptz
+    )`,
+    `create index if not exists artist_applications_user_idx on artist_applications (user_id, created_at desc)`,
+    // one open application per member
+    `create unique index if not exists artist_applications_one_pending on artist_applications (user_id) where status = 'pending'`,
+  ],
 ];
 
 // Neon's Vercel integration names it DATABASE_URL; some setups use POSTGRES_URL.

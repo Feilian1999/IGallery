@@ -7,7 +7,6 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import ViewInArOutlinedIcon from "@mui/icons-material/ViewInArOutlined";
 import {ArtworkGrid, SectionTitle} from "../components/ArtworkCard";
-import {ArtistCard, useRanking} from "../components/ArtistRanking";
 import {fetchArtworks} from "../services/artworks";
 import {useSession} from "../session";
 
@@ -53,7 +52,6 @@ const HomePage = ({query}) => {
   const [artworks, setArtworks] = React.useState(null);
   const [order, setOrder] = React.useState("curated");
   const [page, setPage] = React.useState(1);
-  const ranking = useRanking(5);
 
   // reloaded when the viewer signs in or out, since "liked" depends on who is looking
   const viewerId = session?.user.id;
@@ -81,19 +79,7 @@ const HomePage = ({query}) => {
 
   return (
     <>
-      {!query && (
-        <>
-          {artworks && artworks.length > 0 && <GalleryBanner artworks={artworks} />}
-          {ranking && ranking.length > 0 && (
-            <>
-              <SectionTitle title="藝術家排行" action={<Button href="#ranking" size="small">查看全部 →</Button>} />
-              <Box sx={{display: "grid", gap: 2, gridTemplateColumns: {xs: "repeat(1, 1fr)", sm: "repeat(2, 1fr)", md: "repeat(3, 1fr)", lg: "repeat(5, 1fr)"}}}>
-                {ranking.map((artist, i) => <ArtistCard key={artist.id} artist={artist} rank={i + 1} />)}
-              </Box>
-            </>
-          )}
-        </>
-      )}
+      {!query && artworks && artworks.length > 0 && <GalleryBanner artworks={artworks} />}
       <SectionTitle first={Boolean(query)} title={query ? `「${query}」的搜尋結果${filtered ? `（${filtered.length}）` : ""}` : "作品"} action={orderSwitch} />
       {filtered && !filtered.length ? (
         <Box sx={{py: 8, textAlign: "center", color: "text.secondary"}}>{query ? "找不到符合的作品，換個關鍵字試試。" : "還沒有作品。"}</Box>

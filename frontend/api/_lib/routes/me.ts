@@ -3,13 +3,28 @@ import * as artworks from "../artworks";
 import * as schemas from "../schemas";
 import {parse} from "../http";
 import {query} from "../db";
-import {requireUser, requireMember, toUser, USER_COLUMNS, type AuthEnv, type User} from "../auth";
+import {requireUser, requireMember, requireArtist, toUser, USER_COLUMNS, type AuthEnv, type User} from "../auth";
+import * as applications from "../applications";
 import {removeImage} from "../storage";
 import {notifyAdmins, listNotifications, markRead, unreadCount} from "../notifications";
 
 // The signed-in user's own profile and artworks.
 export const meRoutes = new Hono<AuthEnv>();
 meRoutes.use("*", requireUser);
+
+// The member's latest application to become an artist, if any.
+meRoutes.get("/artist-application", async (c) => c.json({application: await applications.latestApplication(c.get("user").id)}));
+
+meRoutes.post("/artist-application", requireMember, async (c) => {
+  const user = c.get("user");
+  if (user.role !== "member") return c.json({error: "你已經可以發布作品了"}, 400);
+  const body = await parse(c.req.raw, schemas.artistApplicationBody);
+  if (!body.data) return c.json({error: body.error}, 400);
+  const application = await applications.createApplication(user.id, body.data.message, body.data.links);
+  if (!application) return c.json({error: "你的申請還在審核中"}, 400);
+  await notifyAdmins("artist_requested", {actorId: user.id});
+  return c.json({application}, 201);
+});
 
 meRoutes.patch("/profile", async (c) => {
   const body = await parse(c.req.raw, schemas.profileBody);
@@ -63,7 +78,7 @@ const owned = async (user: User, id: string) => {
   return user.role === "admin" || artwork.owner?.id === user.id ? artwork : null;
 };
 
-meRoutes.post("/artworks", requireMember, async (c) => {
+meRoutes.post("/artworks", requireArtist, async (c) => {
   const body = await parse(c.req.raw, schemas.createArtwork);
   if (!body.data) return c.json({error: body.error}, 400);
   const user = c.get("user");
@@ -76,7 +91,7 @@ meRoutes.get("/artworks/:id", async (c) => {
   return artwork ? c.json({artwork}) : c.json({error: "找不到這件作品"}, 404);
 });
 
-meRoutes.patch("/artworks/:id", requireMember, async (c) => {
+meRoutes.patch("/artworks/:id", requireArtist, async (c) => {
   const artwork = await owned(c.get("user"), c.req.param("id"));
   if (!artwork) return c.json({error: "找不到這件作品"}, 404);
   const body = await parse(c.req.raw, schemas.updateArtwork);
@@ -84,7 +99,7 @@ meRoutes.patch("/artworks/:id", requireMember, async (c) => {
   return c.json({artwork: await artworks.updateArtwork(artwork.id, body.data)});
 });
 
-meRoutes.delete("/artworks/:id", requireMember, async (c) => {
+meRoutes.delete("/artworks/:id", requireArtist, async (c) => {
   const artwork = await owned(c.get("user"), c.req.param("id"));
   if (!artwork) return c.json({error: "找不到這件作品"}, 404);
   await artworks.deleteArtwork(artwork.id);
@@ -94,7 +109,7 @@ meRoutes.delete("/artworks/:id", requireMember, async (c) => {
 });
 
 // Members send work for review; an admin's own work is published straight away.
-meRoutes.post("/artworks/:id/submit", requireMember, async (c) => {
+meRoutes.post("/artworks/:id/submit", requireArtist, async (c) => {
   const user = c.get("user");
   const artwork = await owned(user, c.req.param("id"));
   if (!artwork) return c.json({error: "找不到這件作品"}, 404);
@@ -108,7 +123,7 @@ meRoutes.post("/artworks/:id/submit", requireMember, async (c) => {
 });
 
 // Takes work back to draft: cancels a pending review or unpublishes it.
-meRoutes.post("/artworks/:id/withdraw", requireMember, async (c) => {
+meRoutes.post("/artworks/:id/withdraw", requireArtist, async (c) => {
   const artwork = await owned(c.get("user"), c.req.param("id"));
   if (!artwork) return c.json({error: "找不到這件作品"}, 404);
   if (!["pending", "published"].includes(artwork.status)) return c.json({error: "這件作品目前是草稿"}, 400);

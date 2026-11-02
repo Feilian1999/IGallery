@@ -49,7 +49,7 @@
 </tr>
 </table>
 
-- **首頁**：精選與最新作品、依收到的喜歡數排行的藝術家、搜尋作品／作者／角色
+- **首頁**：精選與最新作品、搜尋作品／作者／角色；「排行榜」頁依收到的喜歡數為藝術家排名
 - **AI 標註**：每件作品上傳時都必須標明「未使用 AI／AI 輔助／AI 生成」，並顯示在作品上
 - **審核制度**：會員送審、管理者核准或附原因退回，只有通過的作品會公開
 - **通知**：作品被喜歡、審核結果、角色變更都會收到站內通知
@@ -80,7 +80,7 @@ npm run dev
 - 3D 畫廊：http://localhost:3000/#gallery
 - 登入／工作室：http://localhost:3000/#login（本機預設管理者 `admin`／`igallery-dev`）
 
-第一次啟動會自動匯入 `public/artworks/` 裡的 7 件範例作品。想重來的話，刪掉 `frontend/.data/` 再啟動即可。
+第一次啟動會自動匯入 `public/artworks/` 裡的 7 件範例作品（見下方「範例作品」）。想重來的話，刪掉 `frontend/.data/` 再啟動即可。
 
 其他指令：
 
@@ -111,10 +111,13 @@ npm run dev
 | 角色 | 可以做什麼 |
 |---|---|
 | 訪客 | 從登入頁一鍵進入，有自己的 dashboard 與 profile，只能瀏覽；可以隨時升級成會員（同一個帳號） |
-| 會員 | 註冊帳號＋密碼；上傳作品（必須標註是否使用 AI）、編輯、送出審核、對別人的作品按喜歡 |
-| 管理者 | 會員的所有功能，加上審核、所有作品排序、展場配置、使用者管理（改角色、重設密碼、刪除） |
+| 會員 | 註冊帳號＋密碼；對作品按喜歡收藏、有自己的個人頁；可以申請成為藝術家 |
+| 藝術家 | 會員申請、管理者核准後取得；發布作品（必須標註是否使用 AI）、編輯、送出審核、設定約稿 |
+| 管理者 | 藝術家的所有功能，加上作品審核、藝術家申請審核、所有作品排序、展場配置、使用者管理（改角色、重設密碼、刪除） |
 
-第一個管理者由 `ADMIN_USERNAME`／`ADMIN_PASSWORD` 建立，之後可以在「使用者」頁把會員設為管理者。會員忘記密碼時由管理者重設。
+第一個管理者由 `ADMIN_USERNAME`／`ADMIN_PASSWORD` 建立，之後可以在「使用者」頁調整角色。會員忘記密碼時由管理者重設。
+
+成為藝術家：會員填寫自我介紹與作品集連結送出申請 → 管理者在「藝術家申請」核准（角色改為藝術家）或附原因不通過（可以補充後再申請），結果都會通知申請者。
 
 作品狀態：草稿 → 送審（審核中）→ 管理者核准（已公開）或退回（附原因，修改後可再送審）。只有已公開的作品會出現在首頁、排行與畫廊。
 
@@ -137,14 +140,31 @@ npm run dev
 | GET | `/api/me/dashboard` | 登入 | 自己的作品統計 |
 | GET | `/api/me/notifications`、`/api/me/notifications/unread` | 登入 | 通知列表／未讀數（前端每分鐘輪詢） |
 | POST | `/api/me/notifications/read` | 登入 | 標為已讀（帶 `ids` 只標指定的，不帶就全部） |
-| GET／POST | `/api/me/artworks` | 會員 | 自己的作品／新增作品 |
+| GET／POST | `/api/me/artist-application` | 會員 | 自己最新的藝術家申請／送出申請 |
+| GET／POST | `/api/me/artworks` | 藝術家 | 自己的作品／新增作品 |
 | GET／PATCH／DELETE | `/api/me/artworks/:id` | 擁有者或管理者 | 讀取／修改／刪除 |
 | POST | `/api/me/artworks/:id/submit`、`withdraw` | 擁有者 | 送審／撤回（管理者送出即公開） |
-| POST | `/api/uploads/blob`、`/api/uploads/local` | 會員 | 圖片上傳授權（正式環境）／本機上傳 |
+| POST | `/api/uploads/blob`、`/api/uploads/local` | 藝術家 | 圖片上傳授權（正式環境）／本機上傳 |
 | GET／PATCH／DELETE | `/api/admin/artworks[/:id]` | 管理者 | 所有作品 |
 | POST | `/api/admin/artworks/:id/approve`、`reject` | 管理者 | 核准／退回 |
 | PUT | `/api/admin/artworks/order` | 管理者 | 排序 |
 | GET／PUT | `/api/admin/exhibition` | 管理者 | 展位配置 |
 | GET／PATCH／DELETE | `/api/admin/users[/:id]`、POST `/:id/password` | 管理者 | 使用者管理 |
+| GET | `/api/admin/artist-applications` | 管理者 | 待審核的藝術家申請 |
+| POST | `/api/admin/artist-applications/:id/approve`、`reject` | 管理者 | 核准／不通過（附原因） |
 
 所有修改請求都必須是 JSON 並帶 `x-igallery: 1` 標頭（防 CSRF）。資料庫結構變更寫在 `api/_lib/db.ts` 的 `MIGRATIONS`，部署後第一次呼叫 API 時自動套用。欄位長度等限制放在 `src/shared/artworkLimits.json`，前端表單和後端驗證共用同一份。
+
+## 範例作品
+
+`frontend/public/artworks/` 內附的範例作品都是已進入公有領域的名畫，圖檔取自 Wikimedia Commons：
+
+| 作品 | 作者 | 年代 | 來源 |
+|---|---|---|---|
+| 星夜 | 文森・梵谷 | 1889 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg) |
+| 向日葵 | 文森・梵谷 | 1888 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Vincent_Willem_van_Gogh_127.jpg) |
+| 自畫像 | 文森・梵谷 | 1887 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Vincent_van_Gogh_-_Self-Portrait_-_Google_Art_Project_(454045).jpg) |
+| 戴珍珠耳環的少女 | 約翰尼斯・維梅爾 | 約 1665 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:1665_Girl_with_a_Pearl_Earring.jpg) |
+| 神奈川沖浪裏 | 葛飾北齋 | 約 1831 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Tsunami_by_hokusai_19th_century.jpg) |
+| 印象・日出 | 克勞德・莫內 | 1872 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Monet_-_Impression,_Sunrise.jpg) |
+| 吻 | 古斯塔夫・克林姆 | 1907–1908 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:The_Kiss_-_Gustav_Klimt_-_Google_Cultural_Institute.jpg) |

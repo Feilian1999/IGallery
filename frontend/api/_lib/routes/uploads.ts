@@ -2,7 +2,7 @@ import {Hono} from "hono";
 import {issueSignedToken} from "@vercel/blob";
 import {handleUpload, handleUploadPresigned, type HandleUploadBody, type HandleUploadPresignedBody} from "@vercel/blob/client";
 import * as schemas from "../schemas";
-import {currentUser, requireMember, CSRF_HEADER, type AuthEnv} from "../auth";
+import {currentUser, requireArtist, CSRF_HEADER, type AuthEnv} from "../auth";
 import {storageKind, blobAuth, sniffImageType, saveLocal} from "../storage";
 
 // Image uploads for members. Files never pass through the function in production:
@@ -22,7 +22,7 @@ uploadRoutes.post("/blob", async (c) => {
   if (PERMISSION_REQUESTS.has(body.type)) {
     const user = await currentUser(c);
     if (c.req.header(CSRF_HEADER) !== "1" || !user) return c.json({error: "請先登入"}, 401);
-    if (user.role === "guest") return c.json({error: "訪客無法上傳作品，請先註冊成為會員"}, 403);
+    if (user.role !== "admin" && user.role !== "artist") return c.json({error: "只有藝術家可以上傳作品，請先申請成為藝術家"}, 403);
   }
   if (blobAuth === "oidc") {
     const result = await handleUploadPresigned({
@@ -44,7 +44,7 @@ uploadRoutes.post("/blob", async (c) => {
 });
 
 // Local development stand-in for Vercel Blob: the raw image bytes are the request body.
-uploadRoutes.post("/local", requireMember, async (c) => {
+uploadRoutes.post("/local", requireArtist, async (c) => {
   if (storageKind !== "local") return c.json({error: "正式環境請使用 Vercel Blob 上傳"}, 400);
   const bytes = new Uint8Array(await c.req.arrayBuffer());
   if (bytes.length > MAX_UPLOAD_BYTES) return c.json({error: `檔案超過 ${schemas.limits.maxUploadMB} MB`}, 413);

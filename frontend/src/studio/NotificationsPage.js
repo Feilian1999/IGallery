@@ -2,7 +2,7 @@ import * as React from "react";
 import {api} from "../api";
 import {useSession} from "../session";
 
-const ROLE_NAMES = {admin: "管理者", member: "會員"};
+const ROLE_NAMES = {admin: "管理者", artist: "藝術家", member: "會員"};
 
 const titleOf = (notification) => `《${notification.artwork?.title || notification.message || "未命名"}》`;
 
@@ -25,6 +25,12 @@ const describe = (notification) => {
       return {icon: "✕", text: `管理者刪除了你的作品《${notification.message}》`, href: null};
     case "role":
       return {icon: "★", text: `你的身分已變更為${ROLE_NAMES[notification.message] || notification.message}`, href: "#me"};
+    case "artist_requested":
+      return {icon: "✎", text: `${actor} 申請成為藝術家`, href: "#admin/applications"};
+    case "artist_approved":
+      return {icon: "★", text: "你的藝術家申請通過了，現在可以發布作品", href: "#me/new"};
+    case "artist_rejected":
+      return {icon: "↩", text: "你的藝術家申請沒有通過", detail: notification.message ? `原因：${notification.message}` : "", href: "#me/apply"};
     default:
       return {icon: "•", text: "新的通知", href: null};
   }

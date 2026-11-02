@@ -2,7 +2,7 @@ import * as React from "react";
 import {api} from "../api";
 import {useSession} from "../session";
 
-const ROLES = {admin: "管理者", member: "會員"};
+const ROLES = {admin: "管理者", artist: "藝術家", member: "會員"};
 
 // Admin: member accounts. Members can't reset forgotten passwords themselves, so it happens here.
 const UsersPage = () => {

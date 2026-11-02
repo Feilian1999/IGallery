@@ -7,6 +7,7 @@ import {
 } from "../auth";
 import {storageKind, blobAuth} from "../storage";
 import {pendingCount} from "../artworks";
+import {pendingApplicationCount} from "../applications";
 import {unreadCount} from "../notifications";
 
 export const authRoutes = new Hono<AuthEnv>();
@@ -48,6 +49,7 @@ authRoutes.get("/me", async (c) => {
     storage: storageKind,
     blobAuth,
     pendingReviews: user.role === "admin" ? await pendingCount() : 0,
+    pendingApplications: user.role === "admin" ? await pendingApplicationCount() : 0,
     unreadNotifications: await unreadCount(user.id),
   });
 });

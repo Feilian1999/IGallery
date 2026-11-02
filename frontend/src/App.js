@@ -15,10 +15,10 @@ import ArtworkPage from "./pages/ArtworkPage";
 // three.js and the whole 3D gallery are only downloaded when someone opens it
 const GalleryPage = React.lazy(() => import("./pages/GalleryPage"));
 const StudioApp = React.lazy(() => import("./studio/StudioApp"));
-const ProfileDialog = React.lazy(() => import("./studio/ProfileDialog"));
+const SettingsDialog = React.lazy(() => import("./studio/SettingsDialog"));
 
-// #me/profile opens a dialog over the current page instead of replacing it
-const PROFILE = /^#\/?me\/profile\/?$/;
+// #me/profile and #me/commissions open a dialog over the current page instead of replacing it
+const SETTINGS = /^#\/?me\/(profile|commissions)\/?$/;
 
 const MODE_KEY = "igallery:color-mode";
 
@@ -54,11 +54,11 @@ const readMode = () => {
 //   #users/<id>[/<tab>]    an artist's public page: works, commissions or favorites
 //   #users/<id>/artworks/<artwork>   one artwork under its artist
 //   #login, #me…, #admin…  the studio
-//   #me/profile            profile dialog over the previous page
+//   #me/profile, #me/commissions   settings dialog over the previous page
 //   #gallery               the 3D gallery (full screen)
 const STUDIO_NAV = {
-  "login": "login", "me": "me", "me/notifications": "notifications", "me/artwork": "me", "me/new": "me",
-  "admin": "review", "admin/review": "review", "admin/artworks": "artworks", "admin/exhibition": "exhibition", "admin/users": "users",
+  "login": "login", "me": "me", "me/notifications": "notifications", "me/artwork": "me", "me/new": "me", "me/apply": "apply",
+  "admin": "review", "admin/review": "review", "admin/artworks": "artworks", "admin/exhibition": "exhibition", "admin/users": "users", "admin/applications": "applications",
 };
 
 const decode = (text) => {
@@ -105,26 +105,28 @@ const App = () => {
   const theme = React.useMemo(() => createTheme(getDesignTokens(mode)), [mode]);
 
   const [hash, setHash] = React.useState(window.location.hash);
-  // the page shown behind the profile dialog; home when the dialog is opened directly
-  const [background, setBackground] = React.useState(() => (PROFILE.test(window.location.hash) ? "" : window.location.hash));
+  // the page shown behind the settings dialog; home when the dialog is opened directly
+  const [background, setBackground] = React.useState(() => (SETTINGS.test(window.location.hash) ? "" : window.location.hash));
   React.useEffect(() => {
     const handleHashChange = (event) => {
       const next = window.location.hash;
       setHash(next);
-      if (PROFILE.test(next)) return;
+      if (SETTINGS.test(next)) return;
       setBackground(next);
       // closing the dialog returns to the same scroll position
-      if (!PROFILE.test(new URL(event.oldURL).hash)) window.scrollTo(0, 0);
+      if (!SETTINGS.test(new URL(event.oldURL).hash)) window.scrollTo(0, 0);
     };
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
-  const profileOpen = PROFILE.test(hash);
-  const pageHash = profileOpen ? background : hash;
+  const settings = hash.match(SETTINGS)?.[1];
+  const pageHash = settings ? background : hash;
   const route = parseHash(pageHash);
   // kept mounted after the first open so the dialog can animate closed
-  const [profileUsed, setProfileUsed] = React.useState(profileOpen);
-  if (profileOpen && !profileUsed) setProfileUsed(true);
+  const [settingsUsed, setSettingsUsed] = React.useState(Boolean(settings));
+  const [lastSection, setLastSection] = React.useState(settings || "profile");
+  if (settings && !settingsUsed) setSettingsUsed(true);
+  if (settings && settings !== lastSection) setLastSection(settings);
   const ShellPage = SHELL_PAGES[route.page];
 
   return (
@@ -147,9 +149,10 @@ const App = () => {
                 )}
               </AppShell>
             )}
-            {profileUsed && (
+            {settingsUsed && (
               <React.Suspense fallback={null}>
-                <ProfileDialog open={profileOpen} onClose={() => {
+                {/* the last section stays while the dialog animates closed */}
+                <SettingsDialog open={Boolean(settings)} section={lastSection} onClose={() => {
                   window.location.hash = background || "#";
                 }} />
               </React.Suspense>

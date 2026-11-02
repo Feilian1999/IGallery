@@ -25,6 +25,8 @@ import EmojiEventsOutlinedIcon from "@mui/icons-material/EmojiEventsOutlined";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import DashboardOutlinedIcon from "@mui/icons-material/DashboardOutlined";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import BrushOutlinedIcon from "@mui/icons-material/BrushOutlined";
+import HowToRegOutlinedIcon from "@mui/icons-material/HowToRegOutlined";
 import FactCheckOutlinedIcon from "@mui/icons-material/FactCheckOutlined";
 import ChairOutlinedIcon from "@mui/icons-material/ChairOutlined";
 import GroupOutlinedIcon from "@mui/icons-material/GroupOutlined";
@@ -34,7 +36,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import AccountBoxOutlinedIcon from "@mui/icons-material/AccountBoxOutlined";
 import CollectionsOutlinedIcon from "@mui/icons-material/CollectionsOutlined";
 import ColorModeContext from "../themes/ToggleContext";
-import {useSession, isMember, isAdmin} from "../session";
+import {useSession, isMember, isAdmin, isArtist} from "../session";
 
 const TOP_BAR = 64;
 const WIDE = 232;
@@ -49,8 +51,13 @@ const readCollapsed = () => {
   }
 };
 
-// Where the "post" button goes depends on who is looking.
-const postHref = (session) => (!session ? "#login" : isMember(session) ? "#me/new" : "#me/profile");
+// Where the "post" button goes depends on who is looking: artists publish, members apply
+// to become one, guests register first.
+const postHref = (session) => {
+  if (!session) return "#login";
+  if (isArtist(session)) return "#me/new";
+  return isMember(session) ? "#me/apply" : "#me/profile";
+};
 
 /* eslint-disable react/prop-types */
 
@@ -104,12 +111,15 @@ const SideNav = ({page, userId, collapsed, onNavigate}) => {
             icon: <AccountBoxOutlinedIcon />, label: "我的個人頁", href: `#users/${session.user.id}`,
             active: page === "user" && String(session.user.id) === userId,
           })}
-          {item({icon: <DashboardOutlinedIcon />, label: "我的作品", href: "#me", active: page === "me"})}
+          {isArtist(session) ?
+            item({icon: <DashboardOutlinedIcon />, label: "我的作品", href: "#me", active: page === "me"}) :
+            item({icon: <BrushOutlinedIcon />, label: "成為藝術家", href: "#me/apply", active: page === "apply" || page === "me"})}
         </Section>
       )}
       {isAdmin(session) && (
         <Section title="管理" collapsed={collapsed}>
           {item({icon: <FactCheckOutlinedIcon />, label: "審核", href: "#admin/review", badge: session.pendingReviews, active: page === "review"})}
+          {item({icon: <HowToRegOutlinedIcon />, label: "藝術家申請", href: "#admin/applications", badge: session.pendingApplications, active: page === "applications"})}
           {item({icon: <CollectionsOutlinedIcon />, label: "所有作品", href: "#admin/artworks", active: page === "artworks"})}
           {item({icon: <ChairOutlinedIcon />, label: "展場配置", href: "#admin/exhibition", active: page === "exhibition"})}
           {item({icon: <GroupOutlinedIcon />, label: "使用者", href: "#admin/users", active: page === "users"})}
@@ -190,8 +200,15 @@ const TopBar = ({query, onMenu}) => {
               {isMember(session) && (
                 <MenuItem component="a" href={`#users/${session.user.id}`} onClick={() => setMenu(null)}><ListItemIcon><AccountBoxOutlinedIcon fontSize="small" /></ListItemIcon>我的個人頁</MenuItem>
               )}
-              <MenuItem component="a" href="#me" onClick={() => setMenu(null)}><ListItemIcon><DashboardOutlinedIcon fontSize="small" /></ListItemIcon>我的作品</MenuItem>
+              {isArtist(session) ? (
+                <MenuItem component="a" href="#me" onClick={() => setMenu(null)}><ListItemIcon><DashboardOutlinedIcon fontSize="small" /></ListItemIcon>我的作品</MenuItem>
+              ) : isMember(session) && (
+                <MenuItem component="a" href="#me/apply" onClick={() => setMenu(null)}><ListItemIcon><BrushOutlinedIcon fontSize="small" /></ListItemIcon>成為藝術家</MenuItem>
+              )}
               <MenuItem component="a" href="#me/profile" onClick={() => setMenu(null)}><ListItemIcon><PersonOutlineIcon fontSize="small" /></ListItemIcon>編輯個人資料</MenuItem>
+              {isArtist(session) && (
+                <MenuItem component="a" href="#me/commissions" onClick={() => setMenu(null)}><ListItemIcon><BrushOutlinedIcon fontSize="small" /></ListItemIcon>約稿設定</MenuItem>
+              )}
               <MenuItem component="a" href="#likes" onClick={() => setMenu(null)}><ListItemIcon><FavoriteBorderIcon fontSize="small" /></ListItemIcon>喜歡的作品</MenuItem>
               <Divider />
               <MenuItem onClick={() => {

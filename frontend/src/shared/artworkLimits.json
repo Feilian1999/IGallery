@@ -21,5 +21,7 @@
   "commissionPlans": 5,
   "planTitle": 40,
   "planPrice": 40,
-  "planDescription": 300
+  "planDescription": 300,
+  "applicationMessage": 1000,
+  "applicationLinks": 500
 }

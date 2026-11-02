@@ -7,6 +7,7 @@ import {requireAdmin, type AuthEnv} from "../auth";
 import {hashPassword} from "../password";
 import {removeImage} from "../storage";
 import {notify} from "../notifications";
+import * as applications from "../applications";
 
 // Review queue, every artwork, the exhibition layout, and user accounts.
 export const adminRoutes = new Hono<AuthEnv>();
@@ -79,6 +80,28 @@ adminRoutes.put("/exhibition", async (c) => {
   if (!Object.values(body.data.placements).every((id) => published.has(id))) return c.json({error: "只能展出已公開的作品"}, 400);
   await artworks.setPlacements(body.data.placements);
   return c.json({placements: body.data.placements});
+});
+
+// Members asking to become artists.
+adminRoutes.get("/artist-applications", async (c) => {
+  const status = c.req.query("status");
+  return c.json({applications: await applications.listApplications(status === "approved" || status === "rejected" ? status : "pending")});
+});
+
+adminRoutes.post("/artist-applications/:id/approve", async (c) => {
+  const application = await applications.decideApplication(Number(c.req.param("id")), true, c.get("user").id);
+  if (!application) return c.json({error: "找不到這份申請，或已經處理過了"}, 404);
+  await notify(application.userId, "artist_approved", {actorId: c.get("user").id});
+  return c.json({application});
+});
+
+adminRoutes.post("/artist-applications/:id/reject", async (c) => {
+  const body = await parse(c.req.raw, schemas.rejectBody);
+  if (!body.data) return c.json({error: body.error}, 400);
+  const application = await applications.decideApplication(Number(c.req.param("id")), false, c.get("user").id, body.data.reason);
+  if (!application) return c.json({error: "找不到這份申請，或已經處理過了"}, 404);
+  await notify(application.userId, "artist_rejected", {actorId: c.get("user").id, message: body.data.reason});
+  return c.json({application});
 });
 
 adminRoutes.get("/users", async (c) => c.json({users: await artworks.listUsers()}));

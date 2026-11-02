@@ -9,7 +9,10 @@ export type NotificationType =
   | "review_requested" // (admins) an artwork is waiting for review
   | "unpublished" // an admin took your artwork down
   | "removed" // an admin deleted your artwork; message = its title
-  | "role"; // your role changed; message = the new role
+  | "role" // your role changed; message = the new role
+  | "artist_requested" // (admins) a member applied to become an artist
+  | "artist_approved" // your artist application was approved
+  | "artist_rejected"; // your artist application was declined; message = the reason
 
 type Details = {artworkId?: string | null; actorId?: number | null; message?: string};
 

@@ -11,7 +11,7 @@ const GUEST_DAYS = 7;
 // headers to cross-site form posts, so together with SameSite cookies this blocks CSRF.
 export const CSRF_HEADER = "x-igallery";
 
-export type Role = "admin" | "member" | "guest";
+export type Role = "admin" | "artist" | "member" | "guest";
 export type CommissionPlan = {title: string; price: string; description: string};
 export type User = {
   id: number; username: string; displayName: string; bio: string; role: Role; createdAt: string;
@@ -147,6 +147,7 @@ const requireRole = (roles: Role[], message: string): MiddlewareHandler<AuthEnv>
   await next();
 };
 
-export const requireUser = requireRole(["admin", "member", "guest"], "請先登入");
-export const requireMember = requireRole(["admin", "member"], "訪客無法使用這個功能，請先註冊成為會員");
+export const requireUser = requireRole(["admin", "artist", "member", "guest"], "請先登入");
+export const requireMember = requireRole(["admin", "artist", "member"], "訪客無法使用這個功能，請先註冊成為會員");
+export const requireArtist = requireRole(["admin", "artist"], "只有藝術家可以發布作品，請先申請成為藝術家");
 export const requireAdmin = requireRole(["admin"], "只有管理者可以使用這個功能");

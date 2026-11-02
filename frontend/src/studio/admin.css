@@ -1130,3 +1130,7 @@ a.admin-notification:hover {
 .admin--dialog .admin-panel { margin: 0; border: 0; border-radius: 0; border-bottom: 1px solid var(--a-border); background: transparent; padding: 20px 24px; }
 .admin--dialog .admin-panel:last-child { border-bottom: 0; }
 .admin--dialog .admin-panel .admin-subtitle { margin-top: 0; }
+
+/* free text that keeps the writer's line breaks */
+.admin-prewrap { white-space: pre-wrap; }
+.admin-panel > :first-child { margin-top: 0; }

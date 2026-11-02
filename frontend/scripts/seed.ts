@@ -1,4 +1,5 @@
-// Fills an empty database with the sample artworks bundled in public/artworks,
+// Fills an empty database with the sample artworks bundled in public/artworks
+// (public-domain paintings from Wikimedia Commons),
 // published and hung in their original slots.
 //
 //   npm run db:seed   (uses DATABASE_URL if set, otherwise the local PGlite database)
@@ -14,8 +15,8 @@ export const seedIfEmpty = async () => {
   if (!admin) throw new Error("no admin account to own the sample artworks; set ADMIN_USERNAME / ADMIN_PASSWORD");
   const placements: Record<string, string> = {};
   for (const item of sample.artworks) {
-    // AI use is unknown for these, so they stay "unspecified" (shown as 未標註)
-    const artwork = await insertArtwork({...item, ownerId: admin.id, status: "published"});
+    // centuries-old paintings, so no AI involved
+    const artwork = await insertArtwork({...item, ownerId: admin.id, aiUsage: "none", status: "published"});
     placements[item.slot] = artwork.id;
     if (item.featured) placements.feature = artwork.id;
   }

@@ -3,201 +3,261 @@
     {
       "slot": "n1",
       "featured": false,
-      "imageUrl": "/artworks/bd3d3459eb219c01c3ac489f2c1b238d.jpg",
-      "previewUrl": "/artworks/preview/bd3d3459eb219c01c3ac489f2c1b238d.jpg",
-      "width": 836,
-      "height": 1199,
-      "title": "回眸",
-      "author": "cocotte_ai",
-      "character": "初音未來",
-      "description": "藍綠雙馬尾，在白光裡轉身。",
-      "story": "",
+      "imageUrl": "/artworks/sunflowers.jpg",
+      "previewUrl": "/artworks/preview/sunflowers.jpg",
+      "width": 1268,
+      "height": 1600,
+      "title": "向日葵",
+      "author": "文森・梵谷",
+      "character": "",
+      "description": "插在陶瓶裡的十五朵向日葵，從盛開到凋謝都在同一個畫面裡。",
+      "story": "1888 年夏天，梵谷在法國南部的阿爾勒等待好友高更到來，畫了一系列向日葵，想用來裝飾黃色小屋裡給高更住的房間。這幅是其中最有名的一張，現藏於倫敦國家美術館。他幾乎只用黃色系完成整幅畫，背景、花朵和桌面靠著深淺不同的黃彼此區分。",
       "hotspots": [
         {
-          "x": 0.42,
-          "y": 0.48,
-          "label": "肩上的「01」",
-          "note": "手臂上的紅色「01」編號和名字刻印。"
-        },
-        {
-          "x": 0.6,
+          "x": 0.13,
           "y": 0.27,
-          "label": "耳機",
-          "note": "粉紅色的發光耳機，是角色的招牌配件。"
+          "label": "盛開的花",
+          "note": "外圈的花瓣向四周展開，深色的花心還很飽滿。"
         },
         {
-          "x": 0.86,
-          "y": 0.3,
-          "label": "飄動的髮尾",
-          "note": "髮尾往右上方散開，帶出轉身的動勢。"
+          "x": 0.2,
+          "y": 0.69,
+          "label": "凋謝的花",
+          "note": "垂下的花瓣已經捲曲枯萎，和上方盛開的花形成對比。"
+        },
+        {
+          "x": 0.27,
+          "y": 0.79,
+          "label": "瓶身的簽名",
+          "note": "梵谷把名字「Vincent」直接簽在花瓶上。"
         }
       ]
     },
     {
       "slot": "n2",
       "featured": true,
-      "imageUrl": "/artworks/0c41aba7666310369baea744a7e9402e.jpg",
-      "previewUrl": "/artworks/preview/0c41aba7666310369baea744a7e9402e.jpg",
-      "width": 1200,
-      "height": 1723,
-      "title": "學姊……",
-      "author": "",
+      "imageUrl": "/artworks/starry-night.jpg",
+      "previewUrl": "/artworks/preview/starry-night.jpg",
+      "width": 1600,
+      "height": 1267,
+      "title": "星夜",
+      "author": "文森・梵谷",
       "character": "",
-      "description": "背著書包、一臉不情願的放學後。",
-      "story": "",
+      "description": "旋轉的夜空、燃燒般的柏樹，和山腳下沉睡的小村莊。",
+      "story": "1889 年 6 月，梵谷住在法國聖雷米的聖保羅療養院，從房間朝東的窗戶望出去，畫下黎明前的天空。畫裡的村莊是他憑想像加上去的。這幅畫用厚重而流動的筆觸表現天空的能量，1941 年起收藏於紐約現代藝術博物館（MoMA），成為梵谷最廣為人知的作品。",
       "hotspots": [
         {
-          "x": 0.15,
-          "y": 0.2,
-          "label": "對話框",
-          "note": "日文手寫對話框：「げぇっ センパイ…」。"
+          "x": 0.89,
+          "y": 0.18,
+          "label": "新月",
+          "note": "月亮被一圈圈光暈包圍，像在發光燃燒。"
         },
         {
-          "x": 0.11,
-          "y": 0.58,
-          "label": "蛋包飯吊飾",
-          "note": "書包拉鍊上掛著蛋包飯和荷包蛋吊飾。"
+          "x": 0.6,
+          "y": 0.3,
+          "label": "漩渦",
+          "note": "畫面中央兩股氣流交纏翻轉，是整幅畫最強烈的動勢。"
         },
         {
-          "x": 0.49,
-          "y": 0.24,
-          "label": "波浪髮夾",
-          "note": "黃黑兩色的波浪髮夾。"
+          "x": 0.2,
+          "y": 0.45,
+          "label": "柏樹",
+          "note": "深色的柏樹像火焰一樣往上竄，連接地面與天空。"
+        },
+        {
+          "x": 0.56,
+          "y": 0.75,
+          "label": "教堂尖塔",
+          "note": "村莊裡的尖塔直指天空，安靜地對比著上方翻騰的夜色。"
         }
       ]
     },
     {
       "slot": "n3",
       "featured": false,
-      "imageUrl": "/artworks/b234ed72200e8d96227a3a377c29c704.jpg",
-      "previewUrl": "/artworks/preview/b234ed72200e8d96227a3a377c29c704.jpg",
-      "width": 769,
-      "height": 1024,
-      "title": "得意",
-      "author": "",
-      "character": "初音未來",
-      "description": "黑色外套與點點網底，自信的笑容。",
-      "story": "",
+      "imageUrl": "/artworks/van-gogh-self-portrait.jpg",
+      "previewUrl": "/artworks/preview/van-gogh-self-portrait.jpg",
+      "width": 1266,
+      "height": 1600,
+      "title": "自畫像",
+      "author": "文森・梵谷",
+      "character": "梵谷本人",
+      "description": "以密集的短筆觸畫成的自畫像，紅色鬍鬚和藍綠背景互相襯托。",
+      "story": "1887 年梵谷住在巴黎，接觸到秀拉、席涅克的點描畫法，這張自畫像就用了大量細小的色點與短線。他一生畫了三十多張自畫像，部分原因是請不起模特兒。這幅現藏於芝加哥藝術博物館。",
       "hotspots": [
         {
-          "x": 0.16,
-          "y": 0.57,
-          "label": "閃光",
-          "note": "背景的四角星閃光和點點網底。"
+          "x": 0.5,
+          "y": 0.38,
+          "label": "眼神",
+          "note": "斜視著觀者的眼神，帶著審視與緊張感。"
         },
         {
-          "x": 0.57,
-          "y": 0.72,
-          "label": "綁帶馬甲",
-          "note": "交叉綁帶的黑色馬甲。"
+          "x": 0.47,
+          "y": 0.6,
+          "label": "紅色鬍鬚",
+          "note": "橘紅色的鬍鬚和藍綠背景是互補色，讓臉部特別突出。"
+        },
+        {
+          "x": 0.12,
+          "y": 0.3,
+          "label": "點狀筆觸",
+          "note": "背景由一點一點的色塊組成，看得出點描派的影響。"
         }
       ]
     },
     {
       "slot": "e1",
       "featured": false,
-      "imageUrl": "/artworks/7d1a31b9edddfa9486c934d46ec931d1.jpg",
-      "previewUrl": "/artworks/preview/7d1a31b9edddfa9486c934d46ec931d1.jpg",
-      "width": 736,
-      "height": 1039,
-      "title": "貓耳少年",
-      "author": "",
+      "imageUrl": "/artworks/great-wave.jpg",
+      "previewUrl": "/artworks/preview/great-wave.jpg",
+      "width": 1600,
+      "height": 1076,
+      "title": "神奈川沖浪裏",
+      "author": "葛飾北齋",
       "character": "",
-      "description": "臉上貼著 OK 繃，尾巴悄悄翹起來。",
-      "story": "",
+      "description": "巨浪像爪子一樣撲向小船，遠方的富士山顯得格外渺小。",
+      "story": "這是葛飾北齋約 1831 年的木刻版畫，屬於《富嶽三十六景》系列。畫面用了當時從歐洲傳入的普魯士藍。它後來在歐洲廣為流傳，影響了莫內、梵谷等印象派畫家，也是今天最有代表性的日本美術作品之一。",
       "hotspots": [
         {
-          "x": 0.55,
-          "y": 0.41,
-          "label": "OK 繃",
-          "note": "臉頰上交叉貼著的 OK 繃。"
+          "x": 0.45,
+          "y": 0.3,
+          "label": "浪尖",
+          "note": "浪頭碎成一根根像爪子的浪花，彷彿要抓住底下的船。"
         },
         {
-          "x": 0.93,
-          "y": 0.52,
-          "label": "尾巴",
-          "note": "從背後翹起來的貓尾巴。"
-        }
-      ]
-    },
-    {
-      "slot": "s1",
-      "featured": false,
-      "imageUrl": "/artworks/9d8992e303e87c95cd038989bf56e74f.jpg",
-      "previewUrl": "/artworks/preview/9d8992e303e87c95cd038989bf56e74f.jpg",
-      "width": 469,
-      "height": 680,
-      "title": "YA！",
-      "author": "",
-      "character": "鏡音鈴",
-      "description": "金髮蝴蝶結，比出大大的勝利手勢。",
-      "story": "",
-      "hotspots": [
-        {
-          "x": 0.36,
-          "y": 0.09,
-          "label": "勝利手勢",
-          "note": "高舉的 V 字手勢。"
+          "x": 0.65,
+          "y": 0.68,
+          "label": "富士山",
+          "note": "富士山被放在畫面深處，在巨浪的襯托下變得很小。"
         },
         {
-          "x": 0.84,
-          "y": 0.12,
-          "label": "蝴蝶結",
-          "note": "頭上的白色大蝴蝶結。"
-        }
-      ]
-    },
-    {
-      "slot": "s2",
-      "featured": false,
-      "imageUrl": "/artworks/bd778c7aa7d3035d39f1c879c97f38dd.jpg",
-      "previewUrl": "/artworks/preview/bd778c7aa7d3035d39f1c879c97f38dd.jpg",
-      "width": 448,
-      "height": 680,
-      "title": "布丁",
-      "author": "",
-      "character": "",
-      "description": "頭上頂著焦糖，披著黃色斗篷。",
-      "story": "",
-      "hotspots": [
-        {
-          "x": 0.49,
-          "y": 0.07,
-          "label": "焦糖頭飾",
-          "note": "像布丁焦糖一樣的頭飾。"
+          "x": 0.15,
+          "y": 0.65,
+          "label": "押送船",
+          "note": "船上的人緊貼船身，正努力穿過海浪。"
         },
         {
-          "x": 0.86,
-          "y": 0.95,
-          "label": "小花",
-          "note": "斗篷下擺的白色小花圖樣。"
+          "x": 0.08,
+          "y": 0.16,
+          "label": "題字",
+          "note": "左上角寫著系列名稱與作品名，以及北齋的署名。"
         }
       ]
     },
     {
       "slot": "w1",
       "featured": false,
-      "imageUrl": "/artworks/3373675b912bca8e068f8b2f50a3a786.jpg",
-      "previewUrl": "/artworks/preview/3373675b912bca8e068f8b2f50a3a786.jpg",
-      "width": 615,
-      "height": 707,
-      "title": "橘色連帽衫",
-      "author": "",
+      "imageUrl": "/artworks/impression-sunrise.jpg",
+      "previewUrl": "/artworks/preview/impression-sunrise.jpg",
+      "width": 1600,
+      "height": 1241,
+      "title": "印象・日出",
+      "author": "克勞德・莫內",
       "character": "",
-      "description": "瀏海遮住一隻眼睛，淡淡地笑著。",
-      "story": "",
+      "description": "晨霧中的港口，一顆橘紅色的太陽倒映在水面上。",
+      "story": "莫內 1872 年在家鄉勒阿弗爾的港口畫下這幅作品，1874 年在巴黎展出。藝評家借用這幅畫的標題，嘲諷參展的畫家只畫「印象」，「印象派」這個名稱就此誕生。現藏於巴黎的瑪摩丹莫內美術館。",
       "hotspots": [
         {
-          "x": 0.62,
-          "y": 0.55,
-          "label": "臉頰的線條",
-          "note": "臉頰上幾道短線，像貓鬚。"
+          "x": 0.6,
+          "y": 0.3,
+          "label": "太陽",
+          "note": "整幅畫最鮮豔的一點，是灰藍色霧氣裡唯一的暖色。"
         },
         {
-          "x": 0.6,
-          "y": 0.07,
-          "label": "呆毛",
-          "note": "頭頂翹起的一撮頭髮。"
+          "x": 0.62,
+          "y": 0.68,
+          "label": "水面倒影",
+          "note": "幾筆橘色短線就畫出了陽光在水面上的反光。"
+        },
+        {
+          "x": 0.46,
+          "y": 0.73,
+          "label": "小船",
+          "note": "划船的人只用深色剪影表現，融入清晨的霧裡。"
+        },
+        {
+          "x": 0.13,
+          "y": 0.94,
+          "label": "署名",
+          "note": "左下角的「Claude Monet 72」記錄了作畫的年份。"
+        }
+      ]
+    },
+    {
+      "slot": "s1",
+      "featured": false,
+      "imageUrl": "/artworks/girl-with-a-pearl-earring.jpg",
+      "previewUrl": "/artworks/preview/girl-with-a-pearl-earring.jpg",
+      "width": 1351,
+      "height": 1600,
+      "title": "戴珍珠耳環的少女",
+      "author": "約翰尼斯・維梅爾",
+      "character": "不知名的少女",
+      "description": "少女回頭望向觀者，耳邊的珍珠在暗色背景中閃著光。",
+      "story": "維梅爾約在 1665 年畫下這幅作品，現藏於荷蘭海牙的莫瑞泰斯皇家美術館。它不是委託的肖像畫，而是當時流行的「臉部習作」，畫中人物的身分至今不明。頭巾的藍色使用了以青金石研磨的昂貴群青顏料。",
+      "hotspots": [
+        {
+          "x": 0.63,
+          "y": 0.53,
+          "label": "珍珠",
+          "note": "只用幾筆亮白和倒影就畫出珍珠的光澤。"
+        },
+        {
+          "x": 0.55,
+          "y": 0.25,
+          "label": "藍色頭巾",
+          "note": "頭巾的藍色來自昂貴的群青顏料，原料是青金石。"
+        },
+        {
+          "x": 0.45,
+          "y": 0.39,
+          "label": "眼神",
+          "note": "回頭的瞬間，視線直直看向畫外的我們。"
+        },
+        {
+          "x": 0.39,
+          "y": 0.52,
+          "label": "微啟的嘴唇",
+          "note": "嘴唇上的一點高光，讓表情像是正要開口說話。"
+        }
+      ]
+    },
+    {
+      "slot": "s2",
+      "featured": false,
+      "imageUrl": "/artworks/the-kiss.jpg",
+      "previewUrl": "/artworks/preview/the-kiss.jpg",
+      "width": 1594,
+      "height": 1600,
+      "title": "吻",
+      "author": "古斯塔夫・克林姆",
+      "character": "一對戀人",
+      "description": "金色長袍包裹著相擁的戀人，腳下是一片開滿花的草地。",
+      "story": "克林姆在 1907 到 1908 年間完成這幅作品，正值他的「黃金時期」，畫面大量使用金箔。它在完成前就被奧地利政府買下，現藏於維也納的美景宮美術館。男子長袍上是直角的黑白方塊，女子身上則是圓形的彩色花紋，兩種圖案在擁抱中融為一體。",
+      "hotspots": [
+        {
+          "x": 0.56,
+          "y": 0.15,
+          "label": "相擁的臉",
+          "note": "男子低頭親吻，女子閉上眼睛，表情平靜。"
+        },
+        {
+          "x": 0.33,
+          "y": 0.45,
+          "label": "方形圖案",
+          "note": "男子長袍上的黑白長方形，代表剛硬的一方。"
+        },
+        {
+          "x": 0.55,
+          "y": 0.4,
+          "label": "圓形花紋",
+          "note": "女子衣服上的彩色圓形，像花朵一樣柔和。"
+        },
+        {
+          "x": 0.35,
+          "y": 0.88,
+          "label": "花草地",
+          "note": "戀人跪在開滿花的草地邊緣，彷彿站在懸崖上。"
         }
       ]
     }
