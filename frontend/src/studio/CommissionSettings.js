@@ -2,7 +2,7 @@ import * as React from "react";
 import {api} from "../api";
 import {useSession, isArtist} from "../session";
 import limits from "../shared/artworkLimits.json";
-import {Section, useForm, Feedback} from "./ProfilePage";
+import {Section, useForm, Feedback, SwitchRow} from "./ProfilePage";
 
 // Commission settings, shown in SettingsDialog (#me/commissions): open or closed,
 // terms, contact, and up to a few price plans for the artist page's 約稿 tab.
@@ -28,10 +28,8 @@ const CommissionSettings = () => {
         await api("/me/profile", {method: "PATCH", body: {commission: {open, info, contact, plans: plans.filter((plan) => plan.title.trim())}}});
         await refresh();
       }, "已儲存")}>
-        <label className="admin-check">
-          <input type="checkbox" checked={page.values.open} onChange={(event) => setPage("open", event.target.checked)} />
-          <span>接受約稿<em>個人頁會顯示「接受約稿」標籤和約稿按鈕</em></span>
-        </label>
+        <SwitchRow label="接受約稿" hint="個人頁會顯示「接受約稿」標籤和約稿按鈕"
+          checked={page.values.open} onChange={(open) => setPage("open", open)} />
         <label className="admin-field"><span>約稿說明<em>{page.values.info.length} / {limits.commissionInfo}</em></span>
           <textarea rows={4} value={page.values.info} onChange={page.set("info")} maxLength={limits.commissionInfo}
             placeholder="可接的類型、交期、修改次數、使用範圍……" /></label>
@@ -49,10 +47,10 @@ const CommissionSettings = () => {
           </div>
         ))}
         {page.values.plans.length < limits.commissionPlans && (
-          <button type="button" className="admin-button" onClick={() => setPage("plans", [...page.values.plans, {title: "", price: "", description: ""}])}>＋ 新增方案</button>
+          <button type="button" className="admin-button admin-offer__add" onClick={() => setPage("plans", [...page.values.plans, {title: "", price: "", description: ""}])}>＋ 新增方案</button>
         )}
         <Feedback status={page.status} />
-        <div><button className="admin-button admin-button--primary" disabled={page.status.busy}>儲存</button></div>
+        <div className="admin-form-footer"><button className="admin-button admin-button--primary" disabled={page.status.busy}>儲存</button></div>
       </form>
     </Section>
   );

@@ -146,9 +146,10 @@ const GalleryPage = () => {
     };
   }, []);
 
-  // keep the synthesized audio in step with the settings
+  // keep the audio in step with the settings and the room
   React.useEffect(() => {
     const sync = (state) => {
+      audio.setRoom(state.room);
       audio.setMusicOn(state.musicOn);
       audio.setVolume(state.volume);
       audio.setRain(state.weather === "rain" && state.room === "main");

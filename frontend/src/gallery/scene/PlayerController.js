@@ -222,7 +222,7 @@ const PlayerController = () => {
           player.heading = seat.heading;
           runtime.camera.yaw = seat.heading + Math.PI;
         } else if (interactable.type === "portal") {
-          enterPortal(interactable.target);
+          enterPortal(interactable.target, interactable.arrival);
         } else if (interactable.type === "graffiti") {
           state.set({mode: "graffiti", focusedId: null, prompt: null});
           l.focusId = null;

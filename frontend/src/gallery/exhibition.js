@@ -3,6 +3,7 @@
 // sees the layout the admins saved; the bundled samples stand in only when the API
 // can't be reached.
 import sample from "../shared/sampleArtworks.json";
+import slots from "../shared/exhibitionSlots.json";
 import {buildRooms} from "./layout";
 
 const sampleData = () => {
@@ -10,6 +11,10 @@ const sampleData = () => {
   const placements = Object.fromEntries(sample.artworks.map(({slot}) => [slot, `sample-${slot}`]));
   const featured = sample.artworks.find((artwork) => artwork.featured);
   if (featured) placements.feature = `sample-${featured.slot}`;
+  // the festival shows the same samples, so it isn't empty either
+  slots.festival.forEach((slot, i) => {
+    placements[slot.id] = artworks[i % artworks.length].id;
+  });
   return {artworks, placements};
 };
 

@@ -53,10 +53,12 @@ export const travelToArtwork = (roomId, artworkId) => {
   });
 };
 
-export const enterPortal = (target) => {
+// `arrival` ({position, heading}) overrides the room's usual spawn point.
+export const enterPortal = (target, arrival) => {
   if (getGalleryState().transition) return;
   audio.whoosh();
-  const {name, spawn} = getGalleryState().exhibition.rooms[target];
+  const {name, spawn: roomSpawn} = getGalleryState().exhibition.rooms[target];
+  const spawn = arrival || roomSpawn;
   fadeTransition(name, () => {
     getGalleryState().set({room: target, focusedId: null, prompt: null, hoveredId: null});
     runtime.player.seat = null;

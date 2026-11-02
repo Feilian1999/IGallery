@@ -27,7 +27,7 @@ export const runtime = {
   // wall meshes that fade out when they block the third person camera
   occluders: new Set(),
   // recent walking path per room for the map, as [x, z] pairs
-  trail: {main: [], annex: []},
+  trail: {main: [], annex: [], festival: []},
   // footprints left on the floor: {room, x, z, heading, side, time}
   footprints: [],
   interactRequested: false,

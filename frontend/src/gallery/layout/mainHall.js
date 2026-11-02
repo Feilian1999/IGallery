@@ -111,6 +111,7 @@ export const COLLIDERS = {
 export const INTERACTABLES = [
   ...BENCHES.map((bench, i) => ({id: `bench${i}`, type: "bench", position: bench.position, radius: 1.5, label: "坐下", seat: bench})),
   {id: "portal", type: "portal", position: viewingSpot(PORTAL, 1.2), radius: 1.6, label: "進入懸浮展廳", target: "annex"},
+  {id: "festival", type: "portal", position: [(SOUTH_WALL.door.from + SOUTH_WALL.door.to) / 2, 9.1], radius: 1.7, label: "走出大門，前往夏日祭典", target: "festival"},
   {id: "graffiti", type: "graffiti", position: viewingSpot(GRAFFITI, 2.2), radius: 2.2, label: "開始塗鴉"},
 ];
 

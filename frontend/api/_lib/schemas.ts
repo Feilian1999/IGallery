@@ -92,7 +92,7 @@ export const rejectBody = z.object({reason: z.string().trim().min(1, "請填寫�
 
 export const reorder = z.object({ids: z.array(z.string()).max(1000)});
 
-const slotIds = [...slots.main.map((slot) => slot.id), slots.feature.id];
+const slotIds = [...slots.main, ...slots.festival].map((slot) => slot.id).concat(slots.feature.id);
 export const exhibition = z.object({
   // slot id -> artwork id; slots left out are emptied
   placements: z.record(z.string(), z.string()).refine(

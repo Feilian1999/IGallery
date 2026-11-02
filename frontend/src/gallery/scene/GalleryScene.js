@@ -10,24 +10,26 @@ import PlayerController from "./PlayerController";
 import Effects from "./Effects";
 import FrameDriver from "./FrameDriver";
 
-// The annex is only downloaded when the visitor first walks through the portal.
+// The other rooms are only downloaded when the visitor first goes there.
 const Annex = React.lazy(() => import("./Annex"));
+const Festival = React.lazy(() => import("./Festival"));
 
 const ANNEX_FOG = ["#07070c", 14, 30];
+const FESTIVAL_FOG = ["#0b1026", 26, 70];
 
 const GalleryScene = () => {
   const themeId = useGalleryStore((state) => state.theme);
   const roomId = useGalleryStore((state) => state.room);
   const theme = THEMES[themeId];
-  const fog = roomId === "annex" ? ANNEX_FOG : theme.fog;
+  const fog = roomId === "annex" ? ANNEX_FOG : roomId === "festival" ? FESTIVAL_FOG : theme.fog;
 
   return (
     <>
-      <color attach="background" args={[roomId === "annex" ? ANNEX_FOG[0] : theme.background]} />
+      <color attach="background" args={[roomId === "main" ? theme.background : fog[0]]} />
       <fog attach="fog" args={fog} />
       <Lighting />
       <React.Suspense fallback={null}>
-        {roomId === "main" ? <MainHall /> : <Annex />}
+        {roomId === "main" ? <MainHall /> : roomId === "festival" ? <Festival /> : <Annex />}
       </React.Suspense>
       <React.Suspense fallback={null}>
         <Robot />

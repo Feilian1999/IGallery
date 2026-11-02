@@ -5,6 +5,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import {ROOM_INFO} from "../layout";
 import * as mainHall from "../layout/mainHall";
 import * as annex from "../layout/annex";
+import * as festival from "../layout/festival";
 import {runtime} from "../runtime";
 import {useGalleryStore} from "../store";
 import {travelToArtwork} from "../actions";
@@ -15,6 +16,7 @@ import {travelToArtwork} from "../actions";
 const VIEW = {
   main: {x: -15.5, y: -15.5, width: 31, height: 27},
   annex: {x: -11.5, y: -11.5, width: 23, height: 23},
+  festival: {x: -14.5, y: -16.5, width: 29, height: 29.5},
 };
 const ART_RADIUS = 0.95;
 
@@ -35,7 +37,7 @@ const MainHallPlan = ({id}) => {
       {/* window and door openings in the south wall */}
       <line x1={mainHall.SOUTH_WALL.window.from} y1="10" x2={mainHall.SOUTH_WALL.window.to} y2="10" stroke="#9fd2ff" strokeWidth="0.32" strokeLinecap="round" strokeOpacity="0.8" />
       <line x1={mainHall.SOUTH_WALL.door.from} y1="10" x2={mainHall.SOUTH_WALL.door.to} y2="10" stroke="#15131a" strokeWidth="0.4" />
-      <text x={(mainHall.SOUTH_WALL.door.from + mainHall.SOUTH_WALL.door.to) / 2} y="11.4" className="map-svg__note" textAnchor="middle">入口</text>
+      <text x={(mainHall.SOUTH_WALL.door.from + mainHall.SOUTH_WALL.door.to) / 2} y="11.4" className="map-svg__note" textAnchor="middle">大門・往夏日祭典</text>
       {mainHall.PARTITIONS.map((partition, i) => (
         <line key={i} x1={partition.start[0]} y1={partition.start[1]} x2={partition.end[0]} y2={partition.end[1]}
           stroke="#f2ede4" strokeOpacity="0.75" strokeWidth="0.26" strokeLinecap="round" filter={`url(#${id}-ink)`} />
@@ -75,6 +77,39 @@ const AnnexPlan = ({id}) => (
     </g>
   </g>
 );
+
+const FestivalPlan = ({id}) => {
+  const {minX, maxX, minZ, maxZ} = festival.SQUARE;
+  const outline = toPath([[minX, minZ], [maxX, minZ], [maxX, maxZ], [minX, maxZ]]);
+  const {STALL, STAGE, SIGNBOARD, YAGURA, TORII} = festival;
+  return (
+    <g>
+      <path d={outline} fill={`url(#${id}-wash)`} />
+      <path d={outline} fill="none" stroke="var(--g-accent)" strokeWidth="0.16" strokeLinejoin="round" filter={`url(#${id}-ink)`} />
+      {/* lantern strings */}
+      {festival.POLES.map(([x, z], i) => (
+        <line key={i} x1={YAGURA.center[0]} y1={YAGURA.center[1]} x2={x} y2={z} stroke="#ffb36b" strokeOpacity="0.25" strokeWidth="0.06" strokeDasharray="0.15 0.5" />
+      ))}
+      {festival.STALLS.map((stall) => (
+        <rect key={stall.slot} x={stall.facing > 0 ? stall.x : stall.x - STALL.depth - 0.3} y={stall.z - STALL.width / 2} width={STALL.depth + 0.3} height={STALL.width}
+          rx="0.15" fill={stall.canopy} fillOpacity="0.35" stroke="#f2ede4" strokeOpacity="0.4" strokeWidth="0.06" />
+      ))}
+      <rect x={YAGURA.center[0] - YAGURA.size / 2} y={YAGURA.center[1] - YAGURA.size / 2} width={YAGURA.size} height={YAGURA.size}
+        fill="#c62f37" fillOpacity="0.3" stroke="#f2ede4" strokeOpacity="0.6" strokeWidth="0.08" />
+      <text x={YAGURA.center[0]} y={YAGURA.center[1] + 0.25} className="map-svg__note" textAnchor="middle">櫓</text>
+      <rect x={STAGE.center[0] - STAGE.width / 2} y={STAGE.center[1] - STAGE.depth / 2} width={STAGE.width} height={STAGE.depth}
+        fill="#f2ede4" fillOpacity="0.12" stroke="#f2ede4" strokeOpacity="0.5" strokeWidth="0.08" />
+      <text x={STAGE.center[0]} y={STAGE.center[1] + 0.25} className="map-svg__note" textAnchor="middle">神樂殿</text>
+      <line x1={SIGNBOARD.center[0] - SIGNBOARD.width / 2} y1={SIGNBOARD.center[1]} x2={SIGNBOARD.center[0] + SIGNBOARD.width / 2} y2={SIGNBOARD.center[1]}
+        stroke="#f2ede4" strokeOpacity="0.75" strokeWidth="0.2" strokeLinecap="round" />
+      <g transform={`translate(${TORII.center[0]} ${TORII.center[1]})`}>
+        <circle r="1.1" fill="#ffb36b" fillOpacity="0.2" filter={`url(#${id}-glow)`} />
+        <line x1={-TORII.width / 2 - 0.6} y1="0" x2={TORII.width / 2 + 0.6} y2="0" stroke="#c0392b" strokeWidth="0.3" strokeLinecap="round" />
+        <text y="-0.8" className="map-svg__note" textAnchor="middle">鳥居・回主展廳</text>
+      </g>
+    </g>
+  );
+};
 
 export const MapSvg = ({roomId, interactive, showTitles}) => {
   const id = React.useId().replace(/:/g, "");
@@ -140,14 +175,14 @@ export const MapSvg = ({roomId, interactive, showTitles}) => {
         ))}
       </defs>
 
-      {roomId === "main" ? <MainHallPlan id={id} /> : <AnnexPlan id={id} />}
+      {roomId === "main" ? <MainHallPlan id={id} /> : roomId === "festival" ? <FestivalPlan id={id} /> : <AnnexPlan id={id} />}
 
       {here && (
         <polyline ref={trail} fill="none" stroke="#f2ede4" strokeOpacity="0.55" strokeWidth="0.14" strokeLinecap="round" strokeDasharray="0.01 0.42" />
       )}
 
       {room.artworks.map(({artwork, placement}) => {
-        const [x, z] = artMarkerPoint(placement, roomId === "main" ? 1.05 : 0);
+        const [x, z] = artMarkerPoint(placement, roomId === "annex" ? 0 : 1.05);
         const seen = visited.includes(artwork.id);
         return (
           <g
@@ -186,7 +221,7 @@ export const MapSvg = ({roomId, interactive, showTitles}) => {
 };
 
 MapSvg.propTypes = {
-  roomId: PropTypes.oneOf(["main", "annex"]).isRequired,
+  roomId: PropTypes.oneOf(["main", "annex", "festival"]).isRequired,
   interactive: PropTypes.bool,
   showTitles: PropTypes.bool,
 };

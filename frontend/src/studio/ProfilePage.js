@@ -30,6 +30,20 @@ export const useForm = (initial) => {
   return {values, setValues, set, status, submit};
 };
 
+// A yes/no setting: the label and hint on the left, an on/off switch on the right.
+export const SwitchRow = ({label, hint, checked, onChange}) => (
+  <div className="admin-switch-row">
+    <div>
+      <div>{label}</div>
+      {hint && <div className="admin-muted admin-switch-row__hint">{hint}</div>}
+    </div>
+    <button type="button" role="switch" aria-checked={checked} aria-label={label}
+      className={`admin-switch${checked ? " admin-switch--on" : ""}`} onClick={() => onChange(!checked)}>
+      <span className="admin-switch__state">{checked ? "Yes" : "No"}</span>
+    </button>
+  </div>
+);
+
 export const Feedback = ({status}) => (
   <>
     {status.error && <div className="admin-error">{status.error}</div>}
@@ -95,10 +109,8 @@ const ProfilePage = () => {
             await api("/me/profile", {method: "PATCH", body: values});
             await refresh();
           }, "已儲存")}>
-            <label className="admin-check">
-              <input type="checkbox" checked={privacy.values.likesPublic} onChange={(event) => privacy.setValues({likesPublic: event.target.checked})} />
-              <span>公開我的收藏<em>關閉後，只有你自己能在個人頁看到按過愛心的作品</em></span>
-            </label>
+            <SwitchRow label="公開我的收藏" hint="關閉後，只有你自己能在個人頁看到按過愛心的作品"
+              checked={privacy.values.likesPublic} onChange={(likesPublic) => privacy.setValues({likesPublic})} />
             <Feedback status={privacy.status} />
             <button className="admin-button admin-button--primary" disabled={privacy.status.busy}>儲存</button>
           </form>

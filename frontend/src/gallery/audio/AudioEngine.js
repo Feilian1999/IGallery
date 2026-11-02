@@ -1,7 +1,14 @@
 /* eslint-disable require-jsdoc */
-// Everything audible in the gallery is synthesized with the Web Audio API, so the
-// project ships no audio files. The context can only start after a user gesture,
-// which is why the gallery opens with an "enter" button.
+// The gallery's sound: a recorded soundtrack in the main hall and the festival, and
+// everything else (the annex ambience, footsteps, rain, chimes) synthesized with the
+// Web Audio API. The context can only start after a user gesture, which is why the
+// gallery opens with an "enter" button.
+
+// Rooms with a recorded soundtrack; the others get the synthesized ambience.
+const TRACKS = {main: "/audio/hikari.mp3", festival: "/audio/kagura.mp3"};
+// the recordings are mastered loud; this keeps them behind the sound effects
+const TRACK_LEVEL = 0.32;
+const CROSSFADE_SECONDS = 2.4;
 
 // Slow, open chords (MIDI note numbers): Cmaj9, Am9, Fmaj7#11, Gsus
 const CHORDS = [
@@ -26,6 +33,11 @@ class AudioEngine {
     this.active = false;
     this.chordTimer = null;
     this.melodyTimer = null;
+    this.room = "main";
+    // room -> {element, gain}, created the first time a room's soundtrack plays
+    this.tracks = {};
+    // rooms whose soundtrack couldn't play; they fall back to the synthesized music
+    this.failedTracks = new Set();
   }
 
   // Must be called from a user gesture handler (or after one, on returning to the gallery).
@@ -38,6 +50,7 @@ class AudioEngine {
       this.scheduleMelody();
       this.setMusicOn(this.musicOn, 3);
       this.setRain(this.rainOn);
+      this.applyRoom(0.5);
       return;
     }
     this.active = true;
@@ -59,7 +72,16 @@ class AudioEngine {
     this.music = context.createGain();
     this.music.gain.value = 0;
     this.music.connect(this.master);
-    this.music.connect(this.reverb);
+    // the music's reverb send, faded together with the music so "music off" is silent
+    this.musicWet = context.createGain();
+    this.musicWet.gain.value = 0;
+    this.musicWet.connect(this.reverb);
+
+    // the synthesized ambience, faded in only in rooms without a soundtrack
+    this.synth = context.createGain();
+    this.synth.gain.value = 0;
+    this.synth.connect(this.music);
+    this.synth.connect(this.musicWet);
 
     this.sfx = context.createGain();
     this.sfx.gain.value = 0.9;
@@ -70,10 +92,17 @@ class AudioEngine {
     this.scheduleChords();
     this.scheduleMelody();
     this.setMusicOn(this.musicOn, 4);
+    this.applyRoom(0.5);
 
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden) context.suspend();
-      else if (this.active) context.resume();
+      const track = this.tracks[this.room];
+      if (document.hidden) {
+        context.suspend();
+        track?.element.pause();
+      } else if (this.active) {
+        context.resume();
+        if (track && this.musicOn && !this.failedTracks.has(this.room)) this.playTrack(this.room);
+      }
     });
   }
 
@@ -84,13 +113,74 @@ class AudioEngine {
     clearTimeout(this.chordTimer);
     clearTimeout(this.melodyTimer);
     const now = this.context.currentTime;
-    [this.music.gain, this.rainGain.gain].forEach((gain) => {
+    [this.music.gain, this.musicWet.gain, this.rainGain.gain].forEach((gain) => {
       gain.cancelScheduledValues(now);
       gain.setTargetAtTime(0, now, 0.1);
     });
     setTimeout(() => {
-      if (!this.active) this.context.suspend();
+      if (this.active) return;
+      this.context.suspend();
+      Object.values(this.tracks).forEach(({element}) => element.pause());
     }, 500);
+  }
+
+  // The soundtrack element for a room, wired into the music bus.
+  track(room) {
+    if (!TRACKS[room]) return null;
+    if (!this.tracks[room]) {
+      const element = new Audio(TRACKS[room]);
+      element.loop = true;
+      element.preload = "auto";
+      element.addEventListener("error", () => this.trackFailed(room));
+      const gain = this.context.createGain();
+      gain.gain.value = 0;
+      this.context.createMediaElementSource(element).connect(gain).connect(this.music);
+      this.tracks[room] = {element, gain};
+    }
+    return this.tracks[room];
+  }
+
+  // Walking into another room crossfades to its music.
+  setRoom(room) {
+    if (room === this.room) return;
+    this.room = room;
+    if (this.context && this.active) this.applyRoom(CROSSFADE_SECONDS);
+  }
+
+  // whether this room plays its recording (otherwise the synthesized music)
+  hasTrack(room = this.room) {
+    return Boolean(TRACKS[room]) && !this.failedTracks.has(room);
+  }
+
+  playTrack(room) {
+    this.track(room).element.play().catch(() => this.trackFailed(room));
+  }
+
+  // A missing file, an undecodable one or a blocked play() falls back to the synthesized music.
+  trackFailed(room) {
+    if (this.failedTracks.has(room)) return;
+    console.warn(`[igallery] the ${room} soundtrack can't play; using the synthesized music instead`);
+    this.failedTracks.add(room);
+    if (this.context && this.active && room === this.room) this.applyRoom(1);
+  }
+
+  applyRoom(fadeSeconds) {
+    const now = this.context.currentTime;
+    const ease = fadeSeconds / 3;
+    this.synth.gain.setTargetAtTime(this.hasTrack() ? 0 : 1, now, ease);
+    Object.keys(TRACKS).forEach((room) => {
+      if (room === this.room && this.hasTrack(room)) {
+        // with music off nothing is downloaded or played
+        if (this.musicOn) this.playTrack(room);
+        this.track(room).gain.gain.setTargetAtTime(TRACK_LEVEL, now, ease);
+      } else if (this.tracks[room]) {
+        this.tracks[room].gain.gain.setTargetAtTime(0, now, ease);
+        // pause once it has faded, unless the visitor came straight back
+        setTimeout(() => {
+          if (this.room !== room || !this.hasTrack(room)) this.tracks[room].element.pause();
+        }, fadeSeconds * 1000 + 600);
+      }
+    });
   }
 
   impulseResponse(seconds) {
@@ -115,7 +205,8 @@ class AudioEngine {
   scheduleChords() {
     let index = 0;
     const playNext = () => {
-      this.playChord(CHORDS[index % CHORDS.length]);
+      // only build the synth voices where they can be heard
+      if (this.musicOn && !this.hasTrack()) this.playChord(CHORDS[index % CHORDS.length]);
       index++;
       this.chordTimer = setTimeout(playNext, CHORD_SECONDS * 1000);
     };
@@ -139,7 +230,7 @@ class AudioEngine {
     envelope.gain.linearRampToValueAtTime(0.055, now + 3);
     envelope.gain.setValueAtTime(0.055, now + CHORD_SECONDS - 1);
     envelope.gain.linearRampToValueAtTime(0, now + CHORD_SECONDS + 3);
-    filter.connect(envelope).connect(this.music);
+    filter.connect(envelope).connect(this.synth);
 
     const end = now + CHORD_SECONDS + 3.2;
     notes.forEach((note) => {
@@ -159,7 +250,7 @@ class AudioEngine {
 
   scheduleMelody() {
     const playNext = () => {
-      if (Math.random() < 0.75) this.bell(MELODY[Math.floor(Math.random() * MELODY.length)], 0.035, this.music);
+      if (this.musicOn && !this.hasTrack() && Math.random() < 0.75) this.bell(MELODY[Math.floor(Math.random() * MELODY.length)], 0.035, this.synth);
       this.melodyTimer = setTimeout(playNext, 1400 + Math.random() * 3200);
     };
     this.melodyTimer = setTimeout(playNext, 3000);
@@ -173,7 +264,8 @@ class AudioEngine {
     envelope.gain.linearRampToValueAtTime(level, now + 0.01);
     envelope.gain.exponentialRampToValueAtTime(0.0001, now + 2.6);
     envelope.connect(destination);
-    envelope.connect(this.reverb);
+    // sound effects get their own reverb; the music bus already sends to it
+    if (destination === this.sfx) envelope.connect(this.reverb);
     // a bell is a fundamental plus a few inharmonic partials
     [[1, 1], [2.76, 0.35], [5.4, 0.12]].forEach(([ratio, gain]) => {
       const oscillator = context.createOscillator();
@@ -230,12 +322,20 @@ class AudioEngine {
   }
 
   setMusicOn(on, fadeSeconds = 1.5) {
+    const changed = on !== this.musicOn;
     this.musicOn = on;
     if (!this.context || !this.active) return;
     const now = this.context.currentTime;
-    this.music.gain.cancelScheduledValues(now);
-    this.music.gain.setValueAtTime(this.music.gain.value, now);
-    this.music.gain.linearRampToValueAtTime(on ? 1 : 0, now + fadeSeconds);
+    [this.music.gain, this.musicWet.gain].forEach((gain) => {
+      gain.cancelScheduledValues(now);
+      gain.setValueAtTime(gain.value, now);
+      gain.linearRampToValueAtTime(on ? 1 : 0, now + fadeSeconds);
+    });
+    if (!changed) return;
+    const track = this.tracks[this.room];
+    if (on && this.hasTrack()) this.playTrack(this.room);
+    // pause the recording once it has faded out, so it stops streaming
+    if (!on && track) setTimeout(() => !this.musicOn && track.element.pause(), fadeSeconds * 1000 + 200);
   }
 
   setVolume(volume) {
@@ -263,6 +363,15 @@ class AudioEngine {
 
   bounce(strength) {
     this.noiseBurst({duration: 0.12, frequency: 160 + strength * 120, q: 3, level: Math.min(0.35, strength * 0.12), type: "lowpass"});
+  }
+
+  // a distant firework: a low thump, then crackle
+  firework() {
+    if (!this.context || !this.active) return;
+    this.noiseBurst({duration: 0.7, frequency: 110, q: 0.8, level: 0.16, type: "lowpass"});
+    for (let i = 0; i < 5; i++) {
+      setTimeout(() => this.noiseBurst({duration: 0.05, frequency: 3500 + Math.random() * 2000, q: 1, level: 0.025, type: "highpass"}), 350 + i * 90 + Math.random() * 80);
+    }
   }
 
   click() {

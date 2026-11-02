@@ -1112,10 +1112,26 @@ a.admin-notification:hover {
   object-fit: cover;
 }
 
-/* checkbox rows and commission plans on the profile page */
-.admin-check { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 14px; cursor: pointer; }
-.admin-check input { margin-top: 3px; accent-color: var(--a-accent); width: 16px; height: 16px; }
-.admin-check em { display: block; font-style: normal; font-size: 12px; color: var(--a-muted); margin-top: 2px; }
+/* yes/no settings: label on the left, a sliding switch on the right */
+.admin-switch-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.admin-switch-row__hint { font-size: 12px; margin-top: 2px; }
+.admin-switch {
+  position: relative; flex: none; width: 72px; height: 32px; padding: 0; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--a-border); background: var(--a-raised); color: var(--a-muted);
+  font: inherit; font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.admin-switch::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--a-muted); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); transition: transform 0.2s ease, background 0.2s ease;
+}
+.admin-switch__state { position: absolute; top: 50%; right: 12px; transform: translateY(-50%); }
+.admin-switch--on { background: var(--a-accent); border-color: var(--a-accent); color: var(--a-on-accent); }
+.admin-switch--on::after { transform: translateX(40px); background: var(--a-on-accent); }
+.admin-switch--on .admin-switch__state { right: auto; left: 12px; }
+.admin-switch:focus-visible { outline: 2px solid var(--a-accent); outline-offset: 2px; }
+
+/* commission plans */
 .admin-offer { display: grid; gap: 8px; padding: 12px; margin-bottom: 10px; border: 1px solid var(--a-border); border-radius: 10px; }
 .admin-offer__row { display: grid; grid-template-columns: 1fr 160px auto; gap: 8px; }
 .admin-offer input, .admin-offer textarea {
@@ -1134,3 +1150,11 @@ a.admin-notification:hover {
 /* free text that keeps the writer's line breaks */
 .admin-prewrap { white-space: pre-wrap; }
 .admin-panel > :first-child { margin-top: 0; }
+
+/* space between "add plan" and the form's save button */
+.admin-offer__add { margin-bottom: 8px; }
+.admin-form-footer { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--a-border); }
+
+/* main hall / festival switch on the exhibition page */
+.admin-hall-tabs { display: inline-flex; margin-bottom: 16px; }
+.admin-hall-tabs button { padding: 7px 18px; }

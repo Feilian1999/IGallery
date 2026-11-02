@@ -30,7 +30,8 @@ const Lighting = () => {
   useFrame((_, delta) => {
     const state = getGalleryState();
     const k = 1 - Math.exp(-Math.min(delta, 0.1) * 3);
-    const roomScale = roomId === "annex" ? 0.45 : 1;
+    // the annex and the night festival are lit mostly by their own lights
+    const roomScale = roomId === "annex" ? 0.45 : roomId === "festival" ? 0.4 : 1;
     const dimGoal = state.focusedId ? FOCUS_DIM : 1;
     if (Math.abs(dim.current - dimGoal) > 0.002) {
       dim.current = THREE.MathUtils.lerp(dim.current, dimGoal, k);
