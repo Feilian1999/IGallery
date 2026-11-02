@@ -10,6 +10,7 @@ import RankingPage from "./pages/RankingPage";
 import LikesPage from "./pages/LikesPage";
 import InboxPage from "./pages/InboxPage";
 import UserPage from "./pages/UserPage";
+import ArtworkPage from "./pages/ArtworkPage";
 
 // three.js and the whole 3D gallery are only downloaded when someone opens it
 const GalleryPage = React.lazy(() => import("./pages/GalleryPage"));
@@ -51,6 +52,7 @@ const readMode = () => {
 //   #search/<text>         search results
 //   #ranking, #likes, #inbox
 //   #users/<id>[/<tab>]    an artist's public page: works, commissions or favorites
+//   #users/<id>/artworks/<artwork>   one artwork under its artist
 //   #login, #me…, #admin…  the studio
 //   #me/profile            profile dialog over the previous page
 //   #gallery               the 3D gallery (full screen)
@@ -73,13 +75,16 @@ const parseHash = (hash) => {
   if (["login", "me", "admin"].includes(name)) {
     return {page: "studio", nav: STUDIO_NAV[rest[0] ? `${name}/${rest[0]}` : name] || name};
   }
+  if (name === "users" && rest[0] && rest[1] === "artworks" && rest[2]) {
+    return {page: "artwork", nav: "user", userId: rest[0], artworkId: decode(rest[2])};
+  }
   if (name === "users" && rest[0]) return {page: "user", nav: "user", userId: rest[0], tab: rest[1]};
   if (name === "search") return {page: "home", nav: "home", query: decode(rest.join("/"))};
   if (["ranking", "likes", "inbox"].includes(name)) return {page: name, nav: name};
   return {page: "home", nav: "home"};
 };
 
-const SHELL_PAGES = {home: HomePage, ranking: RankingPage, likes: LikesPage, inbox: InboxPage, user: UserPage};
+const SHELL_PAGES = {home: HomePage, ranking: RankingPage, likes: LikesPage, inbox: InboxPage, user: UserPage, artwork: ArtworkPage};
 
 /**
  * @return {App} App object
@@ -135,7 +140,7 @@ const App = () => {
               </React.Suspense>
             ) : (
               <AppShell page={route.nav} userId={route.userId} query={route.query}>
-                {ShellPage ? <ShellPage query={route.query} userId={route.userId} tab={route.tab} key={route.userId} /> : (
+                {ShellPage ? <ShellPage query={route.query} userId={route.userId} tab={route.tab} artworkId={route.artworkId} key={route.artworkId || route.userId} /> : (
                   <React.Suspense fallback={null}>
                     <StudioApp hash={pageHash} />
                   </React.Suspense>

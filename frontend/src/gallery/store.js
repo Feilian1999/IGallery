@@ -1,5 +1,5 @@
 import {create} from "zustand";
-import {sampleExhibition, fetchExhibition, buildExhibition} from "./exhibition";
+import {sampleExhibition, emptyExhibition, fetchExhibition, buildExhibition} from "./exhibition";
 
 const STORAGE_KEY = "igallery:preferences";
 // Only these keys survive a reload; everything else is session state.
@@ -52,8 +52,10 @@ export const useGalleryStore = create((set, get) => ({
   graffitiClearToken: 0,
 
   photo: {filter: "none", depthOfField: true, frame: false},
-  // artworks and rooms; starts with the bundled samples until the API answers
-  exhibition: sampleExhibition(),
+  // artworks and rooms from the API. "loading" until it answers (the entrance waits for it);
+  // "offline" when it couldn't be reached and the bundled samples are shown instead
+  exhibition: emptyExhibition(),
+  exhibitionStatus: "loading",
   ...preferences,
 
   resolvedQuality: () => {
@@ -73,13 +75,18 @@ export const useGalleryStore = create((set, get) => ({
     return {exhibition: buildExhibition({artworks: updated, placements}, source)};
   }),
   loadExhibition: async () => {
-    try {
-      const exhibition = await fetchExhibition();
-      // an empty exhibition would leave the rooms bare; keep the samples instead
-      if (exhibition.artworks.length) set({exhibition});
-    } catch (error) {
-      console.warn("[igallery] showing sample artworks, the API is unavailable:", error.message);
+    // one retry covers a cold-starting API
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        set({exhibition: await fetchExhibition(), exhibitionStatus: "ready"});
+        return;
+      } catch (error) {
+        if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 1500));
+        else console.warn("[igallery] showing sample artworks, the API is unavailable:", error.message);
+      }
     }
+    // a failed refresh keeps an exhibition that already loaded
+    if (get().exhibitionStatus !== "ready") set({exhibition: sampleExhibition(), exhibitionStatus: "offline"});
   },
 }));
 

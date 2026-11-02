@@ -1,5 +1,5 @@
 import limits from "../shared/artworkLimits.json";
-import {api, ApiError, CSRF_HEADERS} from "../api";
+import {ApiError, CSRF_HEADERS} from "../api";
 
 // Images are resized in the browser before upload: a large version for viewing
 // and a small preview for the gallery and lists. Production uploads go straight
@@ -71,16 +71,4 @@ export const uploadImage = async (file, session, onProgress) => {
   const imageUrl = await send(large.blob, `${id}.jpg`, (p) => onProgress(p * 0.85));
   const previewUrl = await send(preview.blob, `${id}-preview.jpg`, (p) => onProgress(0.85 + p * 0.15));
   return {imageUrl, previewUrl, width: large.width, height: large.height};
-};
-
-// Uploads the image and registers the artwork as a draft owned by the uploader.
-// `aiUsage` is the uploader's AI disclosure for this file.
-export const uploadArtwork = async (file, session, aiUsage, onProgress) => {
-  const image = await uploadImage(file, session, onProgress);
-  const title = file.name.replace(/\.[^.]+$/, "").slice(0, limits.title);
-  const {artwork} = await api("/me/artworks", {
-    method: "POST",
-    body: {...image, title, aiUsage},
-  });
-  return artwork;
 };

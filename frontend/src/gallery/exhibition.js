@@ -1,6 +1,7 @@
 // The exhibition the 3D gallery shows: published artworks, which slot each hangs
-// in, and the rooms built from them. Loaded from /api/exhibition; the bundled
-// sample artworks are used until then, or if the API can't be reached.
+// in, and the rooms built from them. Loaded from /api/exhibition, so every visitor
+// sees the layout the admins saved; the bundled samples stand in only when the API
+// can't be reached.
 import sample from "../shared/sampleArtworks.json";
 import {buildRooms} from "./layout";
 
@@ -22,6 +23,8 @@ export const buildExhibition = ({artworks, placements}, source) => ({
 });
 
 export const sampleExhibition = () => buildExhibition(sampleData(), "sample");
+
+export const emptyExhibition = () => buildExhibition({artworks: [], placements: {}}, "loading");
 
 export const fetchExhibition = async () => {
   const response = await fetch("/api/exhibition");

@@ -327,33 +327,9 @@
   font-size: 18px;
 }
 
-.admin-jobs {
-  list-style: none;
-  margin: 12px 0 0;
-  padding: 0;
-}
 
-.admin-job {
-  display: grid;
-  grid-template-columns: minmax(0, 260px) 1fr auto;
-  align-items: center;
-  gap: 14px;
-  padding: 8px 12px;
-  border-radius: 9px;
-  background: var(--a-surface);
-  margin-bottom: 6px;
-  font-size: 13px;
-}
 
-.admin-job--error {
-  color: var(--a-danger-text);
-}
 
-.admin-job__name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 
 .admin-progress {
   height: 4px;
@@ -835,10 +811,6 @@
   box-shadow: 0 0 0 1px var(--a-accent) inset;
 }
 
-.admin-drop--disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 
 .admin-ai-tag {
   position: absolute;
@@ -1003,6 +975,7 @@
 .admin-table td {
   padding: 12px;
   border-bottom: 1px solid var(--a-border);
+  vertical-align: middle;
 }
 
 .admin-table__actions {
@@ -1011,13 +984,21 @@
   justify-content: flex-end;
 }
 
+/* our own chevron, inset from the edge (the native arrow sits against the border) */
 .admin select {
-  padding: 6px 10px;
+  appearance: none;
+  padding: 6px 34px 6px 12px;
   border-radius: 8px;
   border: 1px solid var(--a-border);
-  background: var(--a-surface);
+  background: var(--a-surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%23908c99' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center;
   color: var(--a-text);
   font: inherit;
+  cursor: pointer;
+}
+
+.admin select:disabled {
+  cursor: default;
+  opacity: 0.6;
 }
 
 @media (max-width: 900px) {

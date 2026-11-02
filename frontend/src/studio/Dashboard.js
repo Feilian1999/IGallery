@@ -1,7 +1,7 @@
 import * as React from "react";
 import {api} from "../api";
 import {useSession, isMember} from "../session";
-import ArtworkGrid, {Uploader, STATUS} from "./ArtworkGrid";
+import ArtworkGrid, {STATUS} from "./ArtworkGrid";
 
 const FILTERS = ["all", "draft", "pending", "published", "rejected"];
 
@@ -49,12 +49,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      {member ? (
-        <Uploader batch onUploaded={(artwork) => {
-          setArtworks((current) => [...(current || []), artwork]);
-          loadStats();
-        }} />
-      ) : (
+      {!member && (
         <div className="admin-empty">
           <h2 className="admin-subtitle">想展出自己的作品嗎？</h2>
           <p className="admin-muted">訪客只能瀏覽。註冊成為會員後，就能上傳作品並送出審核，這個帳號也會保留下來。</p>

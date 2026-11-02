@@ -2,9 +2,7 @@ import * as React from "react";
 import PropTypes from "prop-types";
 import {api} from "../api";
 import {useSession, isAdmin} from "../session";
-import {uploadArtwork, checkFile} from "./upload";
-import limits from "../shared/artworkLimits.json";
-import {AI_USAGE, AI_CHOICES} from "../shared/aiUsage";
+import {AI_USAGE} from "../shared/aiUsage";
 
 export const STATUS = {
   draft: "草稿",
@@ -12,95 +10,6 @@ export const STATUS = {
   published: "已公開",
   rejected: "已退回",
 };
-
-// two uploads at a time keeps the browser responsive while resizing big images
-const PARALLEL_UPLOADS = 2;
-
-// Drop zone. The uploader must say whether the work used AI before choosing files.
-// `batch` is the dashboard's many-at-once version; single works go through #me/new.
-export const Uploader = ({onUploaded, batch}) => {
-  const {session} = useSession();
-  const [aiUsage, setAiUsage] = React.useState(null);
-  const [jobs, setJobs] = React.useState([]);
-  const [over, setOver] = React.useState(false);
-  const input = React.useRef();
-
-  const update = (key, patch) => setJobs((current) => current.map((job) => (job.key === key ? {...job, ...patch} : job)));
-
-  const start = async (files) => {
-    if (!aiUsage) return;
-    const queued = [...files].map((file) => ({key: `${file.name}-${file.size}-${Math.random()}`, file, name: file.name, progress: 0, error: checkFile(file)}));
-    setJobs((current) => [...queued, ...current]);
-    const pending = queued.filter((job) => !job.error);
-    const worker = async () => {
-      while (pending.length) {
-        const job = pending.shift();
-        try {
-          const artwork = await uploadArtwork(job.file, session, aiUsage, (progress) => update(job.key, {progress}));
-          update(job.key, {progress: 1, done: true});
-          onUploaded(artwork);
-        } catch (error) {
-          update(job.key, {error: error.message});
-        }
-      }
-    };
-    await Promise.all(Array.from({length: PARALLEL_UPLOADS}, worker));
-    // finished uploads fade out of the queue after a moment
-    setTimeout(() => setJobs((current) => current.filter((job) => !job.done)), 2500);
-  };
-
-  return (
-    <section>
-      <div className="admin-ai">
-        <div className="admin-ai__label">{batch ? "批次上傳：" : ""}這批作品是否使用 AI？<em>必填</em></div>
-        <div className="admin-ai__choices">
-          {AI_CHOICES.map((id) => (
-            <button key={id} type="button" className={`admin-ai__choice${aiUsage === id ? " admin-ai__choice--active" : ""}`} onClick={() => setAiUsage(id)}>
-              <strong>{AI_USAGE[id].name}</strong>
-              <span>{AI_USAGE[id].hint}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-      <div
-        className={`admin-drop${over ? " admin-drop--over" : ""}${aiUsage ? "" : " admin-drop--disabled"}`}
-        onClick={() => aiUsage && input.current.click()}
-        onDragOver={(event) => {
-          event.preventDefault();
-          if (aiUsage) setOver(true);
-        }}
-        onDragLeave={() => setOver(false)}
-        onDrop={(event) => {
-          event.preventDefault();
-          setOver(false);
-          start(event.dataTransfer.files);
-        }}
-      >
-        <div className="admin-drop__title">{aiUsage ? "把圖片拖到這裡，或點擊選擇檔案" : "請先選擇上面的 AI 使用情況"}</div>
-        <div className="admin-muted">JPEG、PNG、WebP，每張最大 {limits.maxUploadMB} MB，可一次選多張。上傳後會先存成草稿，編輯完再送出審核。</div>
-        <input ref={input} type="file" accept={limits.imageTypes.join(",")} multiple hidden onChange={(event) => {
-          start(event.target.files);
-          event.target.value = "";
-        }} />
-      </div>
-      {jobs.length > 0 && (
-        <ul className="admin-jobs">
-          {jobs.map((job) => (
-            <li key={job.key} className={`admin-job${job.error ? " admin-job--error" : ""}`}>
-              <span className="admin-job__name">{job.name}</span>
-              {job.error ? <span>{job.error}</span> : (
-                <span className="admin-progress"><span style={{width: `${Math.round(job.progress * 100)}%`}} /></span>
-              )}
-              {job.error && <button className="admin-button admin-button--ghost" onClick={() => setJobs((current) => current.filter((item) => item.key !== job.key))}>移除</button>}
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
-  );
-};
-
-Uploader.propTypes = {onUploaded: PropTypes.func.isRequired, batch: PropTypes.bool};
 
 // Artwork cards. "mine" shows the owner's actions (submit / withdraw); "all" is the
 // admin view with publish / unpublish, owners, and drag-to-reorder.

@@ -67,9 +67,11 @@ const UsersPage = () => {
                   </td>
                   <td>{user.works}</td>
                   <td>{new Date(user.createdAt).toLocaleDateString("zh-TW")}</td>
-                  <td className="admin-table__actions">
-                    <button className="admin-button" onClick={() => resetPassword(user)}>重設密碼</button>
-                    <button className="admin-button admin-button--danger" disabled={self} onClick={() => remove(user)}>刪除</button>
+                  <td>
+                    <div className="admin-table__actions">
+                      <button className="admin-button" onClick={() => resetPassword(user)}>重設密碼</button>
+                      <button className="admin-button admin-button--danger" disabled={self} onClick={() => remove(user)}>刪除</button>
+                    </div>
                   </td>
                 </tr>
               );

@@ -6,6 +6,7 @@ import {startIntro, skipIntro} from "../actions";
 // curtain lifts while the camera glides in through the door.
 const IntroScreen = () => {
   const phase = useGalleryStore((state) => state.phase);
+  const status = useGalleryStore((state) => state.exhibitionStatus);
 
   if (phase === "explore") return null;
 
@@ -15,8 +16,13 @@ const IntroScreen = () => {
         <div className="eyebrow" style={{color: "rgba(244,239,231,0.5)", marginBottom: 18}}>An Online Exhibition</div>
         <div className="intro__title">IGallery</div>
         <div className="intro__subtitle">一座可以走進去的線上美術館</div>
-        <button className="intro__enter" onClick={startIntro} autoFocus>進入展覽</button>
-        <div className="intro__hints">建議戴上耳機 · WASD 走路 · 拖曳滑鼠轉動視角</div>
+        {/* wait for the real exhibition, so nobody walks into a stand-in layout */}
+        <button className="intro__enter" onClick={startIntro} disabled={status === "loading"} autoFocus>
+          {status === "loading" ? "展覽載入中…" : "進入展覽"}
+        </button>
+        <div className="intro__hints">
+          {status === "offline" ? "暫時連不上伺服器，先展示範例作品" : "建議戴上耳機 · WASD 走路 · 拖曳滑鼠轉動視角"}
+        </div>
       </div>
     );
   }

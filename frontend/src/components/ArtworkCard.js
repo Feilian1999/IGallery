@@ -8,7 +8,7 @@ import {AI_USAGE} from "../shared/aiUsage";
 import {useSession, isMember, toggleLike} from "../session";
 
 // An artwork in a grid: square image with the AI label and a like button on it,
-// title and artist underneath. Clicking the image opens the 3D gallery.
+// title and artist underneath. Clicking the image opens the artwork under its artist.
 export const ArtworkCard = ({artwork, onChange}) => {
   const {session} = useSession();
   if (!artwork) {
@@ -33,7 +33,7 @@ export const ArtworkCard = ({artwork, onChange}) => {
 
   return (
     <Box>
-      <Box component="a" href="#gallery" title={artwork.title} sx={{
+      <Box component="a" href={artwork.owner ? `#users/${artwork.owner.id}/artworks/${encodeURIComponent(artwork.id)}` : "#gallery"} title={artwork.title} sx={{
         "position": "relative", "display": "block", "aspectRatio": "1 / 1", "borderRadius": 2, "overflow": "hidden", "bgcolor": "action.hover",
         "& img": {transition: "transform 0.3s ease"}, "&:hover img": {transform: "scale(1.03)"},
       }}>

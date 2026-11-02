@@ -1217,9 +1217,14 @@
   animation: breathe 2.6s ease-in-out infinite;
 }
 
-.intro__enter:hover {
+.intro__enter:hover:not(:disabled) {
   background: #f4efe7;
   color: #050505;
+}
+
+.intro__enter:disabled {
+  opacity: 0.5;
+  cursor: progress;
 }
 
 .intro__hints {

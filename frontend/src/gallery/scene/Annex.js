@@ -170,7 +170,8 @@ const Annex = () => {
       </mesh>
       <Stars />
       <React.Suspense fallback={null}>
-        <Projector />
+        {/* nothing to project until something is published */}
+        {room.artworks.length > 0 && <Projector />}
         {room.artworks.map((entry, index) => (
           <FloatingPiece key={entry.artwork.id} entry={entry} index={index} />
         ))}
