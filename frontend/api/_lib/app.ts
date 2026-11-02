@@ -1,10 +1,11 @@
 import {Hono} from "hono";
 import type {ZodType} from "zod";
-import {handleUpload, type HandleUploadBody} from "@vercel/blob/client";
+import {issueSignedToken} from "@vercel/blob";
+import {handleUpload, handleUploadPresigned, type HandleUploadBody, type HandleUploadPresignedBody} from "@vercel/blob/client";
 import * as artworks from "./artworks";
 import * as schemas from "./schemas";
 import {login, logout, currentUser, requireAdmin, CSRF_HEADER, type User} from "./auth";
-import {storageKind, sniffImageType, saveLocal, readLocal, removeImage} from "./storage";
+import {storageKind, blobAuth, sniffImageType, saveLocal, readLocal, removeImage} from "./storage";
 import {databaseKind} from "./db";
 
 type Env = {Variables: {user: User}};
@@ -88,25 +89,37 @@ app.post("/auth/logout", async (c) => {
 
 app.get("/auth/me", async (c) => {
   const user = await currentUser(c);
-  return user ? c.json({user, storage: storageKind}) : c.json({error: "尚未登入"}, 401);
+  return user ? c.json({user, storage: storageKind, blobAuth}) : c.json({error: "尚未登入"}, 401);
 });
 
-// Vercel Blob client uploads. The browser asks this route for an upload token (admins
-// only), then sends the file straight to Blob, bypassing the 4.5 MB function body limit.
+// Vercel Blob client uploads. The browser asks this route for permission to upload
+// (admins only), then sends the file straight to Blob, bypassing the 4.5 MB function
+// body limit. With a read-write token that permission is a client token; with OIDC
+// (BLOB_STORE_ID) it is a short-lived presigned URL.
+const UPLOAD_RULES = {allowedContentTypes: schemas.limits.imageTypes, maximumSizeInBytes: MAX_UPLOAD_BYTES};
+const PERMISSION_REQUESTS = new Set(["blob.generate-client-token", "blob.generate-presigned-url"]);
+
 app.post("/admin/blob", async (c) => {
   if (storageKind !== "blob") return c.json({error: "尚未設定 Vercel Blob"}, 400);
-  const body = (await c.req.json()) as HandleUploadBody;
-  if (body.type === "blob.generate-client-token") {
+  const body = (await c.req.json()) as HandleUploadBody | HandleUploadPresignedBody;
+  if (PERMISSION_REQUESTS.has(body.type)) {
     if (c.req.header(CSRF_HEADER) !== "1" || !(await currentUser(c))) return c.json({error: "請先登入"}, 401);
   }
+  if (blobAuth === "oidc") {
+    const result = await handleUploadPresigned({
+      body: body as HandleUploadPresignedBody,
+      request: c.req.raw,
+      getSignedToken: async (pathname) => ({
+        token: await issueSignedToken({pathname, operations: ["put"], validUntil: Date.now() + 10 * 60 * 1000, ...UPLOAD_RULES}),
+        urlOptions: {...UPLOAD_RULES, addRandomSuffix: true},
+      }),
+    });
+    return c.json(result);
+  }
   const result = await handleUpload({
-    body,
+    body: body as HandleUploadBody,
     request: c.req.raw,
-    onBeforeGenerateToken: async () => ({
-      allowedContentTypes: schemas.limits.imageTypes,
-      maximumSizeInBytes: MAX_UPLOAD_BYTES,
-      addRandomSuffix: true,
-    }),
+    onBeforeGenerateToken: async () => ({...UPLOAD_RULES, addRandomSuffix: true}),
   });
   return c.json(result);
 });

@@ -50,14 +50,14 @@ const AdminApp = () => {
           <a className={`admin-tab${route.page === "exhibition" ? " admin-tab--active" : ""}`} href="#admin/exhibition">展場配置</a>
         </nav>
         <div className="admin-bar__end">
-          {session.storage === "local" && <span className="admin-badge" title="尚未設定 BLOB_READ_WRITE_TOKEN，圖片存在本機">本機開發</span>}
+          {session.storage === "local" && <span className="admin-badge" title="尚未設定 Vercel Blob，圖片存在本機">本機開發</span>}
           <a className="admin-link" href="#gallery">看畫廊 ↗</a>
           <span className="admin-muted">{session.user.username}</span>
           <button className="admin-button admin-button--ghost" onClick={logout}>登出</button>
         </div>
       </header>
       <main className="admin-main">
-        {route.page === "list" && <ArtworkList storage={session.storage} />}
+        {route.page === "list" && <ArtworkList session={session} />}
         {route.page === "edit" && <ArtworkEditor key={route.id} id={route.id} />}
         {route.page === "exhibition" && <ExhibitionEditor />}
       </main>

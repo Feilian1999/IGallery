@@ -45,14 +45,17 @@ create table if not exists placements (
 );
 `;
 
-export const databaseKind = process.env.DATABASE_URL ? "neon" : "pglite";
+// Neon's Vercel integration names it DATABASE_URL; some setups use POSTGRES_URL.
+const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+
+export const databaseKind = connectionString ? "neon" : "pglite";
 
 const createDriver = async (): Promise<Query> => {
-  if (process.env.DATABASE_URL) {
-    const sql = neon(process.env.DATABASE_URL);
+  if (connectionString) {
+    const sql = neon(connectionString);
     return (text, params = []) => sql.query(text, params) as Promise<Row[]>;
   }
-  if (process.env.VERCEL) throw new Error("DATABASE_URL is not set");
+  if (process.env.VERCEL) throw new Error("DATABASE_URL is not set; connect the Neon database to this Vercel project");
   const {PGlite} = await import("@electric-sql/pglite");
   const dataDir = path.resolve(".data/pglite");
   await mkdir(path.dirname(dataDir), {recursive: true});

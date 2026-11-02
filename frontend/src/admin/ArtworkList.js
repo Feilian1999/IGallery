@@ -12,7 +12,7 @@ const FILTERS = [
 // two uploads at a time keeps the browser responsive while resizing big images
 const PARALLEL_UPLOADS = 2;
 
-const Uploader = ({storage, onUploaded}) => {
+const Uploader = ({session, onUploaded}) => {
   const [jobs, setJobs] = React.useState([]);
   const [over, setOver] = React.useState(false);
   const input = React.useRef();
@@ -27,7 +27,7 @@ const Uploader = ({storage, onUploaded}) => {
       while (pending.length) {
         const job = pending.shift();
         try {
-          const artwork = await uploadArtwork(job.file, storage, (progress) => update(job.key, {progress}));
+          const artwork = await uploadArtwork(job.file, session, (progress) => update(job.key, {progress}));
           update(job.key, {progress: 1, done: true});
           onUploaded(artwork);
         } catch (error) {
@@ -80,9 +80,9 @@ const Uploader = ({storage, onUploaded}) => {
   );
 };
 
-Uploader.propTypes = {storage: PropTypes.string.isRequired, onUploaded: PropTypes.func.isRequired};
+Uploader.propTypes = {session: PropTypes.object.isRequired, onUploaded: PropTypes.func.isRequired};
 
-const ArtworkList = ({storage}) => {
+const ArtworkList = ({session}) => {
   const [artworks, setArtworks] = React.useState(null);
   const [filter, setFilter] = React.useState("all");
   const [error, setError] = React.useState("");
@@ -147,7 +147,7 @@ const ArtworkList = ({storage}) => {
           ))}
         </div>
       </div>
-      <Uploader storage={storage} onUploaded={(artwork) => setArtworks((current) => [...(current || []), artwork])} />
+      <Uploader session={session} onUploaded={(artwork) => setArtworks((current) => [...(current || []), artwork])} />
       {error && <div className="admin-error">{error}</div>}
       {artworks === null ? <div className="admin-spinner" /> : (
         <>
@@ -186,6 +186,6 @@ const ArtworkList = ({storage}) => {
   );
 };
 
-ArtworkList.propTypes = {storage: PropTypes.string.isRequired};
+ArtworkList.propTypes = {session: PropTypes.object.isRequired};
 
 export default ArtworkList;

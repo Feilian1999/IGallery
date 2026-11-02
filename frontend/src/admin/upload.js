@@ -36,9 +36,11 @@ const sendLocal = (blob, onProgress) => new Promise((resolve, reject) => {
   request.send(blob);
 });
 
-const sendToBlob = async (blob, name, onProgress) => {
-  const {upload} = await import("@vercel/blob/client");
-  const result = await upload(`artworks/${name}`, blob, {
+const sendToBlob = async (blob, name, blobAuth, onProgress) => {
+  const {upload, uploadPresigned} = await import("@vercel/blob/client");
+  // stores using OIDC hand out presigned URLs instead of client tokens
+  const send = blobAuth === "oidc" ? uploadPresigned : upload;
+  const result = await send(`artworks/${name}`, blob, {
     access: "public",
     contentType: blob.type,
     handleUploadUrl: "/api/admin/blob",
@@ -55,7 +57,8 @@ export const checkFile = (file) => {
 };
 
 // Resizes, uploads both versions, and registers the artwork as a draft.
-export const uploadArtwork = async (file, storage, onProgress) => {
+// `session` is the /api/auth/me response, which says how uploads are stored.
+export const uploadArtwork = async (file, session, onProgress) => {
   const problem = checkFile(file);
   if (problem) throw new Error(problem);
   const bitmap = await createImageBitmap(file);
@@ -64,7 +67,7 @@ export const uploadArtwork = async (file, storage, onProgress) => {
   bitmap.close();
 
   const id = crypto.randomUUID();
-  const send = (blob, name, progress) => (storage === "blob" ? sendToBlob(blob, name, progress) : sendLocal(blob, progress));
+  const send = (blob, name, progress) => (session.storage === "blob" ? sendToBlob(blob, name, session.blobAuth, progress) : sendLocal(blob, progress));
   const imageUrl = await send(large.blob, `${id}.jpg`, (p) => onProgress(p * 0.85));
   const previewUrl = await send(preview.blob, `${id}-preview.jpg`, (p) => onProgress(0.85 + p * 0.15));
 

@@ -3,9 +3,13 @@ import {promises as fs} from "node:fs";
 import {randomUUID} from "node:crypto";
 import {del} from "@vercel/blob";
 
-// Images live in Vercel Blob when BLOB_READ_WRITE_TOKEN is set. Locally they are
+// Images live in Vercel Blob when it is configured, otherwise (locally) they are
 // written to .data/uploads and served by GET /api/files/:name.
-export const storageKind = process.env.BLOB_READ_WRITE_TOKEN ? "blob" : "local";
+//
+// Blob stores connected to a project recently get BLOB_STORE_ID and authenticate
+// with Vercel's OIDC token; older ones get BLOB_READ_WRITE_TOKEN. Both work.
+export const blobAuth = process.env.BLOB_READ_WRITE_TOKEN ? "token" : process.env.BLOB_STORE_ID ? "oidc" : null;
+export const storageKind = blobAuth ? "blob" : "local";
 
 const LOCAL_DIR = path.resolve(".data/uploads");
 const LOCAL_PREFIX = "/api/files/";
