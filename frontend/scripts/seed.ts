@@ -2,7 +2,7 @@
 // published and hung in their original slots.
 //
 //   npm run db:seed   (uses DATABASE_URL if set, otherwise the local PGlite database)
-import sample from "../src/shared/sampleArtworks.json";
+import * as sample from "../src/shared/sampleArtworks.json";
 import {query} from "../api/_lib/db";
 import {insertArtwork, setPlacements} from "../api/_lib/artworks";
 

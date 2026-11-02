@@ -1,4 +1,4 @@
-import path from "node:path";
+import * as path from "node:path";
 import {promises as fs} from "node:fs";
 import {randomUUID} from "node:crypto";
 import {del} from "@vercel/blob";

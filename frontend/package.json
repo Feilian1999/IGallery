@@ -71,5 +71,8 @@
   "proxy": "http://localhost:3001",
   "overrides": {
     "typescript": "$typescript"
+  },
+  "engines": {
+    "node": ">=22 <25"
   }
 }

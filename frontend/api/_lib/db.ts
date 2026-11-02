@@ -1,4 +1,4 @@
-import path from "node:path";
+import * as path from "node:path";
 import {mkdir} from "node:fs/promises";
 import {neon} from "@neondatabase/serverless";
 import {hashPassword} from "./password";

@@ -60,16 +60,17 @@ export const insertArtwork = async (input: {
   author?: string; character?: string; description?: string; story?: string;
   hotspots?: Artwork["hotspots"]; status?: Artwork["status"];
 }) => {
-  const [{next}] = await query("select coalesce(max(sort_order), -1) + 1 as next from artworks");
+  // new artworks go to the end of the order
   const [row] = await query(
       `insert into artworks (id, title, author, character_name, description, story, image_url, preview_url,
         width, height, hotspots, status, sort_order)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12, $13)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12,
+        (select coalesce(max(sort_order), -1) + 1 from artworks))
        returning ${COLUMNS}`,
       [
         randomUUID(), input.title, input.author || "", input.character || "", input.description || "", input.story || "",
         input.imageUrl, input.previewUrl, input.width, input.height, JSON.stringify(input.hotspots || []),
-        input.status || "draft", next,
+        input.status || "draft",
       ],
   );
   return toArtwork(row);
@@ -109,10 +110,14 @@ export const deleteArtwork = async (id: string) => {
   return row ? toArtwork(row) : null;
 };
 
+// One statement, so it's a single round trip to the database.
 export const reorderArtworks = async (ids: string[]) => {
-  for (const [index, id] of ids.entries()) {
-    await query("update artworks set sort_order = $1 where id = $2", [index, id]);
-  }
+  await query(
+      `update artworks a set sort_order = o.position - 1
+       from unnest($1::text[]) with ordinality as o(id, position)
+       where a.id = o.id`,
+      [ids],
+  );
 };
 
 export const getPlacements = async () => {
@@ -120,9 +125,18 @@ export const getPlacements = async () => {
   return Object.fromEntries(rows.map((row) => [row.slot, row.artwork_id])) as Record<string, string>;
 };
 
+// Replaces the whole layout in one statement, so a failure can't leave it half-saved:
+// upsert the given slots, then clear every slot that wasn't given.
 export const setPlacements = async (placements: Record<string, string>) => {
-  await query("delete from placements");
-  for (const [slot, artworkId] of Object.entries(placements)) {
-    await query("insert into placements (slot, artwork_id) values ($1, $2)", [slot, artworkId]);
-  }
+  const entries = Object.entries(placements);
+  await query(
+      `with saved as (
+         insert into placements (slot, artwork_id)
+         select * from unnest($1::text[], $2::text[])
+         on conflict (slot) do update set artwork_id = excluded.artwork_id
+         returning slot
+       )
+       delete from placements where slot not in (select slot from saved)`,
+      [entries.map(([slot]) => slot), entries.map(([, id]) => id)],
+  );
 };

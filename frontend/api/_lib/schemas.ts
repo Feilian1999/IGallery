@@ -1,6 +1,7 @@
 import {z} from "zod";
-import limits from "../../src/shared/artworkLimits.json";
-import slots from "../../src/shared/exhibitionSlots.json";
+// namespace imports, so this compiles the same whether or not esModuleInterop is on
+import * as limits from "../../src/shared/artworkLimits.json";
+import * as slots from "../../src/shared/exhibitionSlots.json";
 import {isOwnImageUrl} from "./storage";
 
 // validation messages in Traditional Chinese

@@ -18,6 +18,8 @@ const FIELD_NAMES: Record<string, string> = {
 
 // Parses and validates a JSON body; returns the data or a 400 response.
 const parse = async <T>(request: Request, schema: ZodType<T>) => {
+  // a cross-site form can only send form or text bodies, never application/json
+  if (!request.headers.get("content-type")?.includes("application/json")) return {error: "請求內容必須是 JSON"};
   let body: unknown;
   try {
     body = await request.json();
