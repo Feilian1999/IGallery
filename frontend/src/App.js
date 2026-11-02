@@ -2,6 +2,7 @@ import * as React from "react";
 import "./App.css";
 import {ThemeProvider, createTheme} from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
+import {Analytics} from "@vercel/analytics/react";
 import ColorModeContext from "./themes/ToggleContext";
 import {SessionProvider} from "./session";
 import AppShell from "./layout/AppShell";
@@ -84,6 +85,14 @@ const parseHash = (hash) => {
   return {page: "home", nav: "home"};
 };
 
+// Vercel Analytics only sees the path, and every page here lives in the hash, so each
+// view is reported as a path (#users/2 -> /users/2) and grouped by its route
+// (/users/[id]). Search text stays out of the reports.
+const analyticsPage = (hash) => {
+  const path = `/${hash.replace(/^#\/?/, "")}`.replace(/^\/search\/.*/, "/search");
+  return {path, route: path.replace(/\/(\d+|[0-9a-f-]{8,})(?=\/|$)/g, "/[id]")};
+};
+
 const SHELL_PAGES = {home: HomePage, ranking: RankingPage, likes: LikesPage, inbox: InboxPage, user: UserPage, artwork: ArtworkPage};
 
 /**
@@ -131,6 +140,7 @@ const App = () => {
 
   return (
     <SessionProvider>
+      <Analytics {...analyticsPage(hash)} />
       <ColorModeContext.Provider value={colorMode}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
