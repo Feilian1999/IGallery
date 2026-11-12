@@ -3,16 +3,21 @@ import {z} from "zod";
 import * as limits from "../../src/shared/artworkLimits.json";
 import * as slots from "../../src/shared/exhibitionSlots.json";
 import {isOwnImageUrl} from "./storage";
+import type {MessageKey} from "./i18n";
 
-// validation messages in Traditional Chinese
+// Default validation messages in Traditional Chinese; http.ts passes the request's
+// language to each parse, which takes precedence.
 z.config(z.locales.zhTW());
+
+// Custom messages are message keys, translated by http.ts once the language is known.
+const message = (key: MessageKey) => key;
 
 // The same limits drive the forms in the app, so client and server always agree.
 export {limits};
 
 export const AI_USAGES = ["none", "assisted", "generated"] as const;
 
-const imageUrl = z.string().max(500).refine(isOwnImageUrl, "圖片網址不屬於本站的儲存空間");
+const imageUrl = z.string().max(500).refine(isOwnImageUrl, message("validation.foreignImageUrl"));
 
 const hotspot = z.object({
   x: z.number().min(0).max(1),
@@ -25,8 +30,8 @@ const hotspot = z.object({
 
 // usernames are stored lowercase so "Allen" and "allen" can't both exist
 const username = z.string().trim().toLowerCase()
-    .regex(/^[a-z0-9_-]{3,24}$/, "帳號只能用 3–24 個英文小寫、數字、底線或連字號");
-const password = z.string().min(8, "密碼至少要 8 個字元").max(200);
+    .regex(/^[a-z0-9_-]{3,24}$/, message("validation.username"));
+const password = z.string().min(8, message("validation.passwordTooShort")).max(200);
 const displayName = z.string().trim().max(limits.displayName);
 
 export const loginBody = z.object({
@@ -37,13 +42,13 @@ export const loginBody = z.object({
 export const registerBody = z.object({username, password, displayName: displayName.default("")});
 
 const commissionPlan = z.object({
-  title: z.string().trim().min(1, "請填寫方案名稱").max(limits.planTitle),
+  title: z.string().trim().min(1, message("validation.planTitleRequired")).max(limits.planTitle),
   price: z.string().trim().max(limits.planPrice),
   description: z.string().trim().max(limits.planDescription),
 });
 
 export const profileBody = z.object({
-  displayName: displayName.min(1, "請填寫顯示名稱"),
+  displayName: displayName.min(1, message("validation.displayNameRequired")),
   bio: z.string().trim().max(limits.bio),
   likesPublic: z.boolean(),
   commission: z.object({
@@ -69,7 +74,7 @@ export const createArtwork = z.object({
   description: z.string().trim().max(limits.description).optional(),
   story: z.string().trim().max(limits.story).optional(),
   hotspots: z.array(hotspot).max(limits.hotspots).optional(),
-  aiUsage: z.enum(AI_USAGES, {message: "請標註這件作品是否使用 AI"}),
+  aiUsage: z.enum(AI_USAGES, {message: message("validation.aiUsageRequired")}),
 });
 
 // what the owner can change; status changes go through submit / withdraw
@@ -80,7 +85,7 @@ export const updateArtwork = z.object({
   description: z.string().trim().max(limits.description),
   story: z.string().trim().max(limits.story),
   hotspots: z.array(hotspot).max(limits.hotspots),
-  aiUsage: z.enum(AI_USAGES, {message: "請標註這件作品是否使用 AI"}),
+  aiUsage: z.enum(AI_USAGES, {message: message("validation.aiUsageRequired")}),
 }).partial();
 
 // admins can also set the status directly
@@ -88,7 +93,7 @@ export const adminUpdateArtwork = updateArtwork.extend({
   status: z.enum(["draft", "pending", "published", "rejected"]),
 }).partial();
 
-export const rejectBody = z.object({reason: z.string().trim().min(1, "請填寫退回原因").max(limits.reviewNote)});
+export const rejectBody = z.object({reason: z.string().trim().min(1, message("validation.reasonRequired")).max(limits.reviewNote)});
 
 export const reorder = z.object({ids: z.array(z.string()).max(1000)});
 
@@ -97,7 +102,7 @@ export const exhibition = z.object({
   // slot id -> artwork id; slots left out are emptied
   placements: z.record(z.string(), z.string()).refine(
       (placements) => Object.keys(placements).every((slot) => slotIds.includes(slot)),
-      "未知的展位",
+      message("validation.unknownSlot"),
   ),
 });
 
@@ -108,7 +113,7 @@ export const markReadBody = z.object({ids: z.array(z.number().int()).max(200).op
 
 export const roleBody = z.object({role: z.enum(["admin", "artist", "member"])});
 export const artistApplicationBody = z.object({
-  message: z.string().trim().min(1, "請介紹一下自己和你的創作").max(limits.applicationMessage),
+  message: z.string().trim().min(1, message("validation.applicationMessageRequired")).max(limits.applicationMessage),
   links: z.string().trim().max(limits.applicationLinks).default(""),
 });
 export const resetPasswordBody = z.object({password});

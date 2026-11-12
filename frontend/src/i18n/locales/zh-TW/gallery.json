@@ -1,0 +1,217 @@
+{
+  "themes": {
+    "night": {
+      "name": "夜間美術館",
+      "caption": "深色牆面，只有作品被點亮"
+    },
+    "white": {
+      "name": "白盒",
+      "caption": "明亮、極簡的當代藝廊"
+    },
+    "warm": {
+      "name": "暖木",
+      "caption": "木地板與暖光，像午後的工作室"
+    }
+  },
+  "seasons": {
+    "spring": "春",
+    "summer": "夏",
+    "autumn": "秋",
+    "winter": "冬"
+  },
+  "weathers": {
+    "clear": "晴",
+    "rain": "雨",
+    "snow": "雪"
+  },
+  "outfits": {
+    "body": {
+      "orange": "經典橘",
+      "mint": "薄荷綠",
+      "navy": "夜空藍",
+      "sakura": "櫻花粉",
+      "pearl": "珍珠白",
+      "ink": "墨黑"
+    },
+    "trim": {
+      "silver": "銀灰",
+      "graphite": "石墨",
+      "gold": "香檳金"
+    },
+    "accessory": {
+      "none": "無",
+      "beret": "貝雷帽",
+      "scarf": "圍巾",
+      "headphones": "耳機"
+    }
+  },
+  "emotes": {
+    "Wave": "揮手",
+    "ThumbsUp": "按讚",
+    "Dance": "跳舞",
+    "Yes": "點頭",
+    "Jump": "跳躍"
+  },
+  "qualities": {
+    "auto": "自動",
+    "high": "高畫質",
+    "balanced": "均衡",
+    "low": "省電"
+  },
+  "outfit": {
+    "title": "角色服裝",
+    "body": "機身顏色",
+    "trim": "關節與配色",
+    "accessory": "配件",
+    "tryEmote": "試試動作"
+  },
+  "theme": {
+    "title": "畫廊主題",
+    "season": "窗外的季節",
+    "weather": "天氣"
+  },
+  "settings": {
+    "title": "設定",
+    "camera": "視角",
+    "thirdPerson": "第三人稱",
+    "firstPerson": "第一人稱",
+    "quality": "畫質",
+    "music": "背景音樂",
+    "on": "開",
+    "off": "關",
+    "volume": "音量 {{percent}}%"
+  },
+  "help": {
+    "title": "操作說明",
+    "keyNames": {
+      "drag": "拖曳"
+    },
+    "keys": {
+      "move": "前進、後退（方向鍵也可以）",
+      "turn": "左轉、右轉，鏡頭跟在背後",
+      "strafe": "向左、向右橫移",
+      "run": "按住跑步",
+      "look": "暫時看看四周，放開後鏡頭回到背後",
+      "interact": "互動：坐下、傳送門、塗鴉",
+      "view": "查看正在欣賞的作品",
+      "emotes": "揮手、按讚、跳舞、點頭",
+      "jump": "跳躍",
+      "camera": "切換第一／第三人稱",
+      "map": "導覽地圖",
+      "photo": "攝影模式",
+      "outfit": "角色服裝",
+      "theme": "主題與天氣",
+      "close": "關閉面板、離開模式"
+    }
+  },
+  "hud": {
+    "visited": "已參觀 {{seen}}/{{total}}",
+    "map": "導覽地圖 M",
+    "toThirdPerson": "切到第三人稱 V",
+    "toFirstPerson": "切到第一人稱 V",
+    "photo": "攝影模式 P",
+    "outfit": "角色服裝 C",
+    "theme": "主題與天氣 T",
+    "musicOff": "關閉音樂",
+    "musicOn": "開啟音樂",
+    "settings": "設定",
+    "help": "操作說明 ?",
+    "leave": "離開畫廊"
+  },
+  "prompt": {
+    "standUp": "起身",
+    "viewArtwork": "查看作品細節",
+    "sit": "坐下",
+    "enterAnnex": "進入懸浮展廳",
+    "toFestival": "前往夏日祭典",
+    "startGraffiti": "開始塗鴉",
+    "backToMain": "回到主展廳"
+  },
+  "portal": {
+    "toAnnex": "→ 懸浮展廳",
+    "toFestival": "→ 夏日祭典",
+    "backToMain": "← 回到主展廳"
+  },
+  "painting": {
+    "hoverHint": "點擊查看作品細節"
+  },
+  "intro": {
+    "subtitle": "一座可以走進去的線上美術館",
+    "loading": "展覽載入中…",
+    "enter": "進入展覽",
+    "offline": "暫時連不上伺服器，先展示範例作品",
+    "hints": "建議戴上耳機 · W/S 前進後退 · A/D 轉向",
+    "hallOfLight": "光之展廳",
+    "skip": "跳過 ›"
+  },
+  "graffiti": {
+    "hint": "在牆上拖曳就能畫，作品會自動保存在這台電腦 · Esc 完成",
+    "size": "粗細",
+    "eraser": "橡皮擦",
+    "clear": "清除",
+    "confirmClear": "要清除整面塗鴉牆嗎？",
+    "done": "完成",
+    "watermark": "FREE WALL · 自由塗鴉牆"
+  },
+  "photo": {
+    "filters": {
+      "none": "原色",
+      "warm": "暖陽",
+      "cool": "冷調",
+      "mono": "黑白",
+      "vintage": "復古",
+      "dream": "夢幻"
+    },
+    "hint": "拖曳旋轉 · 滾輪遠近 · 1–4 擺姿勢",
+    "exit": "離開攝影模式",
+    "depthOfField": "景深",
+    "frame": "相框",
+    "shoot": "拍照",
+    "resultAlt": "剛拍的照片",
+    "download": "下載",
+    "close": "關閉"
+  },
+  "label": {
+    "author": "作者",
+    "character": "角色",
+    "description": "描述"
+  },
+  "detail": {
+    "tabs": {
+      "original": "原始作品",
+      "zoom": "細節放大",
+      "about": "創作說明"
+    },
+    "zoomHint": "滾輪縮放 · 拖曳移動 · 點數字看細節",
+    "zoomIn": "放大",
+    "zoomOut": "縮小",
+    "reset": "重設",
+    "uploader": "上傳者",
+    "featured": "精選作品",
+    "likeHint": "註冊會員後就能按喜歡",
+    "previous": "上一件",
+    "next": "下一件",
+    "close": "關閉",
+    "hotspots": "細節熱點",
+    "noHotspots": "這件作品沒有標註細節熱點。",
+    "story": "作品背後的故事",
+    "noStory": "作者尚未提供作品故事。"
+  },
+  "map": {
+    "entrance": "入口",
+    "toFestival": "往夏日祭典",
+    "portal": "傳送門",
+    "graffiti": "塗鴉牆",
+    "projection": "投影",
+    "backToMain": "回主展廳",
+    "garden": "庭園",
+    "torii": "鳥居・回主展廳",
+    "goTo": "前往「{{title}}」",
+    "open": "打開導覽地圖 (M)",
+    "title": "導覽地圖",
+    "visited": "已參觀 {{seen}} / {{total}}",
+    "visitedGo": "已參觀 · 點擊前往",
+    "go": "點擊前往",
+    "close": "關閉地圖"
+  }
+}

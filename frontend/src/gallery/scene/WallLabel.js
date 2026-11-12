@@ -3,8 +3,9 @@ import * as React from "react";
 import * as THREE from "three";
 import PropTypes from "prop-types";
 import {useFrame} from "@react-three/fiber";
+import {useTranslation} from "react-i18next";
 import {markActive} from "../runtime";
-import {drawLabelCanvas, labelRows, LABEL_WIDTH, PIXELS_PER_METER, TITLE_SIZE, ROW_SIZE} from "../labelCanvas";
+import {drawLabelCanvas, labelRows, labelSample, LABEL_WIDTH, PIXELS_PER_METER, TITLE_SIZE, ROW_SIZE} from "../labelCanvas";
 
 export {LABEL_WIDTH};
 
@@ -16,23 +17,25 @@ const drawLabel = (options) => {
   return {texture, height: canvas.height / PIXELS_PER_METER};
 };
 
+const LABEL_FONTS = [`600 ${TITLE_SIZE}px "Noto Serif TC"`, `500 ${ROW_SIZE}px "Noto Sans TC"`];
+// True when the loaded fonts already have every glyph of `text`.
+const fontsCover = (text) => !document.fonts || LABEL_FONTS.every((font) => document.fonts.check(font, text));
+
 // Canvas text needs the web fonts loaded first, otherwise it falls back silently.
-const useFontsReady = () => {
-  const [ready, setReady] = React.useState(() => !document.fonts || document.fonts.status === "loaded");
+// `sample` is the text about to be drawn, so a language switch loads its glyphs too.
+const useFontsReady = (sample) => {
+  const [readyFor, setReadyFor] = React.useState(() => (!document.fonts || document.fonts.status === "loaded" ? sample : null));
   React.useEffect(() => {
-    if (ready || !document.fonts) return undefined;
+    if (readyFor === sample || fontsCover(sample)) return undefined;
     let cancelled = false;
-    Promise.all([
-      document.fonts.load(`600 ${TITLE_SIZE}px "Noto Serif TC"`, "作品"),
-      document.fonts.load(`500 ${ROW_SIZE}px "Noto Sans TC"`, "作者"),
-    ]).finally(() => {
-      if (!cancelled) setReady(true);
+    Promise.all(LABEL_FONTS.map((font) => document.fonts.load(font, sample))).finally(() => {
+      if (!cancelled) setReadyFor(sample);
     });
     return () => {
       cancelled = true;
     };
-  }, [ready]);
-  return ready;
+  }, [sample, readyFor]);
+  return readyFor === sample || fontsCover(sample);
 };
 
 /**
@@ -41,7 +44,10 @@ const useFontsReady = () => {
  */
 const WallLabel = ({artwork, colors, position, visible}) => {
   const mesh = React.useRef();
-  const fontsReady = useFontsReady();
+  // re-render (and redraw the row headings) when the interface language changes
+  const {i18n} = useTranslation("gallery");
+  const language = i18n.resolvedLanguage;
+  const fontsReady = useFontsReady(React.useMemo(() => labelSample(), [language]));
   // redrawn once the web fonts arrive, so the first frame may use a fallback font
   const {texture, height} = React.useMemo(
       () => drawLabel({
@@ -50,7 +56,7 @@ const WallLabel = ({artwork, colors, position, visible}) => {
         colors,
         fontsReady,
       }),
-      [artwork, colors, fontsReady],
+      [artwork, colors, fontsReady, language],
   );
   React.useEffect(() => () => texture.dispose(), [texture]);
 

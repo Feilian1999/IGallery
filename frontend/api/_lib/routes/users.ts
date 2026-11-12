@@ -2,6 +2,7 @@ import {Hono} from "hono";
 import * as artworks from "../artworks";
 import {query} from "../db";
 import {currentUser, toUser, USER_COLUMNS, type AuthEnv} from "../auth";
+import {fail} from "../i18n";
 
 // Public artist pages: anyone can view a member's profile, published works and
 // commission details; favorites only when the member made them public.
@@ -16,7 +17,7 @@ const findArtist = async (id: string) => {
 
 userRoutes.get("/:id", async (c) => {
   const artist = await findArtist(c.req.param("id"));
-  if (!artist) return c.json({error: "找不到這位使用者"}, 404);
+  if (!artist) return fail(c, 404, "user.profileNotFound");
   const viewer = await currentUser(c);
   const [stats] = await query(
       `select
@@ -44,15 +45,15 @@ userRoutes.get("/:id", async (c) => {
 
 userRoutes.get("/:id/artworks", async (c) => {
   const artist = await findArtist(c.req.param("id"));
-  if (!artist) return c.json({error: "找不到這位使用者"}, 404);
+  if (!artist) return fail(c, 404, "user.profileNotFound");
   const viewer = await currentUser(c);
   return c.json({artworks: await artworks.listArtworks({viewerId: viewer?.id ?? null, ownerId: artist.id, status: "published"})});
 });
 
 userRoutes.get("/:id/favorites", async (c) => {
   const artist = await findArtist(c.req.param("id"));
-  if (!artist) return c.json({error: "找不到這位使用者"}, 404);
+  if (!artist) return fail(c, 404, "user.profileNotFound");
   const viewer = await currentUser(c);
-  if (!artist.likesPublic && viewer?.id !== artist.id) return c.json({error: "這位使用者沒有公開收藏"}, 403);
+  if (!artist.likesPublic && viewer?.id !== artist.id) return fail(c, 403, "user.likesPrivate");
   return c.json({artworks: await artworks.likedArtworks(artist.id, viewer?.id ?? null)});
 });

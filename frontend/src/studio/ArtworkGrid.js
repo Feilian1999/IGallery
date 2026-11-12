@@ -1,19 +1,14 @@
 import * as React from "react";
 import PropTypes from "prop-types";
+import {useTranslation} from "react-i18next";
 import {api} from "../api";
 import {useSession, isAdmin} from "../session";
 import {AI_USAGE} from "../shared/aiUsage";
 
-export const STATUS = {
-  draft: "草稿",
-  pending: "審核中",
-  published: "已公開",
-  rejected: "已退回",
-};
-
 // Artwork cards. "mine" shows the owner's actions (submit / withdraw); "all" is the
 // admin view with publish / unpublish, owners, and drag-to-reorder.
 const ArtworkGrid = ({artworks, mode, onChange, onRemove, onReorder, onError}) => {
+  const {t} = useTranslation("studio");
   const {session, refresh} = useSession();
   const [dragged, setDragged] = React.useState(null);
   const admin = isAdmin(session);
@@ -34,7 +29,7 @@ const ArtworkGrid = ({artworks, mode, onChange, onRemove, onReorder, onError}) =
   });
 
   const remove = (artwork) => {
-    if (!window.confirm(`確定要刪除「${artwork.title || "未命名"}」嗎？圖片檔也會一起刪除，無法復原。`)) return;
+    if (!window.confirm(t("grid.confirmDelete", {title: artwork.title || t("untitled")}))) return;
     run(async () => {
       await api(mode === "all" ? `/admin/artworks/${artwork.id}` : `/me/artworks/${artwork.id}`, {method: "DELETE"});
       onRemove(artwork);
@@ -53,13 +48,13 @@ const ArtworkGrid = ({artworks, mode, onChange, onRemove, onReorder, onError}) =
   const actions = (artwork) => {
     if (mode === "all") {
       return artwork.status === "published" ?
-        <button className="admin-button" onClick={() => act(artwork, `/admin/artworks/${artwork.id}`, {status: "draft"})}>下架</button> :
-        <button className="admin-button" onClick={() => act(artwork, `/admin/artworks/${artwork.id}/approve`)}>公開</button>;
+        <button className="admin-button" onClick={() => act(artwork, `/admin/artworks/${artwork.id}`, {status: "draft"})}>{t("grid.unpublish")}</button> :
+        <button className="admin-button" onClick={() => act(artwork, `/admin/artworks/${artwork.id}/approve`)}>{t("grid.publish")}</button>;
     }
     if (artwork.status === "draft" || artwork.status === "rejected") {
-      return <button className="admin-button" onClick={() => act(artwork, `/me/artworks/${artwork.id}/submit`)}>{admin ? "公開" : "送審"}</button>;
+      return <button className="admin-button" onClick={() => act(artwork, `/me/artworks/${artwork.id}/submit`)}>{admin ? t("grid.publish") : t("grid.submit")}</button>;
     }
-    return <button className="admin-button" onClick={() => act(artwork, `/me/artworks/${artwork.id}/withdraw`)}>{artwork.status === "pending" ? "撤回" : "下架"}</button>;
+    return <button className="admin-button" onClick={() => act(artwork, `/me/artworks/${artwork.id}/withdraw`)}>{artwork.status === "pending" ? t("grid.withdraw") : t("grid.unpublish")}</button>;
   };
 
   return (
@@ -76,20 +71,20 @@ const ArtworkGrid = ({artworks, mode, onChange, onRemove, onReorder, onError}) =
         >
           <a className="admin-card__image" href={`#me/artwork/${artwork.id}`} draggable={false}>
             <img src={artwork.previewUrl} alt="" draggable={false} />
-            <span className={`admin-status admin-status--${artwork.status}`}>{STATUS[artwork.status]}</span>
+            <span className={`admin-status admin-status--${artwork.status}`}>{t(`status.${artwork.status}`)}</span>
             {AI_USAGE[artwork.aiUsage]?.short && <span className="admin-ai-tag">{AI_USAGE[artwork.aiUsage].short}</span>}
           </a>
           <div className="admin-card__body">
-            <div className="admin-card__title">{artwork.title || "未命名"}</div>
+            <div className="admin-card__title">{artwork.title || t("untitled")}</div>
             <div className="admin-muted">
-              {mode === "all" ? `${artwork.owner?.displayName || "—"} · ` : ""}♥ {artwork.likes} · {artwork.hotspots.length} 個熱點
+              {mode === "all" ? `${artwork.owner?.displayName || "—"} · ` : ""}♥ {artwork.likes} · {t("grid.hotspots", {count: artwork.hotspots.length})}
             </div>
-            {artwork.status === "rejected" && artwork.reviewNote && <div className="admin-review-note">退回原因：{artwork.reviewNote}</div>}
+            {artwork.status === "rejected" && artwork.reviewNote && <div className="admin-review-note">{t("grid.rejectReason", {reason: artwork.reviewNote})}</div>}
           </div>
           <div className="admin-card__actions">
-            <a className="admin-button" href={`#me/artwork/${artwork.id}`}>編輯</a>
+            <a className="admin-button" href={`#me/artwork/${artwork.id}`}>{t("edit")}</a>
             {actions(artwork)}
-            <button className="admin-button admin-button--danger" onClick={() => remove(artwork)}>刪除</button>
+            <button className="admin-button admin-button--danger" onClick={() => remove(artwork)}>{t("delete")}</button>
           </div>
         </article>
       ))}

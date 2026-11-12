@@ -66,7 +66,7 @@ export const COLLIDERS = {
 
 export const INTERACTABLES = [
   // arrive in front of the main hall's festival portal, where the visitor left
-  {id: "portal", type: "portal", position: viewingSpot(PORTAL, 1.2), radius: 1.6, label: "回到主展廳", target: "main", arrival: FESTIVAL_ARRIVAL},
+  {id: "portal", type: "portal", position: viewingSpot(PORTAL, 1.2), radius: 1.6, label: "prompt.backToMain", target: "main", arrival: FESTIVAL_ARRIVAL},
 ];
 
 // the third person camera stays under the walkway roof and inside the wall

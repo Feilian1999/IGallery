@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import * as React from "react";
+import {useTranslation} from "react-i18next";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import PhotoCameraOutlinedIcon from "@mui/icons-material/PhotoCameraOutlined";
 import CheckroomOutlinedIcon from "@mui/icons-material/CheckroomOutlined";
@@ -37,6 +38,7 @@ const Hud = () => {
   const detailId = useGalleryStore((state) => state.detailId);
   const set = useGalleryStore((state) => state.set);
   const togglePanel = useGalleryStore((state) => state.togglePanel);
+  const {t} = useTranslation("gallery");
 
   const artworks = useGalleryStore((state) => state.exhibition.artworks);
   const room = ROOM_INFO[roomId];
@@ -49,30 +51,30 @@ const Hud = () => {
       <div className="brand glass">
         <div className="eyebrow">{room.subtitle}</div>
         <div className="brand__name">IGallery</div>
-        <div className="brand__room">{room.name}</div>
+        <div className="brand__room">{t(`common:rooms.${roomId}`)}</div>
         <div className="brand__progress">
-          <span>已參觀 {seen}/{total}</span>
+          <span>{t("hud.visited", {seen, total})}</span>
           <span className="brand__bar"><span style={{width: `${(seen / total) * 100}%`}} /></span>
         </div>
       </div>
 
       <div className="toolbar glass">
-        <ToolButton tip="導覽地圖 M" active={mapOpen} onClick={() => set({mapOpen: !mapOpen, panel: null})}><MapOutlinedIcon /></ToolButton>
-        <ToolButton tip={cameraMode === "first" ? "切到第三人稱 V" : "切到第一人稱 V"} active={cameraMode === "first"}
+        <ToolButton tip={t("hud.map")} active={mapOpen} onClick={() => set({mapOpen: !mapOpen, panel: null})}><MapOutlinedIcon /></ToolButton>
+        <ToolButton tip={cameraMode === "first" ? t("hud.toThirdPerson") : t("hud.toFirstPerson")} active={cameraMode === "first"}
           onClick={() => set({cameraMode: cameraMode === "first" ? "third" : "first"})}>
           {cameraMode === "first" ? <VisibilityOutlinedIcon /> : <PersonOutlineIcon />}
         </ToolButton>
-        <ToolButton tip="攝影模式 P" onClick={() => set({mode: "photo", panel: null})}><PhotoCameraOutlinedIcon /></ToolButton>
+        <ToolButton tip={t("hud.photo")} onClick={() => set({mode: "photo", panel: null})}><PhotoCameraOutlinedIcon /></ToolButton>
         <span className="toolbar__divider" />
-        <ToolButton tip="角色服裝 C" active={panel === "outfit"} onClick={() => togglePanel("outfit")}><CheckroomOutlinedIcon /></ToolButton>
-        <ToolButton tip="主題與天氣 T" active={panel === "theme"} onClick={() => togglePanel("theme")}><PaletteOutlinedIcon /></ToolButton>
-        <ToolButton tip={musicOn ? "關閉音樂" : "開啟音樂"} onClick={() => set({musicOn: !musicOn})}>
+        <ToolButton tip={t("hud.outfit")} active={panel === "outfit"} onClick={() => togglePanel("outfit")}><CheckroomOutlinedIcon /></ToolButton>
+        <ToolButton tip={t("hud.theme")} active={panel === "theme"} onClick={() => togglePanel("theme")}><PaletteOutlinedIcon /></ToolButton>
+        <ToolButton tip={musicOn ? t("hud.musicOff") : t("hud.musicOn")} onClick={() => set({musicOn: !musicOn})}>
           {musicOn ? <MusicNoteOutlinedIcon /> : <MusicOffOutlinedIcon />}
         </ToolButton>
-        <ToolButton tip="設定" active={panel === "settings"} onClick={() => togglePanel("settings")}><TuneOutlinedIcon /></ToolButton>
-        <ToolButton tip="操作說明 ?" active={panel === "help"} onClick={() => togglePanel("help")}><HelpOutlineIcon /></ToolButton>
+        <ToolButton tip={t("hud.settings")} active={panel === "settings"} onClick={() => togglePanel("settings")}><TuneOutlinedIcon /></ToolButton>
+        <ToolButton tip={t("hud.help")} active={panel === "help"} onClick={() => togglePanel("help")}><HelpOutlineIcon /></ToolButton>
         <span className="toolbar__divider" />
-        <ToolButton tip="離開畫廊" onClick={() => {
+        <ToolButton tip={t("hud.leave")} onClick={() => {
           window.location.hash = "";
         }}><LogoutOutlinedIcon /></ToolButton>
       </div>
@@ -84,14 +86,14 @@ const Hud = () => {
         {prompt && (
           <div className="prompt glass" key={`${prompt.key}${prompt.label}`}>
             <span className="kbd">{prompt.key}</span>
-            {prompt.label}
+            {t(prompt.label)}
           </div>
         )}
         <div className="emotes glass">
           {EMOTES.map((emote) => (
             <button key={emote.id} className="emote" onClick={() => playEmote(emote.id)}>
               <span className="kbd">{emote.key === "Space" ? "␣" : emote.key}</span>
-              <span>{emote.name}</span>
+              <span>{t(`emotes.${emote.id}`)}</span>
             </button>
           ))}
         </div>

@@ -27,6 +27,7 @@ export const openDetail = (id) => {
 };
 
 // Fade the screen out, run `midway` while it is hidden, then fade back in.
+// `label` is shown as is, or {room: id} to show that room's translated name.
 export const fadeTransition = (label, midway, kind = "fade") => {
   if (getGalleryState().transition) return;
   getGalleryState().set({transition: {kind, label}});
@@ -57,9 +58,9 @@ export const travelToArtwork = (roomId, artworkId) => {
 export const enterPortal = (target, arrival) => {
   if (getGalleryState().transition) return;
   audio.whoosh();
-  const {name, spawn: roomSpawn} = getGalleryState().exhibition.rooms[target];
+  const {spawn: roomSpawn} = getGalleryState().exhibition.rooms[target];
   const spawn = arrival || roomSpawn;
-  fadeTransition(name, () => {
+  fadeTransition({room: target}, () => {
     getGalleryState().set({room: target, focusedId: null, prompt: null, hoveredId: null});
     runtime.player.seat = null;
     runtime.teleport = {position: spawn.position, heading: spawn.heading};

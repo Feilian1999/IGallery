@@ -1,6 +1,18 @@
+import i18n, {currentLanguage} from "./i18n";
+
 // Small fetch wrapper for the admin API: JSON in and out, session cookie, and
 // the header the server requires on every change (CSRF protection).
 export const CSRF_HEADERS = {"x-igallery": "1"};
+
+// The server answers error messages in the visitor's language.
+const languageHeaders = () => ({"x-lang": currentLanguage()});
+
+/**
+ * Headers for any request that changes something, including the uploads that
+ * don't go through `api`.
+ * @return {object} headers
+ */
+export const changeHeaders = () => ({...CSRF_HEADERS, ...languageHeaders()});
 
 /** An API error carrying the server's message and HTTP status. */
 export class ApiError extends Error {
@@ -15,7 +27,7 @@ export class ApiError extends Error {
 }
 
 export const api = async (path, {method = "GET", body} = {}) => {
-  const headers = method === "GET" ? {} : {...CSRF_HEADERS};
+  const headers = method === "GET" ? languageHeaders() : changeHeaders();
   if (body !== undefined) headers["content-type"] = "application/json";
   const response = await fetch(`/api${path}`, {
     method,
@@ -24,6 +36,6 @@ export const api = async (path, {method = "GET", body} = {}) => {
     credentials: "same-origin",
   });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new ApiError(data.error || `請求失敗（${response.status}）`, response.status);
+  if (!response.ok) throw new ApiError(data.error || i18n.t("requestFailed", {status: response.status}), response.status);
   return data;
 };

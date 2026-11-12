@@ -1,5 +1,6 @@
 import limits from "../shared/artworkLimits.json";
-import {ApiError, CSRF_HEADERS} from "../api";
+import {ApiError, changeHeaders} from "../api";
+import i18n from "../i18n";
 
 // Images are resized in the browser before upload: a large version for viewing
 // and a small preview for the gallery and lists. Production uploads go straight
@@ -19,20 +20,20 @@ const toJpeg = (bitmap, maxSize, quality) => new Promise((resolve, reject) => {
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, width, height);
   context.drawImage(bitmap, 0, 0, width, height);
-  canvas.toBlob((blob) => (blob ? resolve({blob, width, height}) : reject(new Error("無法處理這張圖片"))), "image/jpeg", quality);
+  canvas.toBlob((blob) => (blob ? resolve({blob, width, height}) : reject(new Error(i18n.t("studio:upload.processFailed")))), "image/jpeg", quality);
 });
 
 const sendLocal = (blob, onProgress) => new Promise((resolve, reject) => {
   const request = new XMLHttpRequest();
   request.open("POST", "/api/uploads/local");
-  Object.entries({...CSRF_HEADERS, "content-type": blob.type}).forEach(([key, value]) => request.setRequestHeader(key, value));
+  Object.entries({...changeHeaders(), "content-type": blob.type}).forEach(([key, value]) => request.setRequestHeader(key, value));
   request.upload.onprogress = (event) => event.lengthComputable && onProgress(event.loaded / event.total);
   request.onload = () => {
     const data = JSON.parse(request.responseText || "{}");
     if (request.status >= 200 && request.status < 300) resolve(data.url);
-    else reject(new ApiError(data.error || `上傳失敗（${request.status}）`, request.status));
+    else reject(new ApiError(data.error || i18n.t("studio:upload.failed", {status: request.status}), request.status));
   };
-  request.onerror = () => reject(new Error("網路連線失敗"));
+  request.onerror = () => reject(new Error(i18n.t("studio:upload.network")));
   request.send(blob);
 });
 
@@ -44,15 +45,15 @@ const sendToBlob = async (blob, name, blobAuth, onProgress) => {
     access: "public",
     contentType: blob.type,
     handleUploadUrl: "/api/uploads/blob",
-    headers: CSRF_HEADERS,
+    headers: changeHeaders(),
     onUploadProgress: ({percentage}) => onProgress(percentage / 100),
   });
   return result.url;
 };
 
 export const checkFile = (file) => {
-  if (!limits.imageTypes.includes(file.type)) return "只接受 JPEG、PNG、WebP 圖片";
-  if (file.size > limits.maxUploadMB * 1024 * 1024) return `檔案超過 ${limits.maxUploadMB} MB`;
+  if (!limits.imageTypes.includes(file.type)) return i18n.t("studio:upload.fileType");
+  if (file.size > limits.maxUploadMB * 1024 * 1024) return i18n.t("studio:upload.fileSize", {size: limits.maxUploadMB});
   return null;
 };
 

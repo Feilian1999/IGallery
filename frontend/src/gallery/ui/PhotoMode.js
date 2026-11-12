@@ -1,21 +1,23 @@
 import * as React from "react";
+import {useTranslation} from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
-import {ROOM_INFO} from "../layout";
 import {EMOTES} from "../outfits";
 import {runtime} from "../runtime";
 import {useGalleryStore} from "../store";
 import {playEmote} from "../actions";
 import audio from "../audio/AudioEngine";
+import {formatDate} from "../../i18n";
 
 // CSS filters, applied live to the canvas and baked into the saved photo.
+// Names are translated with gallery:photo.filters.<id>.
 export const PHOTO_FILTERS = {
-  none: {name: "原色", css: "none"},
-  warm: {name: "暖陽", css: "sepia(0.25) saturate(1.25) hue-rotate(-8deg) brightness(1.05)"},
-  cool: {name: "冷調", css: "saturate(0.9) hue-rotate(12deg) brightness(1.03) contrast(1.05)"},
-  mono: {name: "黑白", css: "grayscale(1) contrast(1.15)"},
-  vintage: {name: "復古", css: "sepia(0.55) contrast(0.9) brightness(1.08) saturate(0.8)"},
-  dream: {name: "夢幻", css: "saturate(1.35) brightness(1.08) contrast(0.92)"},
+  none: {css: "none"},
+  warm: {css: "sepia(0.25) saturate(1.25) hue-rotate(-8deg) brightness(1.05)"},
+  cool: {css: "saturate(0.9) hue-rotate(12deg) brightness(1.03) contrast(1.05)"},
+  mono: {css: "grayscale(1) contrast(1.15)"},
+  vintage: {css: "sepia(0.55) contrast(0.9) brightness(1.08) saturate(0.8)"},
+  dream: {css: "saturate(1.35) brightness(1.08) contrast(0.92)"},
 };
 
 const POLAROID_SIDE = 0.04;
@@ -39,7 +41,7 @@ const capture = (filter, frame, roomName) => {
   context.drawImage(source, side, side);
   context.filter = "none";
   if (frame) {
-    const date = new Date().toLocaleDateString("zh-TW");
+    const date = formatDate(new Date());
     context.fillStyle = "#3a3530";
     context.font = `600 ${Math.round(bottom * 0.28)}px "Noto Serif TC", serif`;
     context.textBaseline = "middle";
@@ -59,6 +61,7 @@ const PhotoMode = () => {
   const set = useGalleryStore((state) => state.set);
   const [flash, setFlash] = React.useState(0);
   const [result, setResult] = React.useState(null);
+  const {t} = useTranslation("gallery");
 
   React.useEffect(() => {
     if (mode !== "photo") setResult(null);
@@ -68,7 +71,7 @@ const PhotoMode = () => {
 
   const shoot = () => {
     audio.shutter();
-    setResult(capture(photo.filter, photo.frame, ROOM_INFO[roomId].name));
+    setResult(capture(photo.filter, photo.frame, t(`common:rooms.${roomId}`)));
     setFlash((n) => n + 1);
   };
 
@@ -76,36 +79,36 @@ const PhotoMode = () => {
     <>
       <div className="photo-top glass">
         <span className="eyebrow">Photo Mode</span>
-        <span>拖曳旋轉 · 滾輪遠近 · 1–4 擺姿勢</span>
-        <button className="icon-button" onClick={() => set({mode: "explore"})} aria-label="離開攝影模式"><CloseIcon /></button>
+        <span>{t("photo.hint")}</span>
+        <button className="icon-button" onClick={() => set({mode: "explore"})} aria-label={t("photo.exit")}><CloseIcon /></button>
       </div>
       <div className="photo-bottom glass">
         <div className="filters">
           {Object.entries(PHOTO_FILTERS).map(([id, filter]) => (
             <button key={id} className={`filter${photo.filter === id ? " filter--active" : ""}`} onClick={() => setPhoto({filter: id})}>
               <span className="filter__preview" style={{filter: filter.css}} />
-              {filter.name}
+              {t(`photo.filters.${id}`)}
             </button>
           ))}
         </div>
         <div className="chips" style={{flexDirection: "column"}}>
-          <button className={`chip${photo.depthOfField ? " chip--active" : ""}`} onClick={() => setPhoto({depthOfField: !photo.depthOfField})}>景深</button>
-          <button className={`chip${photo.frame ? " chip--active" : ""}`} onClick={() => setPhoto({frame: !photo.frame})}>相框</button>
+          <button className={`chip${photo.depthOfField ? " chip--active" : ""}`} onClick={() => setPhoto({depthOfField: !photo.depthOfField})}>{t("photo.depthOfField")}</button>
+          <button className={`chip${photo.frame ? " chip--active" : ""}`} onClick={() => setPhoto({frame: !photo.frame})}>{t("photo.frame")}</button>
         </div>
         <div className="chips" style={{maxWidth: 170}}>
           {EMOTES.slice(0, 4).map((emote) => (
-            <button key={emote.id} className="chip" onClick={() => playEmote(emote.id)}>{emote.name}</button>
+            <button key={emote.id} className="chip" onClick={() => playEmote(emote.id)}>{t(`emotes.${emote.id}`)}</button>
           ))}
         </div>
-        <button className="shutter" onClick={shoot} aria-label="拍照" />
+        <button className="shutter" onClick={shoot} aria-label={t("photo.shoot")} />
       </div>
       {flash > 0 && <div className="flash" key={flash} />}
       {result && (
         <div className="photo-result glass">
-          <img src={result} alt="剛拍的照片" />
+          <img src={result} alt={t("photo.resultAlt")} />
           <div className="photo-result__actions">
-            <a className="button button--primary" href={result} download={`igallery-${Date.now()}.png`}><DownloadIcon fontSize="small" />下載</a>
-            <button className="button" onClick={() => setResult(null)}>關閉</button>
+            <a className="button button--primary" href={result} download={`igallery-${Date.now()}.png`}><DownloadIcon fontSize="small" />{t("photo.download")}</a>
+            <button className="button" onClick={() => setResult(null)}>{t("photo.close")}</button>
           </div>
         </div>
       )}

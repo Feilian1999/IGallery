@@ -4,6 +4,7 @@ import {currentUser, requireMember, type AuthEnv} from "../auth";
 import {storageKind, readLocal} from "../storage";
 import {databaseKind} from "../db";
 import {notify} from "../notifications";
+import {fail} from "../i18n";
 
 export const publicRoutes = new Hono<AuthEnv>();
 
@@ -17,15 +18,15 @@ publicRoutes.get("/artworks", async (c) => {
 publicRoutes.get("/artworks/:id", async (c) => {
   const viewer = await currentUser(c);
   const artwork = await artworks.getArtwork(c.req.param("id"), viewer?.id ?? null);
-  return artwork?.status === "published" ? c.json({artwork}) : c.json({error: "找不到這件作品"}, 404);
+  return artwork?.status === "published" ? c.json({artwork}) : fail(c, 404, "artwork.notFound");
 });
 
 // Likes count toward the artist ranking, so only members can give them, and not to themselves.
 const likeRoute = (liking: boolean) => async (c: any) => {
   const user = c.get("user");
   const artwork = await artworks.getArtwork(c.req.param("id"), user.id);
-  if (artwork?.status !== "published") return c.json({error: "找不到這件作品"}, 404);
-  if (artwork.owner?.id === user.id) return c.json({error: "不能對自己的作品按喜歡"}, 400);
+  if (artwork?.status !== "published") return fail(c, 404, "artwork.notFound");
+  if (artwork.owner?.id === user.id) return fail(c, 400, "artwork.cannotLikeOwn");
   if (liking) {
     await artworks.like(user.id, artwork.id);
     await notify(artwork.owner?.id, "like", {artworkId: artwork.id, actorId: user.id});
@@ -55,6 +56,6 @@ publicRoutes.get("/exhibition", async (c) => {
 // Locally uploaded images (development only; production images are served by Vercel Blob).
 publicRoutes.get("/files/:name", async (c) => {
   const file = await readLocal(c.req.param("name"));
-  if (!file) return c.json({error: "找不到檔案"}, 404);
+  if (!file) return fail(c, 404, "file.notFound");
   return c.body(new Uint8Array(file.bytes), 200, {"content-type": file.type, "cache-control": "public, max-age=31536000, immutable"});
 });

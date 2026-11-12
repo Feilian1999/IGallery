@@ -1,28 +1,33 @@
 import type {ZodType} from "zod";
+import {isMessageKey, languageOf, translate, zodErrorMap, type MessageKey} from "./i18n";
 
-const FIELD_NAMES: Record<string, string> = {
-  title: "標題", author: "作者", character: "角色", description: "描述", story: "作品故事",
-  hotspots: "細節熱點", imageUrl: "圖片", previewUrl: "預覽圖", username: "帳號", password: "密碼",
-  displayName: "顯示名稱", bio: "自我介紹", commission: "約稿設定", likesPublic: "收藏公開設定", aiUsage: "AI 使用標註", next: "新密碼", reason: "退回原因",
+// a field with a `field.<name>` message has that name put in front of its validation message
+const fieldKey = (field: string): MessageKey | null => {
+  const key = `field.${field}`;
+  return isMessageKey(key) ? key : null;
 };
 
-// Parses and validates a JSON body; returns {data} or {error} with a readable message.
+// Parses and validates a JSON body; returns {data} or {error} with a readable message
+// in the request's language.
 export const parse = async <T>(request: Request, schema: ZodType<T>): Promise<{data: T; error?: undefined} | {data?: undefined; error: string}> => {
+  const lang = languageOf(request.headers);
   // a cross-site form can only send form or text bodies, never application/json
-  if (!request.headers.get("content-type")?.includes("application/json")) return {error: "請求內容必須是 JSON"};
+  if (!request.headers.get("content-type")?.includes("application/json")) return {error: translate(lang, "request.notJson")};
   let body: unknown;
   try {
     body = await request.json();
   } catch (error) {
-    return {error: "請求內容不是有效的 JSON"};
+    return {error: translate(lang, "request.invalidJson")};
   }
-  const result = schema.safeParse(body);
+  const result = schema.safeParse(body, {error: zodErrorMap(lang)});
   if (!result.success) {
     const messages = result.error.issues.map((issue) => {
-      const field = FIELD_NAMES[String(issue.path[0])];
-      return field ? `${field}：${issue.message}` : issue.message;
+      // custom messages in schemas.ts are message keys; zod's own are already localized
+      const message = isMessageKey(issue.message) ? translate(lang, issue.message) : issue.message;
+      const field = fieldKey(String(issue.path[0]));
+      return field ? translate(lang, "validation.fieldMessage", {field: translate(lang, field), message}) : message;
     });
-    return {error: [...new Set(messages)].join("；")};
+    return {error: [...new Set(messages)].join(translate(lang, "validation.separator"))};
   }
   return {data: result.data};
 };

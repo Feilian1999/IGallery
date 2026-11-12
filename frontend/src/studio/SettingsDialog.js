@@ -1,6 +1,7 @@
 import * as React from "react";
 import PropTypes from "prop-types";
 import {useTheme} from "@mui/material/styles";
+import {useTranslation} from "react-i18next";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -15,13 +16,14 @@ import CommissionSettings from "./CommissionSettings";
 import "./admin.css";
 
 const SECTIONS = {
-  profile: {title: "編輯個人資料", Content: ProfilePage},
-  commissions: {title: "約稿設定", Content: CommissionSettings},
+  profile: {title: "settings.profile", Content: ProfilePage},
+  commissions: {title: "settings.commissions", Content: CommissionSettings},
 };
 
 // Account settings in a centered dialog over whatever page is open (full screen on phones):
 // `section` is "profile" (#me/profile) or "commissions" (#me/commissions).
 const SettingsDialog = ({open, section, onClose}) => {
+  const {t} = useTranslation("studio");
   const {session} = useSession();
   const theme = useTheme();
   const phone = useMediaQuery(theme.breakpoints.down("sm"));
@@ -36,9 +38,9 @@ const SettingsDialog = ({open, section, onClose}) => {
     <Dialog open={open && Boolean(session)} onClose={onClose} fullScreen={phone} fullWidth maxWidth="sm" scroll="paper"
       PaperProps={{sx: {bgcolor: "background.paper", backgroundImage: "none", borderRadius: {sm: 4}}}}>
       <DialogTitle sx={{display: "flex", alignItems: "center", gap: 1, pr: 1.5}}>
-        <Box sx={{flex: 1, fontWeight: 800}}>{title}</Box>
-        {isMember(session) && <Button size="small" href={`#users/${session.user.id}`} sx={{borderRadius: 20}}>查看我的個人頁</Button>}
-        <IconButton onClick={onClose} aria-label="關閉"><CloseIcon /></IconButton>
+        <Box sx={{flex: 1, fontWeight: 800}}>{t(title)}</Box>
+        {isMember(session) && <Button size="small" href={`#users/${session.user.id}`} sx={{borderRadius: 20}}>{t("settings.viewProfile")}</Button>}
+        <IconButton onClick={onClose} aria-label={t("settings.close")}><CloseIcon /></IconButton>
       </DialogTitle>
       <DialogContent dividers sx={{p: 0}}>
         <div className="admin admin--dialog" data-mode={theme.palette.mode}>{/* keyed so switching sections starts each form fresh */}

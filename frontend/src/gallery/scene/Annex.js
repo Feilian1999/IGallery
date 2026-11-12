@@ -2,6 +2,7 @@
 import * as React from "react";
 import * as THREE from "three";
 import {useFrame, useThree} from "@react-three/fiber";
+import {useTranslation} from "react-i18next";
 import {MeshReflectorMaterial, useTexture} from "@react-three/drei";
 import {RADIUS, PROJECTION, PORTAL} from "../layout/annex";
 import {useGalleryStore, getGalleryState} from "../store";
@@ -124,6 +125,7 @@ const Stars = () => {
 const Annex = () => {
   const quality = useGalleryStore((state) => state.resolvedQuality());
   const room = useGalleryStore((state) => state.exhibition.rooms.annex);
+  const {t} = useTranslation("gallery");
 
   React.useEffect(() => {
     getGalleryState().set({focusedId: null});
@@ -176,7 +178,7 @@ const Annex = () => {
           <FloatingPiece key={entry.artwork.id} entry={entry} index={index} />
         ))}
       </React.Suspense>
-      <Portal placement={PORTAL} colors={["#7a3b2a", "#ffd27f"]} label="← 回到主展廳" />
+      <Portal placement={PORTAL} colors={["#7a3b2a", "#ffd27f"]} label={t("portal.backToMain")} />
     </group>
   );
 };

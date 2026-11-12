@@ -1,14 +1,13 @@
 import * as React from "react";
+import {useTranslation} from "react-i18next";
 import {api} from "../api";
 import {useSession} from "../session";
 
-const TABS = [
-  {id: "login", name: "登入"},
-  {id: "register", name: "註冊"},
-];
+const TABS = ["login", "register"];
 
 // Sign in, create an account, or look around as a guest.
 const LoginPage = () => {
+  const {t} = useTranslation("studio");
   const {refresh} = useSession();
   const [tab, setTab] = React.useState("login");
   const [form, setForm] = React.useState({username: "", password: "", displayName: ""});
@@ -39,39 +38,39 @@ const LoginPage = () => {
     <div className="admin--center">
       <form className="admin-login" onSubmit={submit}>
         <div className="admin-eyebrow">IGallery</div>
-        <h1 className="admin-login__title">{tab === "login" ? "歡迎回來" : "加入 IGallery"}</h1>
+        <h1 className="admin-login__title">{tab === "login" ? t("login.welcomeBack") : t("login.join")}</h1>
         <div className="admin-segmented admin-login__tabs">
-          {TABS.map((item) => (
-            <button type="button" key={item.id} className={tab === item.id ? "admin-segmented--active" : ""} onClick={() => {
-              setTab(item.id);
+          {TABS.map((id) => (
+            <button type="button" key={id} className={tab === id ? "admin-segmented--active" : ""} onClick={() => {
+              setTab(id);
               setError("");
-            }}>{item.name}</button>
+            }}>{t(`login.${id}`)}</button>
           ))}
         </div>
         <label className="admin-field">
-          <span>帳號</span>
+          <span>{t("username")}</span>
           <input autoComplete="username" value={form.username} onChange={set("username")} autoFocus required />
         </label>
         {tab === "register" && (
           <label className="admin-field">
-            <span>顯示名稱<em>其他人會看到的名字，可以之後再改</em></span>
+            <span>{t("displayName")}<em>{t("login.displayNameHint")}</em></span>
             <input value={form.displayName} onChange={set("displayName")} maxLength={40} />
           </label>
         )}
         <label className="admin-field">
-          <span>密碼{tab === "register" && <em>至少 8 個字元</em>}</span>
+          <span>{t("password")}{tab === "register" && <em>{t("minPassword")}</em>}</span>
           <input type="password" autoComplete={tab === "login" ? "current-password" : "new-password"} value={form.password} onChange={set("password")} required />
         </label>
         {error && <div className="admin-error">{error}</div>}
         <button className="admin-button admin-button--primary admin-login__submit" disabled={busy}>
-          {busy ? "請稍候…" : tab === "login" ? "登入" : "建立帳號"}
+          {busy ? t("login.wait") : tab === "login" ? t("login.login") : t("login.createAccount")}
         </button>
-        <div className="admin-login__or"><span>或</span></div>
+        <div className="admin-login__or"><span>{t("login.or")}</span></div>
         <button type="button" className="admin-button admin-login__submit" disabled={busy} onClick={() => run(() => api("/auth/guest", {method: "POST"}))}>
-          以訪客身分進入
+          {t("login.guest")}
         </button>
-        <p className="admin-muted admin-login__hint">訪客可以先四處逛逛，想按讚收藏或成為藝術家時再註冊即可，不會遺失帳號。</p>
-        <a className="admin-link admin-login__back" href="#">← 回到網站</a>
+        <p className="admin-muted admin-login__hint">{t("login.guestHint")}</p>
+        <a className="admin-link admin-login__back" href="#">{t("login.back")}</a>
       </form>
     </div>
   );

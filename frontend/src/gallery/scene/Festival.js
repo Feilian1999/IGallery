@@ -2,6 +2,7 @@
 import * as React from "react";
 import * as THREE from "three";
 import {useFrame} from "@react-three/fiber";
+import {useTranslation} from "react-i18next";
 import {
   WALL_RADIUS, WALL_HEIGHT, GARDEN_RADIUS, POST_RADIUS, BENCH_RADIUS, ROOF, GATE_HALF_ANGLE, BAMBOO, TREE,
   SLOT_ANGLES, POST_ANGLES, BENCH_ANGLES, BENCH, TORII, PORTAL, WALKWAY_MID, ringPoint,
@@ -630,6 +631,7 @@ const FestivalLights = () => (
 
 const Festival = () => {
   const room = useGalleryStore((state) => state.exhibition.rooms.festival);
+  const {t} = useTranslation("gallery");
 
   React.useEffect(() => {
     getGalleryState().set({focusedId: null});
@@ -653,7 +655,7 @@ const Festival = () => {
       <FloweringTree />
       <Umbrellas />
       <FestivalLights />
-      <Portal placement={PORTAL} colors={["#7a2a3b", "#ffb36b"]} label="← 回到主展廳" />
+      <Portal placement={PORTAL} colors={["#7a2a3b", "#ffb36b"]} label={t("portal.backToMain")} />
       <React.Suspense fallback={null}>
         {room.artworks.map(({artwork, placement}) => (
           <Painting key={artwork.id} artwork={artwork} placement={placement} poolBounds={alcovePool(placement)} />

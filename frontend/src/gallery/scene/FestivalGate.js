@@ -2,6 +2,7 @@
 import * as React from "react";
 import * as THREE from "three";
 import {useFrame} from "@react-three/fiber";
+import {useTranslation} from "react-i18next";
 import {Html} from "@react-three/drei";
 import {runtime} from "../runtime";
 import {PLATFORM, FESTIVAL_GATE} from "../layout/mainHall";
@@ -68,6 +69,7 @@ const FestivalGate = () => {
   const swirl = useUniforms();
   const beam = useUniforms();
   const [near, setNear] = React.useState(false);
+  const {t} = useTranslation("gallery");
 
   useFrame(({clock}) => {
     swirl.uTime.value = clock.elapsedTime;
@@ -97,7 +99,7 @@ const FestivalGate = () => {
       </mesh>
       {near && (
         <Html position={[0, LABEL_HEIGHT, 0]} center zIndexRange={[20, 0]} style={{pointerEvents: "none"}}>
-          <div className="gallery-portal-label gallery-portal-label--festival">→ 夏日祭典</div>
+          <div className="gallery-portal-label gallery-portal-label--festival">{t("portal.toFestival")}</div>
         </Html>
       )}
     </group>

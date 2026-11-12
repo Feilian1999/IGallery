@@ -1,5 +1,6 @@
 import * as React from "react";
 import PropTypes from "prop-types";
+import {useTranslation} from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -13,11 +14,8 @@ import {AI_USAGE} from "../../shared/aiUsage";
 import {useSession, isMember, toggleLike} from "../../session";
 import {useGalleryStore} from "../store";
 
-const TABS = [
-  {id: "original", name: "原始作品"},
-  {id: "zoom", name: "細節放大"},
-  {id: "about", name: "創作說明"},
-];
+// tab names: gallery:detail.tabs.<id>
+const TABS = ["original", "zoom", "about"];
 const MAX_SCALE = 6;
 const HOTSPOT_SCALE = 2.8;
 const EMPTY = "--";
@@ -28,6 +26,7 @@ const ZoomViewer = ({artwork, activeHotspot, onHotspot}) => {
   const drag = React.useRef(null);
   const [fit, setFit] = React.useState(null);
   const [view, setView] = React.useState({scale: 1, x: 0, y: 0, animated: false});
+  const {t} = useTranslation("gallery");
 
   // fit the image inside the stage, recomputed on resize
   React.useEffect(() => {
@@ -123,14 +122,14 @@ const ZoomViewer = ({artwork, activeHotspot, onHotspot}) => {
           ))}
         </div>
       )}
-      <div className="zoom__hint glass">滾輪縮放 · 拖曳移動 · 點數字看細節</div>
+      <div className="zoom__hint glass">{t("detail.zoomHint")}</div>
       <div className="zoom__controls glass" onPointerDown={(event) => event.stopPropagation()}>
-        <button className="icon-button" onClick={() => center(1.5)} aria-label="放大"><AddIcon /></button>
-        <button className="icon-button" onClick={() => center(1 / 1.5)} aria-label="縮小"><RemoveIcon /></button>
+        <button className="icon-button" onClick={() => center(1.5)} aria-label={t("detail.zoomIn")}><AddIcon /></button>
+        <button className="icon-button" onClick={() => center(1 / 1.5)} aria-label={t("detail.zoomOut")}><RemoveIcon /></button>
         <button className="icon-button" onClick={() => {
           onHotspot(null);
           setView({scale: 1, x: 0, y: 0, animated: true});
-        }} aria-label="重設"><CenterFocusWeakIcon /></button>
+        }} aria-label={t("detail.reset")}><CenterFocusWeakIcon /></button>
       </div>
     </div>
   );
@@ -142,22 +141,26 @@ ZoomViewer.propTypes = {
   onHotspot: PropTypes.func.isRequired,
 };
 
-const Meta = ({artwork}) => (
-  <dl className="detail__meta">
-    <dt>作者</dt>
-    <dd>{artwork.author || EMPTY}</dd>
-    <dt>角色</dt>
-    <dd>{artwork.character || EMPTY}</dd>
-    <dt>AI</dt>
-    <dd>{AI_USAGE[artwork.aiUsage]?.name || AI_USAGE.unspecified.name}</dd>
-    {artwork.owner && (
-      <>
-        <dt>上傳者</dt>
-        <dd><a href={`#users/${artwork.owner.id}`} style={{color: "inherit"}}>{artwork.owner.displayName}</a></dd>
-      </>
-    )}
-  </dl>
-);
+const Meta = ({artwork}) => {
+  // also re-renders the AI_USAGE names, which translate when read
+  const {t} = useTranslation("gallery");
+  return (
+    <dl className="detail__meta">
+      <dt>{t("label.author")}</dt>
+      <dd>{artwork.author || EMPTY}</dd>
+      <dt>{t("label.character")}</dt>
+      <dd>{artwork.character || EMPTY}</dd>
+      <dt>AI</dt>
+      <dd>{AI_USAGE[artwork.aiUsage]?.name || AI_USAGE.unspecified.name}</dd>
+      {artwork.owner && (
+        <>
+          <dt>{t("detail.uploader")}</dt>
+          <dd><a href={`#users/${artwork.owner.id}`} style={{color: "inherit"}}>{artwork.owner.displayName}</a></dd>
+        </>
+      )}
+    </dl>
+  );
+};
 
 Meta.propTypes = {artwork: PropTypes.object.isRequired};
 
@@ -190,6 +193,7 @@ const ArtworkDetail = () => {
   const {session} = useSession();
   const [tab, setTab] = React.useState("original");
   const [hotspot, setHotspot] = React.useState(null);
+  const {t} = useTranslation("gallery");
 
   const exhibition = useGalleryStore((state) => state.exhibition);
   const ids = exhibition.rooms[roomId].artworks.map(({artwork}) => artwork.id);
@@ -231,12 +235,12 @@ const ArtworkDetail = () => {
       <header className="detail__bar">
         <div className="detail__crumbs">
           <span className="eyebrow">{ROOM_INFO[roomId].subtitle}</span>
-          <span>{position >= 0 ? `${position + 1} / ${ids.length}` : "精選作品"}</span>
+          <span>{position >= 0 ? `${position + 1} / ${ids.length}` : t("detail.featured")}</span>
         </div>
         <div className="segmented">
-          {TABS.map((item) => (
-            <button key={item.id} className={`segmented__item${tab === item.id ? " segmented__item--active" : ""}`} onClick={() => setTab(item.id)}>
-              {item.name}
+          {TABS.map((id) => (
+            <button key={id} className={`segmented__item${tab === id ? " segmented__item--active" : ""}`} onClick={() => setTab(id)}>
+              {t(`detail.tabs.${id}`)}
             </button>
           ))}
         </div>
@@ -244,7 +248,7 @@ const ArtworkDetail = () => {
           {artwork.owner && artwork.owner.id !== session?.user.id && (
             <button
               className={`detail__like${artwork.liked ? " detail__like--active" : ""}`}
-              title={isMember(session) ? "" : "註冊會員後就能按喜歡"}
+              title={isMember(session) ? "" : t("detail.likeHint")}
               onClick={async () => {
                 if (!isMember(session)) {
                   window.location.hash = session ? "#me/profile" : "#login";
@@ -257,9 +261,9 @@ const ArtworkDetail = () => {
               {artwork.likes}
             </button>
           )}
-          <button className="icon-button" onClick={() => go(-1)} aria-label="上一件"><ChevronLeftIcon /></button>
-          <button className="icon-button" onClick={() => go(1)} aria-label="下一件"><ChevronRightIcon /></button>
-          <button className="icon-button" onClick={() => set({detailId: null})} aria-label="關閉"><CloseIcon /></button>
+          <button className="icon-button" onClick={() => go(-1)} aria-label={t("detail.previous")}><ChevronLeftIcon /></button>
+          <button className="icon-button" onClick={() => go(1)} aria-label={t("detail.next")}><ChevronRightIcon /></button>
+          <button className="icon-button" onClick={() => set({detailId: null})} aria-label={t("detail.close")}><CloseIcon /></button>
         </div>
       </header>
       <div className="detail__body">
@@ -278,11 +282,11 @@ const ArtworkDetail = () => {
           <Meta artwork={artwork} />
           {tab === "original" && (
             <>
-              <h2 className="detail__heading">描述</h2>
+              <h2 className="detail__heading">{t("label.description")}</h2>
               <p className="detail__text">{artwork.description || EMPTY}</p>
               {artwork.hotspots.length > 0 && (
                 <>
-                  <h2 className="detail__heading">細節熱點</h2>
+                  <h2 className="detail__heading">{t("detail.hotspots")}</h2>
                   <HotspotList artwork={artwork} active={null} onSelect={selectHotspot} />
                 </>
               )}
@@ -290,21 +294,21 @@ const ArtworkDetail = () => {
           )}
           {tab === "zoom" && (
             <>
-              <h2 className="detail__heading">細節熱點</h2>
+              <h2 className="detail__heading">{t("detail.hotspots")}</h2>
               {artwork.hotspots.length ? (
                 <HotspotList artwork={artwork} active={hotspot} onSelect={setHotspot} />
-              ) : <p className="detail__placeholder">這件作品沒有標註細節熱點。</p>}
+              ) : <p className="detail__placeholder">{t("detail.noHotspots")}</p>}
             </>
           )}
           {tab === "about" && (
             <>
-              <h2 className="detail__heading">創作說明</h2>
+              <h2 className="detail__heading">{t("detail.tabs.about")}</h2>
               <p className="detail__text">{artwork.description || EMPTY}</p>
-              <h2 className="detail__heading">作品背後的故事</h2>
+              <h2 className="detail__heading">{t("detail.story")}</h2>
               {artwork.story ? (
                 artwork.story.split("\n").map((paragraph, i) => <p key={i} className="detail__text">{paragraph}</p>)
               ) : (
-                <p className="detail__placeholder">作者尚未提供作品故事。</p>
+                <p className="detail__placeholder">{t("detail.noStory")}</p>
               )}
             </>
           )}

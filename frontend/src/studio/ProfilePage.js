@@ -1,6 +1,8 @@
 /* eslint-disable react/prop-types */
 import * as React from "react";
+import {useTranslation, Trans} from "react-i18next";
 import {api} from "../api";
+import {formatDate} from "../i18n";
 import {useSession, isMember, isArtist} from "../session";
 import limits from "../shared/artworkLimits.json";
 
@@ -53,6 +55,7 @@ export const Feedback = ({status}) => (
 
 // The profile settings, shown in SettingsDialog (#me/profile).
 const ProfilePage = () => {
+  const {t} = useTranslation("studio");
   const {session, refresh} = useSession();
   const user = session.user;
   const profile = useForm({displayName: user.displayName, bio: user.bio});
@@ -64,74 +67,74 @@ const ProfilePage = () => {
     <>
 
       {!isMember(session) && (
-        <Section title="註冊成為會員">
-          <p className="admin-muted">設定帳號密碼後，這個訪客帳號會直接變成正式會員，可以按讚收藏，也能申請成為藝術家。</p>
+        <Section title={t("registerMember")}>
+          <p className="admin-muted">{t("profile.registerBody")}</p>
           <form onSubmit={upgrade.submit(async (values) => {
             await api("/auth/upgrade", {method: "POST", body: values});
             await refresh();
-          }, "已經成為會員了！")}>
-            <label className="admin-field"><span>帳號<em>3–24 個英文小寫、數字、底線或連字號</em></span>
+          }, t("profile.registered"))}>
+            <label className="admin-field"><span>{t("username")}<em>{t("profile.usernameHint")}</em></span>
               <input value={upgrade.values.username} onChange={upgrade.set("username")} autoComplete="username" required /></label>
-            <label className="admin-field"><span>顯示名稱</span>
+            <label className="admin-field"><span>{t("displayName")}</span>
               <input value={upgrade.values.displayName} onChange={upgrade.set("displayName")} maxLength={limits.displayName} /></label>
-            <label className="admin-field"><span>密碼<em>至少 8 個字元</em></span>
+            <label className="admin-field"><span>{t("password")}<em>{t("minPassword")}</em></span>
               <input type="password" value={upgrade.values.password} onChange={upgrade.set("password")} autoComplete="new-password" required /></label>
             <Feedback status={upgrade.status} />
-            <button className="admin-button admin-button--primary" disabled={upgrade.status.busy}>註冊</button>
+            <button className="admin-button admin-button--primary" disabled={upgrade.status.busy}>{t("profile.register")}</button>
           </form>
         </Section>
       )}
 
-      <Section title="公開資料">
+      <Section title={t("profile.public")}>
         <form onSubmit={profile.submit(async (values) => {
           await api("/me/profile", {method: "PATCH", body: values});
           await refresh();
-        }, "已儲存")}>
+        }, t("saved"))}>
           <div className="admin-profile-id">
             <span className="admin-avatar admin-avatar--large">{(profile.values.displayName || user.username).slice(0, 1)}</span>
             <div>
               <div>@{user.username}</div>
-              <div className="admin-muted">加入於 {new Date(user.createdAt).toLocaleDateString("zh-TW")}</div>
+              <div className="admin-muted">{t("profile.joinedAt", {date: formatDate(user.createdAt)})}</div>
             </div>
           </div>
-          <label className="admin-field"><span>顯示名稱<em>{profile.values.displayName.length} / {limits.displayName}</em></span>
+          <label className="admin-field"><span>{t("displayName")}<em>{profile.values.displayName.length} / {limits.displayName}</em></span>
             <input value={profile.values.displayName} onChange={profile.set("displayName")} maxLength={limits.displayName} required /></label>
-          <label className="admin-field"><span>自我介紹<em>{profile.values.bio.length} / {limits.bio}</em></span>
+          <label className="admin-field"><span>{t("profile.bio")}<em>{profile.values.bio.length} / {limits.bio}</em></span>
             <textarea rows={4} value={profile.values.bio} onChange={profile.set("bio")} maxLength={limits.bio} /></label>
           <Feedback status={profile.status} />
-          <button className="admin-button admin-button--primary" disabled={profile.status.busy}>儲存</button>
+          <button className="admin-button admin-button--primary" disabled={profile.status.busy}>{t("save")}</button>
         </form>
       </Section>
 
       {isMember(session) && (
-        <Section title="隱私">
+        <Section title={t("profile.privacy")}>
           <form onSubmit={privacy.submit(async (values) => {
             await api("/me/profile", {method: "PATCH", body: values});
             await refresh();
-          }, "已儲存")}>
-            <SwitchRow label="公開我的收藏" hint="關閉後，只有你自己能在個人頁看到按過愛心的作品"
+          }, t("saved"))}>
+            <SwitchRow label={t("profile.likesPublic")} hint={t("profile.likesPublicHint")}
               checked={privacy.values.likesPublic} onChange={(likesPublic) => privacy.setValues({likesPublic})} />
             <Feedback status={privacy.status} />
-            <button className="admin-button admin-button--primary" disabled={privacy.status.busy}>儲存</button>
+            <button className="admin-button admin-button--primary" disabled={privacy.status.busy}>{t("save")}</button>
           </form>
-          {isArtist(session) && <p className="admin-muted">約稿資訊在<a className="admin-link" href="#me/commissions">約稿設定</a>裡編輯。</p>}
+          {isArtist(session) && <p className="admin-muted"><Trans t={t} i18nKey="profile.commissionNote" components={{go: <a className="admin-link" href="#me/commissions" />}} /></p>}
         </Section>
       )}
 
       {isMember(session) && (
-        <Section title="變更密碼">
+        <Section title={t("profile.changePassword")}>
           <form onSubmit={password.submit(async (values) => {
             await api("/auth/password", {method: "PUT", body: values});
             password.setValues({current: "", next: ""});
-          }, "密碼已更新")}>
-            <label className="admin-field"><span>目前的密碼</span>
+          }, t("profile.passwordUpdated"))}>
+            <label className="admin-field"><span>{t("profile.currentPassword")}</span>
               <input type="password" value={password.values.current} onChange={password.set("current")} autoComplete="current-password" required /></label>
-            <label className="admin-field"><span>新密碼<em>至少 8 個字元</em></span>
+            <label className="admin-field"><span>{t("profile.newPassword")}<em>{t("minPassword")}</em></span>
               <input type="password" value={password.values.next} onChange={password.set("next")} autoComplete="new-password" required /></label>
             <Feedback status={password.status} />
-            <button className="admin-button admin-button--primary" disabled={password.status.busy}>更新密碼</button>
+            <button className="admin-button admin-button--primary" disabled={password.status.busy}>{t("profile.updatePassword")}</button>
           </form>
-          <p className="admin-muted">忘記密碼時，請聯絡管理者幫你重設。</p>
+          <p className="admin-muted">{t("profile.forgot")}</p>
         </Section>
       )}
     </>

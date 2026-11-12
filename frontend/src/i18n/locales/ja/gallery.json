@@ -1,0 +1,217 @@
+{
+  "themes": {
+    "night": {
+      "name": "夜の美術館",
+      "caption": "暗い壁に、作品だけが照らされます"
+    },
+    "white": {
+      "name": "ホワイトキューブ",
+      "caption": "明るくミニマルな現代ギャラリー"
+    },
+    "warm": {
+      "name": "ウォームウッド",
+      "caption": "木の床とあたたかな光。午後のアトリエのような空間です"
+    }
+  },
+  "seasons": {
+    "spring": "春",
+    "summer": "夏",
+    "autumn": "秋",
+    "winter": "冬"
+  },
+  "weathers": {
+    "clear": "晴れ",
+    "rain": "雨",
+    "snow": "雪"
+  },
+  "outfits": {
+    "body": {
+      "orange": "クラシックオレンジ",
+      "mint": "ミント",
+      "navy": "夜空ブルー",
+      "sakura": "桜ピンク",
+      "pearl": "パールホワイト",
+      "ink": "墨色"
+    },
+    "trim": {
+      "silver": "シルバー",
+      "graphite": "グラファイト",
+      "gold": "シャンパンゴールド"
+    },
+    "accessory": {
+      "none": "なし",
+      "beret": "ベレー帽",
+      "scarf": "マフラー",
+      "headphones": "ヘッドホン"
+    }
+  },
+  "emotes": {
+    "Wave": "手を振る",
+    "ThumbsUp": "いいね",
+    "Dance": "ダンス",
+    "Yes": "うなずく",
+    "Jump": "ジャンプ"
+  },
+  "qualities": {
+    "auto": "自動",
+    "high": "高画質",
+    "balanced": "バランス",
+    "low": "省電力"
+  },
+  "outfit": {
+    "title": "着せ替え",
+    "body": "ボディカラー",
+    "trim": "関節・アクセントカラー",
+    "accessory": "アクセサリー",
+    "tryEmote": "動きを試す"
+  },
+  "theme": {
+    "title": "ギャラリーのテーマ",
+    "season": "窓の外の季節",
+    "weather": "天気"
+  },
+  "settings": {
+    "title": "設定",
+    "camera": "視点",
+    "thirdPerson": "三人称",
+    "firstPerson": "一人称",
+    "quality": "画質",
+    "music": "BGM",
+    "on": "オン",
+    "off": "オフ",
+    "volume": "音量 {{percent}}%"
+  },
+  "help": {
+    "title": "操作方法",
+    "keyNames": {
+      "drag": "ドラッグ"
+    },
+    "keys": {
+      "move": "前進・後退（矢印キーでも操作できます）",
+      "turn": "左右に旋回（カメラは後ろから追従します）",
+      "strafe": "左右に平行移動",
+      "run": "押している間ダッシュ",
+      "look": "周りを見回す（離すとカメラが背後に戻ります）",
+      "interact": "インタラクト：座る・ポータル・落書き",
+      "view": "鑑賞中の作品を詳しく見る",
+      "emotes": "手を振る・いいね・ダンス・うなずく",
+      "jump": "ジャンプ",
+      "camera": "一人称／三人称の切り替え",
+      "map": "館内マップ",
+      "photo": "フォトモード",
+      "outfit": "着せ替え",
+      "theme": "テーマと天気",
+      "close": "パネルを閉じる・モードを終了"
+    }
+  },
+  "hud": {
+    "visited": "鑑賞済み {{seen}}/{{total}}",
+    "map": "館内マップ M",
+    "toThirdPerson": "三人称に切り替え V",
+    "toFirstPerson": "一人称に切り替え V",
+    "photo": "フォトモード P",
+    "outfit": "着せ替え C",
+    "theme": "テーマと天気 T",
+    "musicOff": "音楽をオフ",
+    "musicOn": "音楽をオン",
+    "settings": "設定",
+    "help": "操作方法 ?",
+    "leave": "ギャラリーを出る"
+  },
+  "prompt": {
+    "standUp": "立ち上がる",
+    "viewArtwork": "作品の詳細を見る",
+    "sit": "座る",
+    "enterAnnex": "浮遊展示室へ入る",
+    "toFestival": "夏祭りへ向かう",
+    "startGraffiti": "落書きを始める",
+    "backToMain": "メインホールへ戻る"
+  },
+  "portal": {
+    "toAnnex": "→ 浮遊展示室",
+    "toFestival": "→ 夏祭り",
+    "backToMain": "← メインホールへ戻る"
+  },
+  "painting": {
+    "hoverHint": "クリックで作品の詳細を表示"
+  },
+  "intro": {
+    "subtitle": "歩いて巡れるオンライン美術館",
+    "loading": "展示を読み込み中…",
+    "enter": "展示に入る",
+    "offline": "サーバーに接続できないため、サンプル作品を展示しています",
+    "hints": "ヘッドホン推奨 · W/S で前進・後退 · A/D で旋回",
+    "hallOfLight": "光の展示室",
+    "skip": "スキップ ›"
+  },
+  "graffiti": {
+    "hint": "壁の上をドラッグして描けます。作品はこの端末に自動で保存されます · Esc で完了",
+    "size": "太さ",
+    "eraser": "消しゴム",
+    "clear": "消去",
+    "confirmClear": "落書きの壁をすべて消去しますか？",
+    "done": "完了",
+    "watermark": "FREE WALL · 自由に描ける壁"
+  },
+  "photo": {
+    "filters": {
+      "none": "オリジナル",
+      "warm": "陽だまり",
+      "cool": "クール",
+      "mono": "モノクロ",
+      "vintage": "レトロ",
+      "dream": "ドリーミー"
+    },
+    "hint": "ドラッグで回転 · ホイールで距離調整 · 1–4 でポーズ",
+    "exit": "フォトモードを終了",
+    "depthOfField": "被写界深度",
+    "frame": "フレーム",
+    "shoot": "撮影",
+    "resultAlt": "撮影した写真",
+    "download": "ダウンロード",
+    "close": "閉じる"
+  },
+  "label": {
+    "author": "作者",
+    "character": "キャラクター",
+    "description": "解説"
+  },
+  "detail": {
+    "tabs": {
+      "original": "作品全体",
+      "zoom": "細部を拡大",
+      "about": "制作ノート"
+    },
+    "zoomHint": "ホイールで拡大縮小 · ドラッグで移動 · 数字をクリックで詳細",
+    "zoomIn": "拡大",
+    "zoomOut": "縮小",
+    "reset": "リセット",
+    "uploader": "投稿者",
+    "featured": "注目の作品",
+    "likeHint": "会員登録すると「いいね」できます",
+    "previous": "前の作品",
+    "next": "次の作品",
+    "close": "閉じる",
+    "hotspots": "見どころ",
+    "noHotspots": "この作品には見どころが登録されていません。",
+    "story": "作品の背景",
+    "noStory": "作者はまだ作品の背景を公開していません。"
+  },
+  "map": {
+    "entrance": "入口",
+    "toFestival": "夏祭りへ",
+    "portal": "ポータル",
+    "graffiti": "落書きの壁",
+    "projection": "投影",
+    "backToMain": "メインホールへ",
+    "garden": "庭園",
+    "torii": "鳥居・メインホールへ",
+    "goTo": "「{{title}}」へ移動",
+    "open": "館内マップを開く (M)",
+    "title": "館内マップ",
+    "visited": "鑑賞済み {{seen}} / {{total}}",
+    "visitedGo": "鑑賞済み · クリックで移動",
+    "go": "クリックで移動",
+    "close": "マップを閉じる"
+  }
+}

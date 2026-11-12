@@ -1,0 +1,118 @@
+{
+  "untitled": "未命名",
+  "nav": {
+    "home": "首頁",
+    "gallery": "3D 畫廊",
+    "ranking": "排行榜",
+    "likes": "喜歡的作品",
+    "mine": "我的",
+    "myPage": "我的個人頁",
+    "myWorks": "我的作品",
+    "becomeArtist": "成為藝術家",
+    "admin": "管理",
+    "review": "審核",
+    "applications": "藝術家申請",
+    "allArtworks": "所有作品",
+    "exhibition": "展場配置",
+    "users": "使用者",
+    "lightMode": "淺色模式",
+    "darkMode": "深色模式"
+  },
+  "top": {
+    "menu": "選單",
+    "searchPlaceholder": "搜尋作品、作者、角色",
+    "search": "搜尋",
+    "post": "發布作品",
+    "inbox": "收信",
+    "notifications": "通知",
+    "login": "登入",
+    "accountMenu": "個人選單",
+    "editProfile": "編輯個人資料",
+    "commissionSettings": "約稿設定",
+    "logout": "登出"
+  },
+  "home": {
+    "bannerTitle": "走進 3D 展廳",
+    "bannerText": "操控角色在美術館裡散步，走到畫作前細看，或穿過傳送門前往懸浮展廳。",
+    "enterGallery": "進入畫廊",
+    "curated": "精選",
+    "latest": "最新",
+    "artworks": "作品",
+    "searchResults": "「{{query}}」的搜尋結果",
+    "searchResultsTotal": "「{{query}}」的搜尋結果（{{total}}）",
+    "noMatches": "找不到符合的作品，換個關鍵字試試。",
+    "noArtworks": "還沒有作品。"
+  },
+  "artwork": {
+    "backToArtist": "← 回到作者頁面",
+    "openOriginal": "開啟原圖",
+    "edit": "編輯作品",
+    "liked": "已收藏",
+    "like": "喜歡",
+    "manage": "管理",
+    "viewIn3D": "在 3D 畫廊觀看",
+    "author": "作者",
+    "character": "角色",
+    "ai": "AI",
+    "publishedAt": "發布於",
+    "story": "作品背後的故事",
+    "moreBy": "{{name}} 的其他作品",
+    "viewAll": "查看全部 →"
+  },
+  "card": {
+    "like": "喜歡",
+    "unlike": "取消喜歡"
+  },
+  "inbox": {
+    "title": "收信匣即將推出",
+    "text": "之後可以在這裡和創作者聯絡。作品被喜歡、審核結果等消息，目前都會出現在通知裡。",
+    "viewNotifications": "查看通知"
+  },
+  "likes": {
+    "title": "喜歡的作品",
+    "guestHint": "訪客不能按喜歡，註冊成為會員後就能收藏喜歡的作品。",
+    "loginHint": "登入後就能收藏喜歡的作品。",
+    "register": "註冊成為會員",
+    "empty": "還沒有喜歡的作品，在作品上按 ♥ 就會收進這裡。"
+  },
+  "ranking": {
+    "title": "藝術家排行",
+    "subtitle": "依已公開作品收到的喜歡數排名，同分時作品多的在前。",
+    "empty": "還沒有藝術家上榜，藝術家的作品通過審核後就有機會出現在這裡。",
+    "works_one": "{{count}} 件作品",
+    "works_other": "{{count}} 件作品"
+  },
+  "user": {
+    "noCommissionSelf": "你還沒有設定約稿資訊。",
+    "noCommissionOther": "{{name}} 目前沒有開放約稿。",
+    "setUpCommissions": "設定約稿",
+    "editCommissions": "編輯約稿設定",
+    "commissionsOpen": "接受約稿中",
+    "commissionsClosed": "暫停接受約稿",
+    "contact": "約稿請聯絡",
+    "openBadge": "接受約稿",
+    "joined": "{{date}} 加入",
+    "applyArtist": "申請成為藝術家",
+    "commission": "約稿",
+    "message": "傳送訊息",
+    "stats": {
+      "works_one": "<b>{{count}}</b> 件作品",
+      "works_other": "<b>{{count}}</b> 件作品",
+      "likes_one": "<b>{{count}}</b> 個喜歡",
+      "likes_other": "<b>{{count}}</b> 個喜歡",
+      "favorites_one": "<b>{{count}}</b> 件收藏",
+      "favorites_other": "<b>{{count}}</b> 件收藏"
+    },
+    "tabs": {
+      "works": "作品 {{total}}",
+      "commissions": "約稿",
+      "favorites": "收藏",
+      "favoritesTotal": "收藏 {{total}}"
+    },
+    "emptyWorksSelf": "你還沒有公開的作品，上傳並通過審核後就會出現在這裡。",
+    "emptyWorks": "還沒有公開的作品。",
+    "favoritesPrivate": "{{name}} 沒有公開收藏。",
+    "favoritesEmpty": "還沒有收藏任何作品。",
+    "favoritesOnlyYou": "只有你看得到自己的收藏，可以在個人資料中公開。"
+  }
+}

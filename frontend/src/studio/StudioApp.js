@@ -1,6 +1,7 @@
 import * as React from "react";
 import PropTypes from "prop-types";
 import {useTheme} from "@mui/material/styles";
+import {useTranslation, Trans} from "react-i18next";
 import {useSession, isMember, isAdmin, isArtist} from "../session";
 import LoginPage from "./LoginPage";
 import Dashboard from "./Dashboard";
@@ -35,6 +36,7 @@ export const parseStudioRoute = (hash) => {
 
 // `hash` is the page under any open dialog (App keeps it while #me/profile is showing).
 const StudioApp = ({hash}) => {
+  const {t} = useTranslation("studio");
   const {session} = useSession();
   const theme = useTheme();
   const route = parseStudioRoute(hash);
@@ -53,8 +55,8 @@ const StudioApp = ({hash}) => {
     content = (
       <div className="admin--center">
         <div className="admin-login">
-          <h1 className="admin-login__title">只有管理者可以進入</h1>
-          <a className="admin-link" href="#me">← 回到我的作品</a>
+          <h1 className="admin-login__title">{t("app.adminOnly")}</h1>
+          <a className="admin-link" href="#me">{t("backToMine")}</a>
         </div>
       </div>
     );
@@ -63,7 +65,7 @@ const StudioApp = ({hash}) => {
       <>
         {!isMember(session) && (
           <div className="admin-notice">
-            你正在以訪客身分瀏覽。<a className="admin-link" href="#me/profile">註冊成為會員</a>就能對喜歡的作品按讚收藏，也可以申請成為藝術家發布作品。
+            <Trans t={t} i18nKey="app.guestNotice" components={{go: <a className="admin-link" href="#me/profile" />}} />
           </div>
         )}
         {route.page === "dashboard" && isArtist(session) && <Dashboard />}

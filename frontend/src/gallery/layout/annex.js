@@ -30,7 +30,7 @@ export const colliders = (placements) => ({
 });
 
 export const INTERACTABLES = [
-  {id: "portal", type: "portal", position: viewingSpot(PORTAL, 1.2), radius: 1.6, label: "回到主展廳", target: "main"},
+  {id: "portal", type: "portal", position: viewingSpot(PORTAL, 1.2), radius: 1.6, label: "prompt.backToMain", target: "main"},
 ];
 
 export const BOUNDS = {minX: -RADIUS, maxX: RADIUS, minZ: -RADIUS, maxZ: RADIUS};

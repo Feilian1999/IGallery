@@ -3,6 +3,7 @@ import * as React from "react";
 import * as THREE from "three";
 import PropTypes from "prop-types";
 import {useFrame} from "@react-three/fiber";
+import {useTranslation} from "react-i18next";
 import {useTexture, Html} from "@react-three/drei";
 import WallLabel from "./WallLabel";
 import THEMES from "../themes";
@@ -53,6 +54,7 @@ const Painting = ({artwork, placement, anchor, floating = false, poolBounds}) =>
   const hovered = useGalleryStore((state) => state.hoveredId === artwork.id);
   const theme = THEMES[themeId];
   const focused = focusedId === artwork.id;
+  const {t} = useTranslation("gallery");
   const pool = React.useRef();
   const halo = React.useRef();
 
@@ -152,7 +154,7 @@ const Painting = ({artwork, placement, anchor, floating = false, poolBounds}) =>
         <Html position={[outerWidth / 2, outerHeight / 2, 0.05]} zIndexRange={[20, 0]} style={{pointerEvents: "none"}}>
           <div className="gallery-hover-card">
             <div className="gallery-hover-card__title">{artwork.title}</div>
-            <div className="gallery-hover-card__hint">點擊查看作品細節</div>
+            <div className="gallery-hover-card__hint">{t("painting.hoverHint")}</div>
           </div>
         </Html>
       )}

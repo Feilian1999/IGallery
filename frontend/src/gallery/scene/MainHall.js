@@ -2,6 +2,7 @@
 import * as React from "react";
 import * as THREE from "three";
 import {useFrame} from "@react-three/fiber";
+import {useTranslation} from "react-i18next";
 import THEMES, {SEASONS} from "../themes";
 import {PLATFORM, PORTAL} from "../layout/mainHall";
 import {useGalleryStore} from "../store";
@@ -67,6 +68,7 @@ const MainHall = () => {
   const room = useGalleryStore((state) => state.exhibition.rooms.main);
   const feature = useGalleryStore((state) => state.exhibition.feature);
   const reflective = theme.reflective && quality === "high";
+  const {t} = useTranslation("gallery");
 
   return (
     <group>
@@ -84,7 +86,7 @@ const MainHall = () => {
           <FloatingFeature artwork={feature} />
         </React.Suspense>
       )}
-      <Portal placement={PORTAL} colors={["#3b2a7a", "#7fd8ff"]} label="→ 懸浮展廳" />
+      <Portal placement={PORTAL} colors={["#3b2a7a", "#7fd8ff"]} label={t("portal.toAnnex")} />
       <GraffitiWall />
       <Ball />
       <Outdoors />

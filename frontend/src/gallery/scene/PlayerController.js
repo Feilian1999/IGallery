@@ -238,9 +238,9 @@ const PlayerController = () => {
       });
     }
     let prompt = null;
-    if (player.seat) prompt = {key: "WASD", label: "起身"};
+    if (player.seat) prompt = {key: "WASD", label: "prompt.standUp"};
     else if (interactable) prompt = {key: "F", label: interactable.label};
-    else if (focus) prompt = {key: "Enter", label: "查看作品細節"};
+    else if (focus) prompt = {key: "Enter", label: "prompt.viewArtwork"};
     const promptKey = prompt ? `${prompt.key}:${prompt.label}` : null;
     if (promptKey !== l.promptKey) {
       l.promptKey = promptKey;

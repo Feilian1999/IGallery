@@ -9,7 +9,9 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import AddPhotoAlternateOutlinedIcon from "@mui/icons-material/AddPhotoAlternateOutlined";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import BrushOutlinedIcon from "@mui/icons-material/BrushOutlined";
+import {useTranslation, Trans} from "react-i18next";
 import {ArtworkGrid} from "../components/ArtworkCard";
+import {formatDate} from "../i18n";
 import {api} from "../api";
 import {useSession} from "../session";
 
@@ -20,24 +22,25 @@ Empty.propTypes = {children: PropTypes.node};
 
 // What the artist offers: open or closed, terms, price plans and how to reach them.
 const Commissions = ({user, self}) => {
+  const {t} = useTranslation("site");
   const {open, info, contact, plans} = user.commission;
   if (!open && !info && !plans.length) {
     return (
       <Empty>
-        {self ? "你還沒有設定約稿資訊。" : `${user.displayName} 目前沒有開放約稿。`}
-        {self && <Box sx={{mt: 2}}><Button variant="contained" disableElevation href="#me/commissions" sx={{borderRadius: 20}}>設定約稿</Button></Box>}
+        {self ? t("user.noCommissionSelf") : t("user.noCommissionOther", {name: user.displayName})}
+        {self && <Box sx={{mt: 2}}><Button variant="contained" disableElevation href="#me/commissions" sx={{borderRadius: 20}}>{t("user.setUpCommissions")}</Button></Box>}
       </Empty>
     );
   }
   return (
     <Box sx={{maxWidth: 860}}>
       {self && (
-        <Button href="#me/commissions" variant="outlined" size="small" startIcon={<EditOutlinedIcon />} sx={{borderRadius: 20, float: "right"}}>編輯約稿設定</Button>
+        <Button href="#me/commissions" variant="outlined" size="small" startIcon={<EditOutlinedIcon />} sx={{borderRadius: 20, float: "right"}}>{t("user.editCommissions")}</Button>
       )}
       <Box sx={{display: "inline-flex", alignItems: "center", gap: 1, px: 1.5, py: 0.5, borderRadius: 20, fontSize: 13, fontWeight: 700,
         color: open ? "success.main" : "text.secondary", bgcolor: open ? "rgba(46, 160, 67, 0.12)" : "action.hover"}}>
         <Box sx={{width: 8, height: 8, borderRadius: "50%", bgcolor: open ? "success.main" : "text.disabled"}} />
-        {open ? "接受約稿中" : "暫停接受約稿"}
+        {open ? t("user.commissionsOpen") : t("user.commissionsClosed")}
       </Box>
       {info && <Box sx={{mt: 2.5, whiteSpace: "pre-wrap", lineHeight: 1.9}}>{info}</Box>}
       {plans.length > 0 && (
@@ -53,7 +56,7 @@ const Commissions = ({user, self}) => {
       )}
       {open && contact && (
         <Box sx={{mt: 3, p: 2.5, borderRadius: 3, bgcolor: "action.hover"}}>
-          <Box sx={{fontSize: 12, color: "text.secondary", mb: 0.5}}>約稿請聯絡</Box>
+          <Box sx={{fontSize: 12, color: "text.secondary", mb: 0.5}}>{t("user.contact")}</Box>
           <Box sx={{whiteSpace: "pre-wrap", wordBreak: "break-all"}}>{contact}</Box>
         </Box>
       )}
@@ -65,6 +68,7 @@ Commissions.propTypes = {user: PropTypes.object.isRequired, self: PropTypes.bool
 
 // An artist's public page: profile header, then their works, commissions and favorites.
 const UserPage = ({userId, tab: requestedTab}) => {
+  const {t} = useTranslation("site");
   const [profile, setProfile] = React.useState(null);
   // only artists (and admins) have works and commissions; a member's page is just their favorites
   const creator = !profile || ["artist", "admin"].includes(profile.user.role);
@@ -98,6 +102,7 @@ const UserPage = ({userId, tab: requestedTab}) => {
 
   const replaceIn = (setList) => (updated) => setList((current) => current.map((item) => (item.id === updated.id ? updated : item)));
   const covers = (works || []).slice(0, 4);
+  const bold = <Box component="b" sx={{color: "text.primary"}} />;
 
   return (
     <>
@@ -118,26 +123,26 @@ const UserPage = ({userId, tab: requestedTab}) => {
         <Box sx={{flex: 1, minWidth: 180}}>
           <Box sx={{display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap"}}>
             <Box component="h1" sx={{m: 0, fontSize: {xs: 22, md: 28}, fontWeight: 800}}>{user.displayName}</Box>
-            {user.role === "artist" && <Box sx={{px: 1, py: 0.25, borderRadius: 1, fontSize: 11, fontWeight: 700, bgcolor: "action.selected", color: "primary.main"}}>藝術家</Box>}
-            {user.role === "admin" && <Box sx={{px: 1, py: 0.25, borderRadius: 1, fontSize: 11, fontWeight: 700, bgcolor: "action.selected", color: "primary.main"}}>管理者</Box>}
-            {user.commission.open && <Box sx={{px: 1, py: 0.25, borderRadius: 1, fontSize: 11, fontWeight: 700, color: "success.main", bgcolor: "rgba(46, 160, 67, 0.12)"}}>接受約稿</Box>}
+            {user.role === "artist" && <Box sx={{px: 1, py: 0.25, borderRadius: 1, fontSize: 11, fontWeight: 700, bgcolor: "action.selected", color: "primary.main"}}>{t("common:roles.artist")}</Box>}
+            {user.role === "admin" && <Box sx={{px: 1, py: 0.25, borderRadius: 1, fontSize: 11, fontWeight: 700, bgcolor: "action.selected", color: "primary.main"}}>{t("common:roles.admin")}</Box>}
+            {user.commission.open && <Box sx={{px: 1, py: 0.25, borderRadius: 1, fontSize: 11, fontWeight: 700, color: "success.main", bgcolor: "rgba(46, 160, 67, 0.12)"}}>{t("user.openBadge")}</Box>}
           </Box>
-          <Box sx={{color: "text.secondary", fontSize: 14}}>@{user.username} · {new Date(user.createdAt).toLocaleDateString("zh-TW")} 加入</Box>
+          <Box sx={{color: "text.secondary", fontSize: 14}}>@{user.username} · {t("user.joined", {date: formatDate(user.createdAt)})}</Box>
         </Box>
         <Box sx={{display: "flex", gap: 1}}>
           {self ? (
             <>
-              <Button href="#me/profile" variant="outlined" startIcon={<EditOutlinedIcon />} sx={{borderRadius: 20}}>編輯個人資料</Button>
+              <Button href="#me/profile" variant="outlined" startIcon={<EditOutlinedIcon />} sx={{borderRadius: 20}}>{t("top.editProfile")}</Button>
               {creator ? (
-                <Button href="#me/new" variant="contained" disableElevation startIcon={<AddPhotoAlternateOutlinedIcon />} sx={{borderRadius: 20}}>發布作品</Button>
+                <Button href="#me/new" variant="contained" disableElevation startIcon={<AddPhotoAlternateOutlinedIcon />} sx={{borderRadius: 20}}>{t("top.post")}</Button>
               ) : (
-                <Button href="#me/apply" variant="contained" disableElevation startIcon={<BrushOutlinedIcon />} sx={{borderRadius: 20}}>申請成為藝術家</Button>
+                <Button href="#me/apply" variant="contained" disableElevation startIcon={<BrushOutlinedIcon />} sx={{borderRadius: 20}}>{t("user.applyArtist")}</Button>
               )}
             </>
           ) : (
             <>
-              {user.commission.open && <Button href={`#users/${user.id}/commissions`} variant="contained" disableElevation startIcon={<BrushOutlinedIcon />} sx={{borderRadius: 20}}>約稿</Button>}
-              <Button href="#inbox" variant="outlined" startIcon={<MailOutlineIcon />} sx={{borderRadius: 20}}>傳送訊息</Button>
+              {user.commission.open && <Button href={`#users/${user.id}/commissions`} variant="contained" disableElevation startIcon={<BrushOutlinedIcon />} sx={{borderRadius: 20}}>{t("user.commission")}</Button>}
+              <Button href="#inbox" variant="outlined" startIcon={<MailOutlineIcon />} sx={{borderRadius: 20}}>{t("user.message")}</Button>
             </>
           )}
         </Box>
@@ -146,9 +151,9 @@ const UserPage = ({userId, tab: requestedTab}) => {
       <Box sx={{px: {xs: 1, md: 4}, mt: 2}}>
         {user.bio && <Box sx={{whiteSpace: "pre-wrap", lineHeight: 1.8, maxWidth: 760}}>{user.bio}</Box>}
         <Box sx={{display: "flex", gap: 3, mt: 1.5, fontSize: 14, color: "text.secondary"}}>
-          {creator && <span><Box component="b" sx={{color: "text.primary"}}>{stats.works}</Box> 件作品</span>}
-          {creator && <span><Box component="b" sx={{color: "text.primary"}}>{stats.likes}</Box> 個喜歡</span>}
-          {stats.favorites !== null && <span><Box component="b" sx={{color: "text.primary"}}>{stats.favorites}</Box> 件收藏</span>}
+          {creator && <span><Trans t={t} i18nKey="user.stats.works" count={stats.works} components={{b: bold}} /></span>}
+          {creator && <span><Trans t={t} i18nKey="user.stats.likes" count={stats.likes} components={{b: bold}} /></span>}
+          {stats.favorites !== null && <span><Trans t={t} i18nKey="user.stats.favorites" count={stats.favorites} components={{b: bold}} /></span>}
         </Box>
       </Box>
 
@@ -156,23 +161,23 @@ const UserPage = ({userId, tab: requestedTab}) => {
         <Tabs value={tab} onChange={(_, value) => {
           window.location.hash = `#users/${user.id}${value === "works" ? "" : `/${value}`}`;
         }}>
-          {creator && <Tab value="works" label={`作品 ${stats.works}`} />}
-          {creator && <Tab value="commissions" label="約稿" />}
-          <Tab value="favorites" label={stats.favorites === null ? <Box sx={{display: "flex", alignItems: "center", gap: 0.5}}><LockOutlinedIcon sx={{fontSize: 16}} />收藏</Box> : `收藏 ${stats.favorites}`} />
+          {creator && <Tab value="works" label={t("user.tabs.works", {total: stats.works})} />}
+          {creator && <Tab value="commissions" label={t("user.tabs.commissions")} />}
+          <Tab value="favorites" label={stats.favorites === null ? <Box sx={{display: "flex", alignItems: "center", gap: 0.5}}><LockOutlinedIcon sx={{fontSize: 16}} />{t("user.tabs.favorites")}</Box> : t("user.tabs.favoritesTotal", {total: stats.favorites})} />
         </Tabs>
       </Box>
 
       {tab === "works" && (works && !works.length ?
-        <Empty>{self ? "你還沒有公開的作品，上傳並通過審核後就會出現在這裡。" : "還沒有公開的作品。"}</Empty> :
+        <Empty>{self ? t("user.emptyWorksSelf") : t("user.emptyWorks")}</Empty> :
         <ArtworkGrid artworks={works} onChange={replaceIn(setWorks)} />)}
       {tab === "commissions" && <Commissions user={user} self={self} />}
       {tab === "favorites" && (favorites === "private" ? (
-        <Empty><LockOutlinedIcon sx={{fontSize: 40, opacity: 0.5, display: "block", mx: "auto", mb: 1}} />{user.displayName} 沒有公開收藏。</Empty>
+        <Empty><LockOutlinedIcon sx={{fontSize: 40, opacity: 0.5, display: "block", mx: "auto", mb: 1}} />{t("user.favoritesPrivate", {name: user.displayName})}</Empty>
       ) : favorites && !favorites.length ? (
-        <Empty>還沒有收藏任何作品。</Empty>
+        <Empty>{t("user.favoritesEmpty")}</Empty>
       ) : (
         <>
-          {self && !user.likesPublic && <Box sx={{mb: 2, fontSize: 13, color: "text.secondary"}}><LockOutlinedIcon sx={{fontSize: 14, verticalAlign: "-2px"}} /> 只有你看得到自己的收藏，可以在個人資料中公開。</Box>}
+          {self && !user.likesPublic && <Box sx={{mb: 2, fontSize: 13, color: "text.secondary"}}><LockOutlinedIcon sx={{fontSize: 14, verticalAlign: "-2px"}} /> {t("user.favoritesOnlyYou")}</Box>}
           <ArtworkGrid artworks={favorites} onChange={replaceIn(setFavorites)} />
         </>
       ))}

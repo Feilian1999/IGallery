@@ -1,8 +1,8 @@
 // Visual themes for the gallery. Scene colors, lighting and the overlay UI all read from here.
+// Names and captions are translated at render time (gallery:themes.<id>, seasons.<id>, weathers.<id>).
 const THEMES = {
   night: {
-    name: "夜間美術館",
-    caption: "深色牆面，只有作品被點亮",
+    id: "night",
     swatch: ["#1b1917", "#e8c48a"],
     wall: "#4a433d",
     // feature panels behind the paintings
@@ -30,8 +30,7 @@ const THEMES = {
     label: {background: "#f2ece3", text: "#1d1a17", muted: "#7a7066", rule: "#b8925a"},
   },
   white: {
-    name: "白盒",
-    caption: "明亮、極簡的當代藝廊",
+    id: "white",
     swatch: ["#f2f1ee", "#1f1f1f"],
     wall: "#f1f0ec",
     feature: "#3a3c3f",
@@ -57,8 +56,7 @@ const THEMES = {
     label: {background: "#ffffff", text: "#111111", muted: "#8a8a8a", rule: "#111111"},
   },
   warm: {
-    name: "暖木",
-    caption: "木地板與暖光，像午後的工作室",
+    id: "warm",
     swatch: ["#d8c7ad", "#b5652b"],
     wall: "#d9c8ae",
     feature: "#3f4a3a",
@@ -86,16 +84,16 @@ const THEMES = {
 };
 
 export const SEASONS = {
-  spring: {name: "春", sky: ["#f7d9e3", "#bcd7f0"], ground: "#9cc184", foliage: ["#f6b7cf", "#f9d2e0", "#e99ab8"], particle: "petal", light: "#ffe9f0"},
-  summer: {name: "夏", sky: ["#8ec8f2", "#e9f6ff"], ground: "#6fa35a", foliage: ["#3f8f4a", "#5aa957", "#2f7a3e"], particle: "firefly", light: "#fff6dc"},
-  autumn: {name: "秋", sky: ["#f2b27a", "#f8e2c2"], ground: "#a7864f", foliage: ["#d9622b", "#e89a3c", "#b8432a"], particle: "leaf", light: "#ffd9a8"},
-  winter: {name: "冬", sky: ["#c9d6e3", "#eef2f6"], ground: "#e9eef3", foliage: ["#e6edf3", "#d5e0ea", "#f4f7fa"], particle: "snow", light: "#e4eefa"},
+  spring: {id: "spring", sky: ["#f7d9e3", "#bcd7f0"], ground: "#9cc184", foliage: ["#f6b7cf", "#f9d2e0", "#e99ab8"], particle: "petal", light: "#ffe9f0"},
+  summer: {id: "summer", sky: ["#8ec8f2", "#e9f6ff"], ground: "#6fa35a", foliage: ["#3f8f4a", "#5aa957", "#2f7a3e"], particle: "firefly", light: "#fff6dc"},
+  autumn: {id: "autumn", sky: ["#f2b27a", "#f8e2c2"], ground: "#a7864f", foliage: ["#d9622b", "#e89a3c", "#b8432a"], particle: "leaf", light: "#ffd9a8"},
+  winter: {id: "winter", sky: ["#c9d6e3", "#eef2f6"], ground: "#e9eef3", foliage: ["#e6edf3", "#d5e0ea", "#f4f7fa"], particle: "snow", light: "#e4eefa"},
 };
 
 export const WEATHERS = {
-  clear: {name: "晴"},
-  rain: {name: "雨"},
-  snow: {name: "雪"},
+  clear: {id: "clear"},
+  rain: {id: "rain"},
+  snow: {id: "snow"},
 };
 
 export default THEMES;

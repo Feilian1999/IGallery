@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import * as React from "react";
 import PropTypes from "prop-types";
+import {useTranslation} from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
 import {ROOM_INFO} from "../layout";
 import * as mainHall from "../layout/mainHall";
@@ -28,6 +29,7 @@ const artMarkerPoint = (placement, inset) => [
 ];
 
 const MainHallPlan = ({id}) => {
+  const {t} = useTranslation("gallery");
   const outline = toPath(mainHall.BOUNDARY);
   return (
     <g>
@@ -37,7 +39,7 @@ const MainHallPlan = ({id}) => {
       {/* window and door openings in the south wall */}
       <line x1={mainHall.SOUTH_WALL.window.from} y1="10" x2={mainHall.SOUTH_WALL.window.to} y2="10" stroke="#9fd2ff" strokeWidth="0.32" strokeLinecap="round" strokeOpacity="0.8" />
       <line x1={mainHall.SOUTH_WALL.door.from} y1="10" x2={mainHall.SOUTH_WALL.door.to} y2="10" stroke="#15131a" strokeWidth="0.4" />
-      <text x={(mainHall.SOUTH_WALL.door.from + mainHall.SOUTH_WALL.door.to) / 2} y="11.4" className="map-svg__note" textAnchor="middle">入口</text>
+      <text x={(mainHall.SOUTH_WALL.door.from + mainHall.SOUTH_WALL.door.to) / 2} y="11.4" className="map-svg__note" textAnchor="middle">{t("map.entrance")}</text>
       {mainHall.PARTITION_PATHS.map((path, i) => (
         <polyline key={i} points={path.map((point) => point.join(",")).join(" ")} fill="none"
           stroke="#f2ede4" strokeOpacity="0.75" strokeWidth="0.26" strokeLinecap="round" strokeLinejoin="round" filter={`url(#${id}-ink)`} />
@@ -48,38 +50,42 @@ const MainHallPlan = ({id}) => {
       ))}
       <circle cx={mainHall.PLATFORM.center[0]} cy={mainHall.PLATFORM.center[1]} r={mainHall.PLATFORM.radius} fill="none" stroke="var(--g-accent)" strokeOpacity="0.6" strokeWidth="0.08" strokeDasharray="0.3 0.25" />
       <circle cx={mainHall.FESTIVAL_GATE.position[0]} cy={mainHall.FESTIVAL_GATE.position[1]} r="1.4" fill="#ffb36b" fillOpacity="0.16" filter={`url(#${id}-glow)`} />
-      <text x={mainHall.PLATFORM.center[0]} y={mainHall.PLATFORM.center[1] + 0.25} className="map-svg__note" textAnchor="middle">往夏日祭典</text>
+      <text x={mainHall.PLATFORM.center[0]} y={mainHall.PLATFORM.center[1] + 0.25} className="map-svg__note" textAnchor="middle">{t("map.toFestival")}</text>
       <g transform={`translate(${mainHall.PORTAL.position[0]} ${mainHall.PORTAL.position[2]})`}>
         <circle r="1.1" fill="#7fd8ff" fillOpacity="0.18" filter={`url(#${id}-glow)`} />
         <circle r="0.5" fill="none" stroke="#7fd8ff" strokeWidth="0.12" />
-        <text y="1.9" className="map-svg__note" textAnchor="middle">傳送門</text>
+        <text y="1.9" className="map-svg__note" textAnchor="middle">{t("map.portal")}</text>
       </g>
       <g transform={`translate(${mainHall.GRAFFITI.position[0]} ${mainHall.GRAFFITI.position[2]}) rotate(${(-mainHall.GRAFFITI.rotationY * 180) / Math.PI})`}>
         {["#ff5a5f", "#f2c94c", "#5aa9e6", "#7bc47f"].map((color, i) => (
           <line key={color} x1={-2.2 + i * 1.15} y1="0.15" x2={-1.4 + i * 1.15} y2="0.15" stroke={color} strokeWidth="0.22" strokeLinecap="round" />
         ))}
-        <text y="1.3" className="map-svg__note" textAnchor="middle">塗鴉牆</text>
+        <text y="1.3" className="map-svg__note" textAnchor="middle">{t("map.graffiti")}</text>
       </g>
     </g>
   );
 };
 
-const AnnexPlan = ({id}) => (
-  <g>
-    <circle r={annex.RADIUS} fill={`url(#${id}-wash)`} />
-    <circle r={annex.RADIUS} fill="none" stroke="var(--g-accent)" strokeWidth="0.16" filter={`url(#${id}-ink)`} />
-    <circle r={annex.RING_RADIUS} fill="none" stroke="#f2ede4" strokeOpacity="0.15" strokeWidth="0.05" strokeDasharray="0.2 0.3" />
-    <circle r={annex.PROJECTION.radius} fill="#9fdcff" fillOpacity="0.08" stroke="#9fdcff" strokeOpacity="0.5" strokeWidth="0.06" />
-    <text y="0.25" className="map-svg__note" textAnchor="middle">投影</text>
-    <g transform={`translate(${annex.PORTAL.position[0]} ${annex.PORTAL.position[2]})`}>
-      <circle r="1.1" fill="#ffd27f" fillOpacity="0.2" filter={`url(#${id}-glow)`} />
-      <circle r="0.5" fill="none" stroke="#ffd27f" strokeWidth="0.12" />
-      <text y="1.7" className="map-svg__note" textAnchor="middle">回主展廳</text>
+const AnnexPlan = ({id}) => {
+  const {t} = useTranslation("gallery");
+  return (
+    <g>
+      <circle r={annex.RADIUS} fill={`url(#${id}-wash)`} />
+      <circle r={annex.RADIUS} fill="none" stroke="var(--g-accent)" strokeWidth="0.16" filter={`url(#${id}-ink)`} />
+      <circle r={annex.RING_RADIUS} fill="none" stroke="#f2ede4" strokeOpacity="0.15" strokeWidth="0.05" strokeDasharray="0.2 0.3" />
+      <circle r={annex.PROJECTION.radius} fill="#9fdcff" fillOpacity="0.08" stroke="#9fdcff" strokeOpacity="0.5" strokeWidth="0.06" />
+      <text y="0.25" className="map-svg__note" textAnchor="middle">{t("map.projection")}</text>
+      <g transform={`translate(${annex.PORTAL.position[0]} ${annex.PORTAL.position[2]})`}>
+        <circle r="1.1" fill="#ffd27f" fillOpacity="0.2" filter={`url(#${id}-glow)`} />
+        <circle r="0.5" fill="none" stroke="#ffd27f" strokeWidth="0.12" />
+        <text y="1.7" className="map-svg__note" textAnchor="middle">{t("map.backToMain")}</text>
+      </g>
     </g>
-  </g>
-);
+  );
+};
 
 const FestivalPlan = ({id}) => {
+  const {t} = useTranslation("gallery");
   const {WALL_RADIUS, GARDEN_RADIUS, BAMBOO, TORII, GATE_HALF_ANGLE} = festival;
   // the back wall as an arc, open to the south
   const [sx, sz] = festival.ringPoint(Math.PI + GATE_HALF_ANGLE, WALL_RADIUS);
@@ -92,11 +98,11 @@ const FestivalPlan = ({id}) => {
       <circle r={GARDEN_RADIUS} fill="#d8d1c3" fillOpacity="0.08" stroke="#f2ede4" strokeOpacity="0.5" strokeWidth="0.08" />
       <circle r={(BAMBOO.inner + BAMBOO.outer) / 2} fill="none" stroke="#8fbf6a" strokeOpacity="0.4" strokeWidth={BAMBOO.outer - BAMBOO.inner} strokeDasharray="0.2 0.6" />
       <circle r="1.8" fill="#e7848f" fillOpacity="0.35" />
-      <text y="0.25" className="map-svg__note" textAnchor="middle">庭園</text>
+      <text y="0.25" className="map-svg__note" textAnchor="middle">{t("map.garden")}</text>
       <g transform={`translate(${TORII.center[0]} ${TORII.center[1]})`}>
         <circle r="1.1" fill="#ffb36b" fillOpacity="0.2" filter={`url(#${id}-glow)`} />
         <line x1={-TORII.width / 2} y1="0" x2={TORII.width / 2} y2="0" stroke="#c0392b" strokeWidth="0.3" strokeLinecap="round" />
-        <text y="-0.8" className="map-svg__note" textAnchor="middle">鳥居・回主展廳</text>
+        <text y="-0.8" className="map-svg__note" textAnchor="middle">{t("map.torii")}</text>
       </g>
     </g>
   );
@@ -111,6 +117,7 @@ export const MapSvg = ({roomId, interactive, showTitles}) => {
   const view = VIEW[roomId];
   const room = useGalleryStore((state) => state.exhibition.rooms[roomId]);
   const here = currentRoom === roomId;
+  const {t} = useTranslation("gallery");
 
   // move the player marker and redraw the trail outside React, a few times a second
   React.useEffect(() => {
@@ -189,7 +196,7 @@ export const MapSvg = ({roomId, interactive, showTitles}) => {
             {showTitles && (
               <text y={ART_RADIUS + 0.85} className="map-svg__title" textAnchor="middle">{artwork.title}</text>
             )}
-            {interactive && <title>{`前往「${artwork.title}」`}</title>}
+            {interactive && <title>{t("map.goTo", {title: artwork.title})}</title>}
           </g>
         );
       })}
@@ -220,8 +227,9 @@ MapSvg.propTypes = {
 export const MiniMap = () => {
   const roomId = useGalleryStore((state) => state.room);
   const set = useGalleryStore((state) => state.set);
+  const {t} = useTranslation("gallery");
   return (
-    <div className="minimap glass" onClick={() => set({mapOpen: true})} role="button" title="打開導覽地圖 (M)">
+    <div className="minimap glass" onClick={() => set({mapOpen: true})} role="button" title={t("map.open")}>
       <div className="minimap__caption">
         <span className="eyebrow">Map</span>
         <span className="kbd">M</span>
@@ -237,6 +245,7 @@ const GalleryMap = () => {
   const visited = useGalleryStore((state) => state.visited);
   const set = useGalleryStore((state) => state.set);
   const [roomId, setRoomId] = React.useState(currentRoom);
+  const {t} = useTranslation("gallery");
 
   React.useEffect(() => {
     if (open) setRoomId(currentRoom);
@@ -260,17 +269,17 @@ const GalleryMap = () => {
         <aside className="map-card__side">
           <div>
             <div className="eyebrow">Gallery Guide</div>
-            <div className="map-card__title">導覽地圖</div>
+            <div className="map-card__title">{t("map.title")}</div>
           </div>
           <div className="map-tabs">
             {Object.values(ROOM_INFO).map((item) => (
               <button key={item.id} className={`map-tab${item.id === roomId ? " map-tab--active" : ""}`} onClick={() => setRoomId(item.id)}>
-                {item.name}
+                {t(`common:rooms.${item.id}`)}
               </button>
             ))}
           </div>
           <div>
-            <div className="eyebrow" style={{marginBottom: 8}}>已參觀 {seen} / {total}</div>
+            <div className="eyebrow" style={{marginBottom: 8}}>{t("map.visited", {seen, total})}</div>
             <div className="brand__bar"><span style={{width: `${(seen / total) * 100}%`}} /></div>
           </div>
           <div className="map-list">
@@ -279,13 +288,13 @@ const GalleryMap = () => {
                 <img className={`map-list__thumb${visited.includes(artwork.id) ? " map-list__thumb--visited" : ""}`} src={artwork.previewUrl} alt="" />
                 <span>
                   <div className="map-list__name">{artwork.title}</div>
-                  <div className="map-list__meta">{visited.includes(artwork.id) ? "已參觀 · 點擊前往" : "點擊前往"}</div>
+                  <div className="map-list__meta">{visited.includes(artwork.id) ? t("map.visitedGo") : t("map.go")}</div>
                 </span>
               </button>
             ))}
           </div>
         </aside>
-        <button className="icon-button map-close" onClick={() => set({mapOpen: false})} aria-label="關閉地圖">
+        <button className="icon-button map-close" onClick={() => set({mapOpen: false})} aria-label={t("map.close")}>
           <CloseIcon />
         </button>
       </div>

@@ -1,11 +1,13 @@
 import * as React from "react";
+import {useTranslation} from "react-i18next";
 import {api} from "../api";
-import ArtworkGrid, {STATUS} from "./ArtworkGrid";
+import ArtworkGrid from "./ArtworkGrid";
 
 const FILTERS = ["all", "published", "pending", "draft", "rejected"];
 
 // Admin: every artwork from every member, with drag-to-reorder.
 const AllArtworks = () => {
+  const {t} = useTranslation("studio");
   const [artworks, setArtworks] = React.useState(null);
   const [filter, setFilter] = React.useState("all");
   const [error, setError] = React.useState("");
@@ -31,18 +33,18 @@ const AllArtworks = () => {
       <div className="admin-page__head">
         <div>
           <div className="admin-eyebrow">Collection</div>
-          <h1 className="admin-title">所有作品</h1>
+          <h1 className="admin-title">{t("allArtworks.title")}</h1>
         </div>
         <div className="admin-chips">
           {FILTERS.map((id) => (
             <button key={id} className={`admin-chip${filter === id ? " admin-chip--active" : ""}`} onClick={() => setFilter(id)}>
-              {id === "all" ? "全部" : STATUS[id]} {count(id)}
+              {t(id === "all" ? "all" : `status.${id}`)} {count(id)}
             </button>
           ))}
         </div>
       </div>
       {error && <div className="admin-error">{error}</div>}
-      {filter === "all" && <p className="admin-muted">拖曳卡片可以調整排序，首頁和懸浮展廳會照這個順序展出。</p>}
+      {filter === "all" && <p className="admin-muted">{t("allArtworks.dragHint")}</p>}
       {artworks === null ? <div className="admin-spinner" /> : (
         <ArtworkGrid
           artworks={shown}

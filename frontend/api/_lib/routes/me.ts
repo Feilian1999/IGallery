@@ -7,6 +7,7 @@ import {requireUser, requireMember, requireArtist, toUser, USER_COLUMNS, type Au
 import * as applications from "../applications";
 import {removeImage} from "../storage";
 import {notifyAdmins, listNotifications, markRead, unreadCount} from "../notifications";
+import {fail} from "../i18n";
 
 // The signed-in user's own profile and artworks.
 export const meRoutes = new Hono<AuthEnv>();
@@ -17,11 +18,11 @@ meRoutes.get("/artist-application", async (c) => c.json({application: await appl
 
 meRoutes.post("/artist-application", requireMember, async (c) => {
   const user = c.get("user");
-  if (user.role !== "member") return c.json({error: "你已經可以發布作品了"}, 400);
+  if (user.role !== "member") return fail(c, 400, "application.alreadyArtist");
   const body = await parse(c.req.raw, schemas.artistApplicationBody);
   if (!body.data) return c.json({error: body.error}, 400);
   const application = await applications.createApplication(user.id, body.data.message, body.data.links);
-  if (!application) return c.json({error: "你的申請還在審核中"}, 400);
+  if (!application) return fail(c, 400, "application.pending");
   await notifyAdmins("artist_requested", {actorId: user.id});
   return c.json({application}, 201);
 });
@@ -88,12 +89,12 @@ meRoutes.post("/artworks", requireArtist, async (c) => {
 
 meRoutes.get("/artworks/:id", async (c) => {
   const artwork = await owned(c.get("user"), c.req.param("id"));
-  return artwork ? c.json({artwork}) : c.json({error: "找不到這件作品"}, 404);
+  return artwork ? c.json({artwork}) : fail(c, 404, "artwork.notFound");
 });
 
 meRoutes.patch("/artworks/:id", requireArtist, async (c) => {
   const artwork = await owned(c.get("user"), c.req.param("id"));
-  if (!artwork) return c.json({error: "找不到這件作品"}, 404);
+  if (!artwork) return fail(c, 404, "artwork.notFound");
   const body = await parse(c.req.raw, schemas.updateArtwork);
   if (!body.data) return c.json({error: body.error}, 400);
   return c.json({artwork: await artworks.updateArtwork(artwork.id, body.data)});
@@ -101,7 +102,7 @@ meRoutes.patch("/artworks/:id", requireArtist, async (c) => {
 
 meRoutes.delete("/artworks/:id", requireArtist, async (c) => {
   const artwork = await owned(c.get("user"), c.req.param("id"));
-  if (!artwork) return c.json({error: "找不到這件作品"}, 404);
+  if (!artwork) return fail(c, 404, "artwork.notFound");
   await artworks.deleteArtwork(artwork.id);
   // the row is gone either way; a failed file cleanup shouldn't fail the request
   await Promise.all([removeImage(artwork.imageUrl), removeImage(artwork.previewUrl)]).catch((error) => console.error(error));
@@ -112,10 +113,10 @@ meRoutes.delete("/artworks/:id", requireArtist, async (c) => {
 meRoutes.post("/artworks/:id/submit", requireArtist, async (c) => {
   const user = c.get("user");
   const artwork = await owned(user, c.req.param("id"));
-  if (!artwork) return c.json({error: "找不到這件作品"}, 404);
-  if (artwork.aiUsage === "unspecified") return c.json({error: "送出前請先標註這件作品是否使用 AI"}, 400);
-  if (!artwork.title) return c.json({error: "送出前請先填寫標題"}, 400);
-  if (!["draft", "rejected"].includes(artwork.status)) return c.json({error: "這件作品已經送出了"}, 400);
+  if (!artwork) return fail(c, 404, "artwork.notFound");
+  if (artwork.aiUsage === "unspecified") return fail(c, 400, "artwork.submitNeedsAiUsage");
+  if (!artwork.title) return fail(c, 400, "artwork.submitNeedsTitle");
+  if (!["draft", "rejected"].includes(artwork.status)) return fail(c, 400, "artwork.alreadySubmitted");
   const status = user.role === "admin" ? "published" : "pending";
   const updated = await artworks.updateArtwork(artwork.id, {status, reviewNote: ""});
   if (status === "pending") await notifyAdmins("review_requested", {artworkId: artwork.id, actorId: user.id});
@@ -125,7 +126,7 @@ meRoutes.post("/artworks/:id/submit", requireArtist, async (c) => {
 // Takes work back to draft: cancels a pending review or unpublishes it.
 meRoutes.post("/artworks/:id/withdraw", requireArtist, async (c) => {
   const artwork = await owned(c.get("user"), c.req.param("id"));
-  if (!artwork) return c.json({error: "找不到這件作品"}, 404);
-  if (!["pending", "published"].includes(artwork.status)) return c.json({error: "這件作品目前是草稿"}, 400);
+  if (!artwork) return fail(c, 404, "artwork.notFound");
+  if (!["pending", "published"].includes(artwork.status)) return fail(c, 400, "artwork.isDraft");
   return c.json({artwork: await artworks.updateArtwork(artwork.id, {status: "draft"})});
 });

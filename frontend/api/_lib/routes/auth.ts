@@ -9,6 +9,7 @@ import {storageKind, blobAuth} from "../storage";
 import {pendingCount} from "../artworks";
 import {pendingApplicationCount} from "../applications";
 import {unreadCount} from "../notifications";
+import {fail} from "../i18n";
 
 export const authRoutes = new Hono<AuthEnv>();
 
@@ -18,9 +19,9 @@ const pause = () => new Promise((resolve) => setTimeout(resolve, 600));
 authRoutes.post("/register", async (c) => {
   const body = await parse(c.req.raw, schemas.registerBody);
   if (!body.data) return c.json({error: body.error}, 400);
-  if (await isUsernameTaken(body.data.username)) return c.json({error: "這個帳號已經有人使用"}, 409);
+  if (await isUsernameTaken(body.data.username)) return fail(c, 409, "auth.usernameTaken");
   const user = await register(c, body.data);
-  return user ? c.json({user}, 201) : c.json({error: "這個帳號已經有人使用"}, 409);
+  return user ? c.json({user}, 201) : fail(c, 409, "auth.usernameTaken");
 });
 
 authRoutes.post("/login", async (c) => {
@@ -29,7 +30,7 @@ authRoutes.post("/login", async (c) => {
   const user = await login(c, body.data.username, body.data.password);
   if (!user) {
     await pause();
-    return c.json({error: "帳號或密碼錯誤"}, 401);
+    return fail(c, 401, "auth.wrongCredentials");
   }
   return c.json({user});
 });
@@ -43,7 +44,7 @@ authRoutes.post("/logout", async (c) => {
 
 authRoutes.get("/me", async (c) => {
   const user = await currentUser(c);
-  if (!user) return c.json({error: "尚未登入"}, 401);
+  if (!user) return fail(c, 401, "auth.notSignedIn");
   return c.json({
     user,
     storage: storageKind,
@@ -56,11 +57,11 @@ authRoutes.get("/me", async (c) => {
 
 // A guest becomes a member without losing their account.
 authRoutes.post("/upgrade", requireUser, async (c) => {
-  if (c.get("user").role !== "guest") return c.json({error: "已經是會員了"}, 400);
+  if (c.get("user").role !== "guest") return fail(c, 400, "auth.alreadyMember");
   const body = await parse(c.req.raw, schemas.registerBody);
   if (!body.data) return c.json({error: body.error}, 400);
   const user = await upgradeGuest(c.get("user").id, body.data);
-  return user ? c.json({user}) : c.json({error: "這個帳號已經有人使用"}, 409);
+  return user ? c.json({user}) : fail(c, 409, "auth.usernameTaken");
 });
 
 authRoutes.put("/password", requireMember, async (c) => {
@@ -68,7 +69,7 @@ authRoutes.put("/password", requireMember, async (c) => {
   if (!body.data) return c.json({error: body.error}, 400);
   if (!(await changePassword(c.get("user").id, body.data.current, body.data.next))) {
     await pause();
-    return c.json({error: "目前的密碼不正確"}, 400);
+    return fail(c, 400, "auth.wrongCurrentPassword");
   }
   return c.json({ok: true});
 });

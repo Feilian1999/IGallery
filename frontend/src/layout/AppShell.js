@@ -35,6 +35,10 @@ import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
 import AccountBoxOutlinedIcon from "@mui/icons-material/AccountBoxOutlined";
 import CollectionsOutlinedIcon from "@mui/icons-material/CollectionsOutlined";
+import TranslateIcon from "@mui/icons-material/Translate";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import {useTranslation} from "react-i18next";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 import ColorModeContext from "../themes/ToggleContext";
 import {useSession, isMember, isAdmin, isArtist} from "../session";
 
@@ -93,7 +97,37 @@ const Section = ({title, collapsed, children}) => (
   </Box>
 );
 
+// The interface language, as a native <select> dressed like a NavItem; collapsed it
+// shows only the short labels.
+const LanguageItem = ({collapsed}) => {
+  const {t} = useTranslation();
+  const content = (
+    <Box sx={{
+      "position": "relative", "display": "flex", "alignItems": "center", "height": 44, "px": collapsed ? 0 : 2,
+      "justifyContent": collapsed ? "center" : "flex-start", "borderRadius": 2, "color": "text.primary",
+      "&:hover": {bgcolor: "action.hover"}, "&:focus-within": {bgcolor: "action.hover"},
+    }}>
+      {!collapsed && <TranslateIcon sx={{pointerEvents: "none"}} />}
+      <Box
+        component={LanguageSwitcher}
+        short={collapsed}
+        sx={{
+          "position": "absolute", "inset": 0, "width": "100%", "height": "100%", "m": 0, "border": 0, "borderRadius": 2,
+          "pl": collapsed ? 0 : "56px", "pr": collapsed ? 0 : 5, "appearance": "none", "bgcolor": "transparent", "color": "inherit",
+          "fontFamily": "inherit", "fontSize": 14, "fontWeight": 500, "cursor": "pointer", "outline": 0,
+          "textAlign": collapsed ? "center" : "left", "textAlignLast": collapsed ? "center" : "left",
+          "&:focus-visible": {boxShadow: (theme) => `inset 0 0 0 2px ${theme.palette.primary.main}`},
+          "& option": {color: "text.primary", bgcolor: "background.paper"},
+        }}
+      />
+      {!collapsed && <ExpandMoreIcon fontSize="small" sx={{position: "absolute", right: 12, color: "text.secondary", pointerEvents: "none"}} />}
+    </Box>
+  );
+  return collapsed ? <Tooltip title={t("language")} placement="right">{content}</Tooltip> : content;
+};
+
 const SideNav = ({page, userId, collapsed, onNavigate}) => {
+  const {t} = useTranslation("site");
   const {session} = useSession();
   const theme = useTheme();
   const colorMode = React.useContext(ColorModeContext);
@@ -101,35 +135,36 @@ const SideNav = ({page, userId, collapsed, onNavigate}) => {
   const item = (props) => <NavItem collapsed={collapsed} {...props} onClick={onNavigate} />;
   return (
     <Box sx={{display: "flex", flexDirection: "column", height: "100%", p: 1.5}}>
-      {item({icon: <HomeOutlinedIcon />, label: "首頁", href: "#", active: page === "home"})}
-      {item({icon: <ViewInArOutlinedIcon />, label: "3D 畫廊", href: "#gallery"})}
-      {item({icon: <EmojiEventsOutlinedIcon />, label: "排行榜", href: "#ranking", active: page === "ranking"})}
-      {item({icon: <FavoriteBorderIcon />, label: "喜歡的作品", href: "#likes", active: page === "likes"})}
+      {item({icon: <HomeOutlinedIcon />, label: t("nav.home"), href: "#", active: page === "home"})}
+      {item({icon: <ViewInArOutlinedIcon />, label: t("nav.gallery"), href: "#gallery"})}
+      {item({icon: <EmojiEventsOutlinedIcon />, label: t("nav.ranking"), href: "#ranking", active: page === "ranking"})}
+      {item({icon: <FavoriteBorderIcon />, label: t("nav.likes"), href: "#likes", active: page === "likes"})}
       {session && (
-        <Section title="我的" collapsed={collapsed}>
+        <Section title={t("nav.mine")} collapsed={collapsed}>
           {isMember(session) && item({
-            icon: <AccountBoxOutlinedIcon />, label: "我的個人頁", href: `#users/${session.user.id}`,
+            icon: <AccountBoxOutlinedIcon />, label: t("nav.myPage"), href: `#users/${session.user.id}`,
             active: page === "user" && String(session.user.id) === userId,
           })}
           {isArtist(session) ?
-            item({icon: <DashboardOutlinedIcon />, label: "我的作品", href: "#me", active: page === "me"}) :
-            item({icon: <BrushOutlinedIcon />, label: "成為藝術家", href: "#me/apply", active: page === "apply" || page === "me"})}
+            item({icon: <DashboardOutlinedIcon />, label: t("nav.myWorks"), href: "#me", active: page === "me"}) :
+            item({icon: <BrushOutlinedIcon />, label: t("nav.becomeArtist"), href: "#me/apply", active: page === "apply" || page === "me"})}
         </Section>
       )}
       {isAdmin(session) && (
-        <Section title="管理" collapsed={collapsed}>
-          {item({icon: <FactCheckOutlinedIcon />, label: "審核", href: "#admin/review", badge: session.pendingReviews, active: page === "review"})}
-          {item({icon: <HowToRegOutlinedIcon />, label: "藝術家申請", href: "#admin/applications", badge: session.pendingApplications, active: page === "applications"})}
-          {item({icon: <CollectionsOutlinedIcon />, label: "所有作品", href: "#admin/artworks", active: page === "artworks"})}
-          {item({icon: <ChairOutlinedIcon />, label: "展場配置", href: "#admin/exhibition", active: page === "exhibition"})}
-          {item({icon: <GroupOutlinedIcon />, label: "使用者", href: "#admin/users", active: page === "users"})}
+        <Section title={t("nav.admin")} collapsed={collapsed}>
+          {item({icon: <FactCheckOutlinedIcon />, label: t("nav.review"), href: "#admin/review", badge: session.pendingReviews, active: page === "review"})}
+          {item({icon: <HowToRegOutlinedIcon />, label: t("nav.applications"), href: "#admin/applications", badge: session.pendingApplications, active: page === "applications"})}
+          {item({icon: <CollectionsOutlinedIcon />, label: t("nav.allArtworks"), href: "#admin/artworks", active: page === "artworks"})}
+          {item({icon: <ChairOutlinedIcon />, label: t("nav.exhibition"), href: "#admin/exhibition", active: page === "exhibition"})}
+          {item({icon: <GroupOutlinedIcon />, label: t("nav.users"), href: "#admin/users", active: page === "users"})}
         </Section>
       )}
       <Box sx={{flex: 1}} />
+      <LanguageItem collapsed={collapsed} />
       <NavItem
         collapsed={collapsed}
         icon={dark ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
-        label={dark ? "淺色模式" : "深色模式"}
+        label={dark ? t("nav.lightMode") : t("nav.darkMode")}
         onClick={colorMode.toggleColorMode}
       />
     </Box>
@@ -137,6 +172,7 @@ const SideNav = ({page, userId, collapsed, onNavigate}) => {
 };
 
 const TopBar = ({query, onMenu}) => {
+  const {t} = useTranslation("site");
   const {session, logout} = useSession();
   const [search, setSearch] = React.useState(query || "");
   const [menu, setMenu] = React.useState(null);
@@ -156,7 +192,7 @@ const TopBar = ({query, onMenu}) => {
       display: "flex", alignItems: "center", gap: {xs: 1, sm: 2}, px: {xs: 1, sm: 2},
       bgcolor: "background.default", borderBottom: 1, borderColor: "divider",
     }}>
-      <IconButton onClick={onMenu} aria-label="選單"><MenuIcon /></IconButton>
+      <IconButton onClick={onMenu} aria-label={t("top.menu")}><MenuIcon /></IconButton>
       <Box component="a" href="#" sx={{fontFamily: "\"Noto Serif TC\", serif", fontWeight: 700, fontSize: 20, color: "text.primary", textDecoration: "none", display: {xs: "none", sm: "block"}}}>
         IGallery
       </Box>
@@ -166,55 +202,55 @@ const TopBar = ({query, onMenu}) => {
         "borderRadius": 20, "bgcolor": "action.hover", "&:focus-within": {bgcolor: "background.paper", boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}`},
       }}>
         <SearchIcon fontSize="small" sx={{color: "text.secondary"}} />
-        <InputBase value={search} onChange={(event) => setSearch(event.target.value)} placeholder="搜尋作品、作者、角色" sx={{flex: 1, fontSize: 14}} inputProps={{"aria-label": "搜尋"}} />
+        <InputBase value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t("top.searchPlaceholder")} sx={{flex: 1, fontSize: 14}} inputProps={{"aria-label": t("top.search")}} />
       </Box>
 
       <Box sx={{display: "flex", alignItems: "center", gap: {xs: 0, sm: 1}}}>
         {compact ? (
-          <IconButton href={postHref(session)} color="primary" aria-label="發布作品"><AddPhotoAlternateOutlinedIcon /></IconButton>
+          <IconButton href={postHref(session)} color="primary" aria-label={t("top.post")}><AddPhotoAlternateOutlinedIcon /></IconButton>
         ) : (
           <Button href={postHref(session)} variant="contained" disableElevation startIcon={<AddPhotoAlternateOutlinedIcon />} sx={{borderRadius: 20, px: 2}}>
-            發布作品
+            {t("top.post")}
           </Button>
         )}
-        <Tooltip title="收信">
-          <IconButton href={session ? "#inbox" : "#login"} aria-label="收信"><MailOutlineIcon /></IconButton>
+        <Tooltip title={t("top.inbox")}>
+          <IconButton href={session ? "#inbox" : "#login"} aria-label={t("top.inbox")}><MailOutlineIcon /></IconButton>
         </Tooltip>
-        <Tooltip title="通知">
-          <IconButton href={session ? "#me/notifications" : "#login"} aria-label="通知">
+        <Tooltip title={t("top.notifications")}>
+          <IconButton href={session ? "#me/notifications" : "#login"} aria-label={t("top.notifications")}>
             <Badge badgeContent={session?.unreadNotifications} color="error" max={99}><NotificationsNoneIcon /></Badge>
           </IconButton>
         </Tooltip>
-        {session === null && <Button href="#login" variant="outlined" sx={{borderRadius: 20}}>登入</Button>}
+        {session === null && <Button href="#login" variant="outlined" sx={{borderRadius: 20}}>{t("top.login")}</Button>}
         {session && (
           <>
-            <IconButton onClick={(event) => setMenu(event.currentTarget)} aria-label="個人選單" sx={{p: 0.5}}>
+            <IconButton onClick={(event) => setMenu(event.currentTarget)} aria-label={t("top.accountMenu")} sx={{p: 0.5}}>
               <Avatar sx={{width: 34, height: 34, bgcolor: "primary.main", fontSize: 15}}>{session.user.displayName.slice(0, 1)}</Avatar>
             </IconButton>
             <Menu anchorEl={menu} open={Boolean(menu)} onClose={() => setMenu(null)} anchorOrigin={{vertical: "bottom", horizontal: "right"}} transformOrigin={{vertical: "top", horizontal: "right"}}>
               <Box sx={{px: 2, py: 1.5, minWidth: 220}}>
                 <Box sx={{fontWeight: 700}}>{session.user.displayName}</Box>
-                <Box sx={{fontSize: 12, color: "text.secondary"}}>@{session.user.username}{session.user.role === "guest" ? " · 訪客" : ""}</Box>
+                <Box sx={{fontSize: 12, color: "text.secondary"}}>@{session.user.username}{session.user.role === "guest" ? ` · ${t("common:roles.guest")}` : ""}</Box>
               </Box>
               <Divider />
               {isMember(session) && (
-                <MenuItem component="a" href={`#users/${session.user.id}`} onClick={() => setMenu(null)}><ListItemIcon><AccountBoxOutlinedIcon fontSize="small" /></ListItemIcon>我的個人頁</MenuItem>
+                <MenuItem component="a" href={`#users/${session.user.id}`} onClick={() => setMenu(null)}><ListItemIcon><AccountBoxOutlinedIcon fontSize="small" /></ListItemIcon>{t("nav.myPage")}</MenuItem>
               )}
               {isArtist(session) ? (
-                <MenuItem component="a" href="#me" onClick={() => setMenu(null)}><ListItemIcon><DashboardOutlinedIcon fontSize="small" /></ListItemIcon>我的作品</MenuItem>
+                <MenuItem component="a" href="#me" onClick={() => setMenu(null)}><ListItemIcon><DashboardOutlinedIcon fontSize="small" /></ListItemIcon>{t("nav.myWorks")}</MenuItem>
               ) : isMember(session) && (
-                <MenuItem component="a" href="#me/apply" onClick={() => setMenu(null)}><ListItemIcon><BrushOutlinedIcon fontSize="small" /></ListItemIcon>成為藝術家</MenuItem>
+                <MenuItem component="a" href="#me/apply" onClick={() => setMenu(null)}><ListItemIcon><BrushOutlinedIcon fontSize="small" /></ListItemIcon>{t("nav.becomeArtist")}</MenuItem>
               )}
-              <MenuItem component="a" href="#me/profile" onClick={() => setMenu(null)}><ListItemIcon><PersonOutlineIcon fontSize="small" /></ListItemIcon>編輯個人資料</MenuItem>
+              <MenuItem component="a" href="#me/profile" onClick={() => setMenu(null)}><ListItemIcon><PersonOutlineIcon fontSize="small" /></ListItemIcon>{t("top.editProfile")}</MenuItem>
               {isArtist(session) && (
-                <MenuItem component="a" href="#me/commissions" onClick={() => setMenu(null)}><ListItemIcon><BrushOutlinedIcon fontSize="small" /></ListItemIcon>約稿設定</MenuItem>
+                <MenuItem component="a" href="#me/commissions" onClick={() => setMenu(null)}><ListItemIcon><BrushOutlinedIcon fontSize="small" /></ListItemIcon>{t("top.commissionSettings")}</MenuItem>
               )}
-              <MenuItem component="a" href="#likes" onClick={() => setMenu(null)}><ListItemIcon><FavoriteBorderIcon fontSize="small" /></ListItemIcon>喜歡的作品</MenuItem>
+              <MenuItem component="a" href="#likes" onClick={() => setMenu(null)}><ListItemIcon><FavoriteBorderIcon fontSize="small" /></ListItemIcon>{t("nav.likes")}</MenuItem>
               <Divider />
               <MenuItem onClick={() => {
                 setMenu(null);
                 logout();
-              }}><ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>登出</MenuItem>
+              }}><ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>{t("top.logout")}</MenuItem>
             </Menu>
           </>
         )}

@@ -3,6 +3,7 @@ import type {Context, MiddlewareHandler} from "hono";
 import {getCookie, setCookie, deleteCookie} from "hono/cookie";
 import {query} from "./db";
 import {hashPassword, verifyPassword} from "./password";
+import {fail, t, type MessageKey} from "./i18n";
 
 const COOKIE = "igallery_session";
 const SESSION_DAYS = 14;
@@ -94,7 +95,7 @@ export const loginAsGuest = async (c: Context) => {
   const [row] = await query(
       `insert into users (username, password_hash, display_name, role) values ($1, '!', $2, 'guest')
        returning ${USER_COLUMNS.replace(/u\./g, "")}`,
-      [`guest-${suffix}`, `訪客 ${suffix.toUpperCase()}`],
+      [`guest-${suffix}`, t(c, "auth.guestName", {id: suffix.toUpperCase()})],
   );
   await startSession(c, row.id, GUEST_DAYS);
   await cleanUp();
@@ -136,18 +137,18 @@ export const currentUser = async (c: Context): Promise<User | null> => {
 };
 
 // Middleware: a signed-in user whose role is in `roles`. Changes also need the CSRF header.
-const requireRole = (roles: Role[], message: string): MiddlewareHandler<AuthEnv> => async (c, next) => {
+const requireRole = (roles: Role[], message: MessageKey): MiddlewareHandler<AuthEnv> => async (c, next) => {
   if (c.req.method !== "GET" && c.req.header(CSRF_HEADER) !== "1") {
-    return c.json({error: "缺少必要的請求標頭"}, 403);
+    return fail(c, 403, "auth.missingHeader");
   }
   const user = await currentUser(c);
-  if (!user) return c.json({error: "請先登入"}, 401);
-  if (!roles.includes(user.role)) return c.json({error: message}, 403);
+  if (!user) return fail(c, 401, "auth.signInFirst");
+  if (!roles.includes(user.role)) return fail(c, 403, message);
   c.set("user", user);
   await next();
 };
 
-export const requireUser = requireRole(["admin", "artist", "member", "guest"], "請先登入");
-export const requireMember = requireRole(["admin", "artist", "member"], "訪客無法使用這個功能，請先註冊成為會員");
-export const requireArtist = requireRole(["admin", "artist"], "只有藝術家可以發布作品，請先申請成為藝術家");
-export const requireAdmin = requireRole(["admin"], "只有管理者可以使用這個功能");
+export const requireUser = requireRole(["admin", "artist", "member", "guest"], "auth.signInFirst");
+export const requireMember = requireRole(["admin", "artist", "member"], "auth.membersOnly");
+export const requireArtist = requireRole(["admin", "artist"], "auth.artistsOnly");
+export const requireAdmin = requireRole(["admin"], "auth.adminsOnly");

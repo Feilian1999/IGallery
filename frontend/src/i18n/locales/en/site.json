@@ -1,0 +1,118 @@
+{
+  "untitled": "Untitled",
+  "nav": {
+    "home": "Home",
+    "gallery": "3D Gallery",
+    "ranking": "Rankings",
+    "likes": "Liked works",
+    "mine": "Personal",
+    "myPage": "My profile",
+    "myWorks": "My works",
+    "becomeArtist": "Become an artist",
+    "admin": "Admin",
+    "review": "Review",
+    "applications": "Artist applications",
+    "allArtworks": "All artworks",
+    "exhibition": "Exhibition layout",
+    "users": "Users",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode"
+  },
+  "top": {
+    "menu": "Menu",
+    "searchPlaceholder": "Search artworks, artists, characters",
+    "search": "Search",
+    "post": "Post artwork",
+    "inbox": "Inbox",
+    "notifications": "Notifications",
+    "login": "Log in",
+    "accountMenu": "Account menu",
+    "editProfile": "Edit profile",
+    "commissionSettings": "Commission settings",
+    "logout": "Log out"
+  },
+  "home": {
+    "bannerTitle": "Step into the 3D gallery",
+    "bannerText": "Stroll through the museum as your character, stop to study a painting up close, or step through a portal to the floating hall.",
+    "enterGallery": "Enter the gallery",
+    "curated": "Featured",
+    "latest": "Latest",
+    "artworks": "Artworks",
+    "searchResults": "Results for “{{query}}”",
+    "searchResultsTotal": "Results for “{{query}}” ({{total}})",
+    "noMatches": "No matching artworks. Try a different keyword.",
+    "noArtworks": "No artworks yet."
+  },
+  "artwork": {
+    "backToArtist": "← Back to the artist",
+    "openOriginal": "Open full-size image",
+    "edit": "Edit artwork",
+    "liked": "Liked",
+    "like": "Like",
+    "manage": "Manage",
+    "viewIn3D": "View in 3D gallery",
+    "author": "Author",
+    "character": "Character",
+    "ai": "AI",
+    "publishedAt": "Published",
+    "story": "The story behind the work",
+    "moreBy": "More from {{name}}",
+    "viewAll": "View all →"
+  },
+  "card": {
+    "like": "Like",
+    "unlike": "Unlike"
+  },
+  "inbox": {
+    "title": "Inbox coming soon",
+    "text": "Soon you'll be able to get in touch with artists here. For now, likes on your work, review results and other updates appear in your notifications.",
+    "viewNotifications": "View notifications"
+  },
+  "likes": {
+    "title": "Liked works",
+    "guestHint": "Guests can't like artworks. Become a member to save the works you love.",
+    "loginHint": "Log in to save the works you love.",
+    "register": "Become a member",
+    "empty": "No liked works yet. Tap ♥ on any artwork to save it here."
+  },
+  "ranking": {
+    "title": "Artist rankings",
+    "subtitle": "Ranked by likes on published works; ties go to the artist with more works.",
+    "empty": "No artists ranked yet. Artists can appear here once their work passes review.",
+    "works_one": "{{count}} work",
+    "works_other": "{{count}} works"
+  },
+  "user": {
+    "noCommissionSelf": "You haven't set up commissions yet.",
+    "noCommissionOther": "{{name}} isn't taking commissions right now.",
+    "setUpCommissions": "Set up commissions",
+    "editCommissions": "Edit commission settings",
+    "commissionsOpen": "Open for commissions",
+    "commissionsClosed": "Commissions closed",
+    "contact": "For commissions, contact",
+    "openBadge": "Commissions open",
+    "joined": "Joined {{date}}",
+    "applyArtist": "Apply to be an artist",
+    "commission": "Commission",
+    "message": "Message",
+    "stats": {
+      "works_one": "<b>{{count}}</b> work",
+      "works_other": "<b>{{count}}</b> works",
+      "likes_one": "<b>{{count}}</b> like",
+      "likes_other": "<b>{{count}}</b> likes",
+      "favorites_one": "<b>{{count}}</b> favorite",
+      "favorites_other": "<b>{{count}}</b> favorites"
+    },
+    "tabs": {
+      "works": "Works {{total}}",
+      "commissions": "Commissions",
+      "favorites": "Favorites",
+      "favoritesTotal": "Favorites {{total}}"
+    },
+    "emptyWorksSelf": "You don't have any public works yet. Uploads appear here once they pass review.",
+    "emptyWorks": "No public works yet.",
+    "favoritesPrivate": "{{name}} keeps their favorites private.",
+    "favoritesEmpty": "No favorites yet.",
+    "favoritesOnlyYou": "Only you can see your favorites. You can make them public in your profile."
+  }
+}

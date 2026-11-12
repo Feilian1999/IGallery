@@ -7,10 +7,11 @@ import * as festival from "./festival";
 const entry = (artwork, placement) => ({artwork, placement, spot: viewingSpot(placement)});
 
 // Static facts about each room; the artworks are filled in by buildRooms.
+// Room names are translated at render time with common:rooms.<id>.
 export const ROOM_INFO = {
-  main: {id: "main", name: "主展廳", subtitle: "Main Hall", spawn: mainHall.SPAWN, bounds: mainHall.BOUNDS},
-  annex: {id: "annex", name: "懸浮展廳", subtitle: "Floating Room", spawn: annex.SPAWN, bounds: annex.BOUNDS},
-  festival: {id: "festival", name: "夏日祭典", subtitle: "Summer Festival", spawn: festival.SPAWN, bounds: festival.BOUNDS},
+  main: {id: "main", subtitle: "Main Hall", spawn: mainHall.SPAWN, bounds: mainHall.BOUNDS},
+  annex: {id: "annex", subtitle: "Floating Room", spawn: annex.SPAWN, bounds: annex.BOUNDS},
+  festival: {id: "festival", subtitle: "Summer Festival", spawn: festival.SPAWN, bounds: festival.BOUNDS},
 };
 
 // Everything the player controller, camera and map need to know about each room,

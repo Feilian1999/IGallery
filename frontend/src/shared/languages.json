@@ -1,0 +1,24 @@
+{
+  "languages": [
+    {
+      "id": "zh-TW",
+      "name": "繁體中文",
+      "short": "中",
+      "prefix": "zh"
+    },
+    {
+      "id": "en",
+      "name": "English",
+      "short": "EN",
+      "prefix": "en"
+    },
+    {
+      "id": "ja",
+      "name": "日本語",
+      "short": "日",
+      "prefix": "ja"
+    }
+  ],
+  "source": "zh-TW",
+  "unmatched": "en"
+}

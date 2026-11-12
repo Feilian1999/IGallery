@@ -1,12 +1,14 @@
 import * as React from "react";
+import {useTranslation} from "react-i18next";
 import {api} from "../api";
 import {useSession, isMember} from "../session";
-import ArtworkGrid, {STATUS} from "./ArtworkGrid";
+import ArtworkGrid from "./ArtworkGrid";
 
 const FILTERS = ["all", "draft", "pending", "published", "rejected"];
 
 // The signed-in user's home in the studio: numbers, upload, and their own artworks.
 const Dashboard = () => {
+  const {t} = useTranslation("studio");
   const {session} = useSession();
   const [artworks, setArtworks] = React.useState(null);
   const [stats, setStats] = React.useState(null);
@@ -34,26 +36,26 @@ const Dashboard = () => {
       <div className="admin-page__head">
         <div>
           <div className="admin-eyebrow">Dashboard</div>
-          <h1 className="admin-title">嗨，{session.user.displayName}</h1>
+          <h1 className="admin-title">{t("dashboard.greeting", {name: session.user.displayName})}</h1>
         </div>
-        {member && <a className="admin-button admin-button--primary" href="#me/new">＋ 發布作品</a>}
+        {member && <a className="admin-button admin-button--primary" href="#me/new">{t("publishArtwork")}</a>}
       </div>
 
       {stats && (
         <div className="admin-stats">
-          <div className="admin-stat"><strong>{stats.published}</strong><span>已公開</span></div>
-          <div className="admin-stat"><strong>{stats.pending}</strong><span>審核中</span></div>
-          <div className="admin-stat"><strong>{stats.draft}</strong><span>草稿</span></div>
-          <div className="admin-stat"><strong>{stats.rejected}</strong><span>已退回</span></div>
-          <div className="admin-stat admin-stat--accent"><strong>♥ {stats.likes}</strong><span>收到的喜歡</span></div>
+          <div className="admin-stat"><strong>{stats.published}</strong><span>{t("status.published")}</span></div>
+          <div className="admin-stat"><strong>{stats.pending}</strong><span>{t("status.pending")}</span></div>
+          <div className="admin-stat"><strong>{stats.draft}</strong><span>{t("status.draft")}</span></div>
+          <div className="admin-stat"><strong>{stats.rejected}</strong><span>{t("status.rejected")}</span></div>
+          <div className="admin-stat admin-stat--accent"><strong>♥ {stats.likes}</strong><span>{t("dashboard.likes")}</span></div>
         </div>
       )}
 
       {!member && (
         <div className="admin-empty">
-          <h2 className="admin-subtitle">想展出自己的作品嗎？</h2>
-          <p className="admin-muted">訪客只能瀏覽。註冊成為會員後，就能上傳作品並送出審核，這個帳號也會保留下來。</p>
-          <a className="admin-button admin-button--primary" href="#me/profile">註冊成為會員</a>
+          <h2 className="admin-subtitle">{t("dashboard.guestTitle")}</h2>
+          <p className="admin-muted">{t("dashboard.guestBody")}</p>
+          <a className="admin-button admin-button--primary" href="#me/profile">{t("registerMember")}</a>
         </div>
       )}
 
@@ -62,11 +64,11 @@ const Dashboard = () => {
       {member && (
         <>
           <div className="admin-page__head admin-page__head--section">
-            <h2 className="admin-subtitle">我的作品</h2>
+            <h2 className="admin-subtitle">{t("dashboard.myArtworks")}</h2>
             <div className="admin-chips">
               {FILTERS.map((id) => (
                 <button key={id} className={`admin-chip${filter === id ? " admin-chip--active" : ""}`} onClick={() => setFilter(id)}>
-                  {id === "all" ? "全部" : STATUS[id]} {count(id)}
+                  {t(id === "all" ? "all" : `status.${id}`)} {count(id)}
                 </button>
               ))}
             </div>
@@ -83,7 +85,7 @@ const Dashboard = () => {
                 }}
                 onError={setError}
               />
-              {!shown.length && <p className="admin-muted">這裡還沒有作品。</p>}
+              {!shown.length && <p className="admin-muted">{t("dashboard.empty")}</p>}
             </>
           )}
         </>

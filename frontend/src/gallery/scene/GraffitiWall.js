@@ -4,12 +4,15 @@ import * as THREE from "three";
 import {GRAFFITI} from "../layout/mainHall";
 import {useGalleryStore, getGalleryState} from "../store";
 import {markActive} from "../runtime";
+import i18n from "../../i18n";
 
 const STORAGE_KEY = "igallery:graffiti";
 const CANVAS_WIDTH = 1600;
 const CANVAS_HEIGHT = Math.round((CANVAS_WIDTH * GRAFFITI.height) / GRAFFITI.width);
 const PAPER = "#ebe7df";
 
+// The faint watermark is baked into the drawing (and its saved copy), so it is
+// written in the language active when the wall is first drawn or cleared.
 const drawBase = (context) => {
   context.globalCompositeOperation = "source-over";
   context.fillStyle = PAPER;
@@ -18,7 +21,7 @@ const drawBase = (context) => {
   context.font = "700 120px \"Noto Sans TC\", sans-serif";
   context.textAlign = "center";
   context.textBaseline = "middle";
-  context.fillText("FREE WALL · 自由塗鴉牆", CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+  context.fillText(i18n.t("gallery:graffiti.watermark"), CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
 };
 
 const save = (canvas) => {

@@ -34,9 +34,10 @@ export const useGalleryStore = create((set, get) => ({
   mapOpen: false,
   // null | "outfit" | "theme" | "settings" | "help"
   panel: null,
-  // {key, label} shown at the bottom of the screen when an interaction is available
+  // {key, label} shown at the bottom of the screen when an interaction is available;
+  // label is a gallery: translation key, translated where it is shown
   prompt: null,
-  // null | {kind: "fade" | "portal", label?}
+  // null | {kind: "fade" | "portal", label?}; label is a plain title or {room} for a room name
   transition: null,
 
   theme: "night",

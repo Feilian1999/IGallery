@@ -433,6 +433,36 @@
   accent-color: var(--g-accent);
 }
 
+/* a native <select> dressed as a chip, e.g. the language switcher */
+.select {
+  height: 34px;
+  min-width: 160px;
+  padding: 0 34px 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--g-border);
+  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 14px center;
+  color: var(--g-text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  appearance: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.select:hover {
+  background-color: var(--g-hover);
+}
+
+.select:focus-visible {
+  outline: none;
+  border-color: var(--g-accent);
+}
+
+.select option {
+  color: #191817;
+  background: #ffffff;
+}
+
 /* ---------- 3D hover card and portal label ---------- */
 
 .gallery-hover-card {

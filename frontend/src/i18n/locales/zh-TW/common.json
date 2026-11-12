@@ -1,0 +1,52 @@
+{
+  "language": "語言",
+  "roles": {
+    "guest": "訪客",
+    "member": "會員",
+    "artist": "藝術家",
+    "admin": "管理者"
+  },
+  "aiUsage": {
+    "none": {
+      "name": "未使用 AI",
+      "hint": "完全由創作者自己完成"
+    },
+    "assisted": {
+      "name": "AI 輔助",
+      "short": "AI 輔助",
+      "hint": "部分過程使用 AI，例如構圖、上色或修圖"
+    },
+    "generated": {
+      "name": "AI 生成",
+      "short": "AI 生成",
+      "hint": "主要由 AI 生成"
+    },
+    "unspecified": {
+      "name": "未標註",
+      "hint": ""
+    }
+  },
+  "requestFailed": "請求失敗（{{status}}）",
+  "rooms": {
+    "main": "主展廳",
+    "annex": "懸浮展廳",
+    "festival": "夏日祭典"
+  },
+  "slots": {
+    "n1": "弧形牆・左",
+    "n2": "弧形牆・中",
+    "n3": "弧形牆・右",
+    "e1": "東牆",
+    "w1": "西牆",
+    "s1": "東側隔牆",
+    "s2": "西側隔牆",
+    "feature": "中央懸浮展台",
+    "fn": "北面",
+    "fw1": "西廊・一",
+    "fw2": "西廊・二",
+    "fw3": "西廊・三",
+    "fe1": "東廊・一",
+    "fe2": "東廊・二",
+    "fe3": "東廊・三"
+  }
+}

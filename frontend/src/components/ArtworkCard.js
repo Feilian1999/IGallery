@@ -4,12 +4,14 @@ import Box from "@mui/material/Box";
 import IconButton from "@mui/material/IconButton";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import {useTranslation} from "react-i18next";
 import {AI_USAGE} from "../shared/aiUsage";
 import {useSession, isMember, toggleLike} from "../session";
 
 // An artwork in a grid: square image with the AI label and a like button on it,
 // title and artist underneath. Clicking the image opens the artwork under its artist.
 export const ArtworkCard = ({artwork, onChange}) => {
+  const {t} = useTranslation("site");
   const {session} = useSession();
   if (!artwork) {
     return (
@@ -46,14 +48,14 @@ export const ArtworkCard = ({artwork, onChange}) => {
         {!own && (
           <IconButton
             onClick={like}
-            aria-label={artwork.liked ? "取消喜歡" : "喜歡"}
+            aria-label={artwork.liked ? t("card.unlike") : t("card.like")}
             sx={{position: "absolute", right: 4, bottom: 4, color: artwork.liked ? "#ff4060" : "#fff", filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.5))"}}
           >
             {artwork.liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
           </IconButton>
         )}
       </Box>
-      <Box sx={{mt: 1, fontSize: 14, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>{artwork.title || "未命名"}</Box>
+      <Box sx={{mt: 1, fontSize: 14, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis"}}>{artwork.title || t("untitled")}</Box>
       <Box sx={{mt: 0.5, display: "flex", alignItems: "center", gap: 0.75, fontSize: 12, color: "text.secondary"}}>
         <Box component={artwork.owner ? "a" : "span"} href={artwork.owner ? `#users/${artwork.owner.id}` : undefined} sx={{
           "flex": 1, "minWidth": 0, "display": "flex", "alignItems": "center", "gap": 0.75, "color": "inherit", "textDecoration": "none",

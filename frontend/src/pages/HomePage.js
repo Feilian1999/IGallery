@@ -7,6 +7,7 @@ import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import ViewInArOutlinedIcon from "@mui/icons-material/ViewInArOutlined";
 import {ArtworkGrid, SectionTitle} from "../components/ArtworkCard";
+import {useTranslation} from "react-i18next";
 import {fetchArtworks} from "../services/artworks";
 import {useSession} from "../session";
 
@@ -16,37 +17,41 @@ const matches = (artwork, query) => [artwork.title, artwork.author, artwork.char
     .some((text) => text && text.toLowerCase().includes(query.toLowerCase()));
 
 // The way into the 3D gallery, using three of the artworks as a collage.
-const GalleryBanner = ({artworks}) => (
-  <Box component="a" href="#gallery" sx={{
-    position: "relative", display: "grid", gridTemplateColumns: {xs: "1fr", md: "1.1fr 1fr"}, gap: 3, alignItems: "center",
-    p: {xs: 3, md: 5}, borderRadius: 4, overflow: "hidden", textDecoration: "none", color: "#f4efe7",
-    background: "radial-gradient(900px 400px at 85% 20%, rgba(232,196,138,0.25), transparent 60%), linear-gradient(135deg, #17141f 0%, #2a2235 100%)",
-  }}>
-    <Box>
-      <Box sx={{fontSize: 12, letterSpacing: "0.3em", opacity: 0.6}}>ONLINE EXHIBITION</Box>
-      <Box sx={{fontFamily: "\"Noto Serif TC\", serif", fontSize: {xs: 28, md: 40}, fontWeight: 700, mt: 1, lineHeight: 1.3}}>走進 3D 展廳</Box>
-      <Box sx={{mt: 1.5, opacity: 0.75, maxWidth: 420, lineHeight: 1.8}}>操控角色在美術館裡散步，走到畫作前細看，或穿過傳送門前往懸浮展廳。</Box>
-      <Button component="span" variant="contained" startIcon={<ViewInArOutlinedIcon />} disableElevation
-        sx={{"mt": 3, "borderRadius": 20, "px": 3, "bgcolor": "#e8c48a", "color": "#17130e", "&:hover": {bgcolor: "#f0d3a4"}}}>
-        進入畫廊
-      </Button>
+const GalleryBanner = ({artworks}) => {
+  const {t} = useTranslation("site");
+  return (
+    <Box component="a" href="#gallery" sx={{
+      position: "relative", display: "grid", gridTemplateColumns: {xs: "1fr", md: "1.1fr 1fr"}, gap: 3, alignItems: "center",
+      p: {xs: 3, md: 5}, borderRadius: 4, overflow: "hidden", textDecoration: "none", color: "#f4efe7",
+      background: "radial-gradient(900px 400px at 85% 20%, rgba(232,196,138,0.25), transparent 60%), linear-gradient(135deg, #17141f 0%, #2a2235 100%)",
+    }}>
+      <Box>
+        <Box sx={{fontSize: 12, letterSpacing: "0.3em", opacity: 0.6}}>ONLINE EXHIBITION</Box>
+        <Box sx={{fontFamily: "\"Noto Serif TC\", serif", fontSize: {xs: 28, md: 40}, fontWeight: 700, mt: 1, lineHeight: 1.3}}>{t("home.bannerTitle")}</Box>
+        <Box sx={{mt: 1.5, opacity: 0.75, maxWidth: 420, lineHeight: 1.8}}>{t("home.bannerText")}</Box>
+        <Button component="span" variant="contained" startIcon={<ViewInArOutlinedIcon />} disableElevation
+          sx={{"mt": 3, "borderRadius": 20, "px": 3, "bgcolor": "#e8c48a", "color": "#17130e", "&:hover": {bgcolor: "#f0d3a4"}}}>
+          {t("home.enterGallery")}
+        </Button>
+      </Box>
+      <Box sx={{display: {xs: "none", md: "flex"}, justifyContent: "center", alignItems: "center", height: 260, position: "relative"}}>
+        {artworks.slice(0, 3).map((artwork, i) => (
+          <Box key={artwork.id} sx={{
+            position: "absolute", width: 170, aspectRatio: "3 / 4", borderRadius: 2, overflow: "hidden", border: "6px solid #f4efe7",
+            boxShadow: "0 20px 40px rgba(0,0,0,0.45)", transform: `translateX(${(i - 1) * 130}px) rotate(${(i - 1) * 7}deg)`, zIndex: i === 1 ? 2 : 1,
+          }}>
+            <img src={artwork.previewUrl} alt="" style={{width: "100%", height: "100%", objectFit: "cover", display: "block"}} />
+          </Box>
+        ))}
+      </Box>
     </Box>
-    <Box sx={{display: {xs: "none", md: "flex"}, justifyContent: "center", alignItems: "center", height: 260, position: "relative"}}>
-      {artworks.slice(0, 3).map((artwork, i) => (
-        <Box key={artwork.id} sx={{
-          position: "absolute", width: 170, aspectRatio: "3 / 4", borderRadius: 2, overflow: "hidden", border: "6px solid #f4efe7",
-          boxShadow: "0 20px 40px rgba(0,0,0,0.45)", transform: `translateX(${(i - 1) * 130}px) rotate(${(i - 1) * 7}deg)`, zIndex: i === 1 ? 2 : 1,
-        }}>
-          <img src={artwork.previewUrl} alt="" style={{width: "100%", height: "100%", objectFit: "cover", display: "block"}} />
-        </Box>
-      ))}
-    </Box>
-  </Box>
-);
+  );
+};
 
 GalleryBanner.propTypes = {artworks: PropTypes.array.isRequired};
 
 const HomePage = ({query}) => {
+  const {t} = useTranslation("site");
   const {session} = useSession();
   // null while loading
   const [artworks, setArtworks] = React.useState(null);
@@ -72,17 +77,17 @@ const HomePage = ({query}) => {
 
   const orderSwitch = (
     <ToggleButtonGroup size="small" exclusive value={order} onChange={(_, value) => value && setOrder(value)}>
-      <ToggleButton value="curated" sx={{px: 2}}>精選</ToggleButton>
-      <ToggleButton value="latest" sx={{px: 2}}>最新</ToggleButton>
+      <ToggleButton value="curated" sx={{px: 2}}>{t("home.curated")}</ToggleButton>
+      <ToggleButton value="latest" sx={{px: 2}}>{t("home.latest")}</ToggleButton>
     </ToggleButtonGroup>
   );
 
   return (
     <>
       {!query && artworks && artworks.length > 0 && <GalleryBanner artworks={artworks} />}
-      <SectionTitle first={Boolean(query)} title={query ? `「${query}」的搜尋結果${filtered ? `（${filtered.length}）` : ""}` : "作品"} action={orderSwitch} />
+      <SectionTitle first={Boolean(query)} title={query ? (filtered ? t("home.searchResultsTotal", {query, total: filtered.length}) : t("home.searchResults", {query})) : t("home.artworks")} action={orderSwitch} />
       {filtered && !filtered.length ? (
-        <Box sx={{py: 8, textAlign: "center", color: "text.secondary"}}>{query ? "找不到符合的作品，換個關鍵字試試。" : "還沒有作品。"}</Box>
+        <Box sx={{py: 8, textAlign: "center", color: "text.secondary"}}>{query ? t("home.noMatches") : t("home.noArtworks")}</Box>
       ) : (
         <ArtworkGrid artworks={shown} onChange={replace} />
       )}

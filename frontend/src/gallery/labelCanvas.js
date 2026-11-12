@@ -1,6 +1,9 @@
 // Draws a museum wall label onto a canvas: title on top, a thin rule, then the
 // 作者 / 角色 / 描述 rows. Shared by the 3D wall label and the admin preview,
-// so it has no three.js dependency.
+// so it has no three.js dependency. Row headings are in the active interface
+// language; callers redraw when the language changes.
+import i18n from "../i18n";
+
 export const LABEL_WIDTH = 1.3;
 export const PIXELS_PER_METER = 800;
 const CANVAS_WIDTH = Math.round(LABEL_WIDTH * PIXELS_PER_METER);
@@ -35,7 +38,8 @@ export const drawLabelCanvas = ({title, rows, colors}) => {
   context.font = `600 ${TITLE_SIZE}px ${SERIF}`;
   const titleLines = wrapText(context, title || EMPTY, innerWidth);
   context.font = `500 ${ROW_SIZE}px ${SANS}`;
-  const keyWidth = context.measureText("描述　").width;
+  // the widest heading plus a one-em gap
+  const keyWidth = Math.max(...rows.map(([key]) => context.measureText(key).width)) + ROW_SIZE;
   const wrapped = rows.map(([key, value]) => [key, wrapText(context, value || EMPTY, innerWidth - keyWidth)]);
   const rowLines = wrapped.reduce((count, [, lines]) => count + lines.length, 0);
 
@@ -70,5 +74,12 @@ export const drawLabelCanvas = ({title, rows, colors}) => {
   return canvas;
 };
 
-export const labelRows = (artwork) => [["作者", artwork.author], ["角色", artwork.character], ["描述", artwork.description]];
+export const labelRows = (artwork) => [
+  [i18n.t("gallery:label.author"), artwork.author],
+  [i18n.t("gallery:label.character"), artwork.character],
+  [i18n.t("gallery:label.description"), artwork.description],
+];
+
+// Text to warm the label fonts with: the headings in the active language.
+export const labelSample = () => labelRows({}).map(([key]) => key).join("");
 

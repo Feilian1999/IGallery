@@ -1,0 +1,217 @@
+{
+  "themes": {
+    "night": {
+      "name": "Night Museum",
+      "caption": "Dark walls, with only the artworks lit"
+    },
+    "white": {
+      "name": "White Cube",
+      "caption": "A bright, minimal contemporary gallery"
+    },
+    "warm": {
+      "name": "Warm Wood",
+      "caption": "Wooden floors and warm light, like a studio in the afternoon"
+    }
+  },
+  "seasons": {
+    "spring": "Spring",
+    "summer": "Summer",
+    "autumn": "Autumn",
+    "winter": "Winter"
+  },
+  "weathers": {
+    "clear": "Clear",
+    "rain": "Rain",
+    "snow": "Snow"
+  },
+  "outfits": {
+    "body": {
+      "orange": "Classic orange",
+      "mint": "Mint",
+      "navy": "Night blue",
+      "sakura": "Sakura pink",
+      "pearl": "Pearl",
+      "ink": "Ink"
+    },
+    "trim": {
+      "silver": "Silver",
+      "graphite": "Graphite",
+      "gold": "Champagne gold"
+    },
+    "accessory": {
+      "none": "None",
+      "beret": "Beret",
+      "scarf": "Scarf",
+      "headphones": "Headphones"
+    }
+  },
+  "emotes": {
+    "Wave": "Wave",
+    "ThumbsUp": "Thumbs up",
+    "Dance": "Dance",
+    "Yes": "Nod",
+    "Jump": "Jump"
+  },
+  "qualities": {
+    "auto": "Auto",
+    "high": "High",
+    "balanced": "Balanced",
+    "low": "Battery saver"
+  },
+  "outfit": {
+    "title": "Outfit",
+    "body": "Body color",
+    "trim": "Joints and trim",
+    "accessory": "Accessory",
+    "tryEmote": "Try a move"
+  },
+  "theme": {
+    "title": "Gallery theme",
+    "season": "Season outside",
+    "weather": "Weather"
+  },
+  "settings": {
+    "title": "Settings",
+    "camera": "View",
+    "thirdPerson": "Third person",
+    "firstPerson": "First person",
+    "quality": "Graphics",
+    "music": "Background music",
+    "on": "On",
+    "off": "Off",
+    "volume": "Volume {{percent}}%"
+  },
+  "help": {
+    "title": "Controls",
+    "keyNames": {
+      "drag": "Drag"
+    },
+    "keys": {
+      "move": "Walk forward and back (arrow keys work too)",
+      "turn": "Turn left and right; the camera follows behind",
+      "strafe": "Step sideways",
+      "run": "Hold to run",
+      "look": "Look around; the camera returns behind you when you let go",
+      "interact": "Interact: sit, portals, graffiti",
+      "view": "View the artwork in front of you",
+      "emotes": "Wave, thumbs up, dance, nod",
+      "jump": "Jump",
+      "camera": "Switch first / third person",
+      "map": "Gallery map",
+      "photo": "Photo mode",
+      "outfit": "Outfit",
+      "theme": "Theme and weather",
+      "close": "Close panels, leave a mode"
+    }
+  },
+  "hud": {
+    "visited": "Visited {{seen}}/{{total}}",
+    "map": "Gallery map M",
+    "toThirdPerson": "Third person V",
+    "toFirstPerson": "First person V",
+    "photo": "Photo mode P",
+    "outfit": "Outfit C",
+    "theme": "Theme and weather T",
+    "musicOff": "Mute music",
+    "musicOn": "Play music",
+    "settings": "Settings",
+    "help": "Controls ?",
+    "leave": "Leave the gallery"
+  },
+  "prompt": {
+    "standUp": "Stand up",
+    "viewArtwork": "View artwork details",
+    "sit": "Sit down",
+    "enterAnnex": "Enter the Floating Room",
+    "toFestival": "Go to the Summer Festival",
+    "startGraffiti": "Start drawing",
+    "backToMain": "Back to the Main Hall"
+  },
+  "portal": {
+    "toAnnex": "→ Floating Room",
+    "toFestival": "→ Summer Festival",
+    "backToMain": "← Back to the Main Hall"
+  },
+  "painting": {
+    "hoverHint": "Click for artwork details"
+  },
+  "intro": {
+    "subtitle": "An online museum you can walk into",
+    "loading": "Loading the exhibition…",
+    "enter": "Enter the exhibition",
+    "offline": "Can't reach the server right now, so sample works are on view",
+    "hints": "Headphones recommended · W/S to walk · A/D to turn",
+    "hallOfLight": "Hall of Light",
+    "skip": "Skip ›"
+  },
+  "graffiti": {
+    "hint": "Drag on the wall to draw; your work is saved on this device · Esc to finish",
+    "size": "Size",
+    "eraser": "Eraser",
+    "clear": "Clear",
+    "confirmClear": "Clear the whole graffiti wall?",
+    "done": "Done",
+    "watermark": "FREE WALL · Draw anything"
+  },
+  "photo": {
+    "filters": {
+      "none": "Original",
+      "warm": "Sunlit",
+      "cool": "Cool",
+      "mono": "Mono",
+      "vintage": "Vintage",
+      "dream": "Dreamy"
+    },
+    "hint": "Drag to orbit · Scroll to zoom · 1–4 to pose",
+    "exit": "Leave photo mode",
+    "depthOfField": "Depth of field",
+    "frame": "Frame",
+    "shoot": "Take photo",
+    "resultAlt": "The photo you just took",
+    "download": "Download",
+    "close": "Close"
+  },
+  "label": {
+    "author": "Artist",
+    "character": "Character",
+    "description": "Description"
+  },
+  "detail": {
+    "tabs": {
+      "original": "Original",
+      "zoom": "Close-up",
+      "about": "About the work"
+    },
+    "zoomHint": "Scroll to zoom · Drag to pan · Tap a number for details",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "reset": "Reset",
+    "uploader": "Uploaded by",
+    "featured": "Featured work",
+    "likeHint": "Sign up as a member to like works",
+    "previous": "Previous",
+    "next": "Next",
+    "close": "Close",
+    "hotspots": "Highlights",
+    "noHotspots": "This work has no highlighted details.",
+    "story": "The story behind the work",
+    "noStory": "The artist hasn't shared a story for this work yet."
+  },
+  "map": {
+    "entrance": "Entrance",
+    "toFestival": "To the Summer Festival",
+    "portal": "Portal",
+    "graffiti": "Graffiti wall",
+    "projection": "Projection",
+    "backToMain": "To the Main Hall",
+    "garden": "Garden",
+    "torii": "Torii · To the Main Hall",
+    "goTo": "Go to “{{title}}”",
+    "open": "Open the gallery map (M)",
+    "title": "Gallery map",
+    "visited": "Visited {{seen}} / {{total}}",
+    "visitedGo": "Visited · Click to go",
+    "go": "Click to go",
+    "close": "Close map"
+  }
+}

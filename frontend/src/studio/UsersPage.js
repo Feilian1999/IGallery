@@ -1,11 +1,14 @@
 import * as React from "react";
+import {useTranslation} from "react-i18next";
 import {api} from "../api";
+import {formatDate} from "../i18n";
 import {useSession} from "../session";
 
-const ROLES = {admin: "管理者", artist: "藝術家", member: "會員"};
+const ROLES = ["admin", "artist", "member"];
 
 // Admin: member accounts. Members can't reset forgotten passwords themselves, so it happens here.
 const UsersPage = () => {
+  const {t} = useTranslation("studio");
   const {session} = useSession();
   const [users, setUsers] = React.useState(null);
   const [error, setError] = React.useState("");
@@ -28,14 +31,14 @@ const UsersPage = () => {
     }
   };
 
-  const setRole = (user, role) => run(() => api(`/admin/users/${user.id}`, {method: "PATCH", body: {role}}), `已將 ${user.displayName} 設為${ROLES[role]}`);
+  const setRole = (user, role) => run(() => api(`/admin/users/${user.id}`, {method: "PATCH", body: {role}}), t("users.roleChanged", {name: user.displayName, role: t(`common:roles.${role}`)}));
   const resetPassword = (user) => {
-    const password = window.prompt(`為 ${user.displayName} 設定新密碼（至少 8 個字元）`);
-    if (password) run(() => api(`/admin/users/${user.id}/password`, {method: "POST", body: {password}}), `已重設 ${user.displayName} 的密碼，請把新密碼告訴對方`);
+    const password = window.prompt(t("users.passwordPrompt", {name: user.displayName}));
+    if (password) run(() => api(`/admin/users/${user.id}/password`, {method: "POST", body: {password}}), t("users.passwordReset", {name: user.displayName}));
   };
   const remove = (user) => {
-    if (window.confirm(`確定要刪除 ${user.displayName} 嗎？他的 ${user.works} 件作品和圖片也會一起刪除，無法復原。`)) {
-      run(() => api(`/admin/users/${user.id}`, {method: "DELETE"}), `已刪除 ${user.displayName}`);
+    if (window.confirm(t("users.confirmDelete", {name: user.displayName, count: user.works}))) {
+      run(() => api(`/admin/users/${user.id}`, {method: "DELETE"}), t("users.deleted", {name: user.displayName}));
     }
   };
 
@@ -44,7 +47,7 @@ const UsersPage = () => {
       <div className="admin-page__head">
         <div>
           <div className="admin-eyebrow">Accounts</div>
-          <h1 className="admin-title">使用者</h1>
+          <h1 className="admin-title">{t("users.title")}</h1>
         </div>
       </div>
       {error && <div className="admin-error">{error}</div>}
@@ -52,7 +55,7 @@ const UsersPage = () => {
       {users === null ? <div className="admin-spinner" /> : (
         <table className="admin-table">
           <thead>
-            <tr><th>使用者</th><th>角色</th><th>作品</th><th>加入時間</th><th /></tr>
+            <tr><th>{t("users.user")}</th><th>{t("users.role")}</th><th>{t("users.works")}</th><th>{t("users.joined")}</th><th /></tr>
           </thead>
           <tbody>
             {users.map((user) => {
@@ -62,15 +65,15 @@ const UsersPage = () => {
                   <td><strong>{user.displayName}</strong><div className="admin-muted">@{user.username}</div></td>
                   <td>
                     <select value={user.role} disabled={self} onChange={(event) => setRole(user, event.target.value)}>
-                      {Object.entries(ROLES).map(([id, name]) => <option key={id} value={id}>{name}</option>)}
+                      {ROLES.map((id) => <option key={id} value={id}>{t(`common:roles.${id}`)}</option>)}
                     </select>
                   </td>
                   <td>{user.works}</td>
-                  <td>{new Date(user.createdAt).toLocaleDateString("zh-TW")}</td>
+                  <td>{formatDate(user.createdAt)}</td>
                   <td>
                     <div className="admin-table__actions">
-                      <button className="admin-button" onClick={() => resetPassword(user)}>重設密碼</button>
-                      <button className="admin-button admin-button--danger" disabled={self} onClick={() => remove(user)}>刪除</button>
+                      <button className="admin-button" onClick={() => resetPassword(user)}>{t("users.resetPassword")}</button>
+                      <button className="admin-button admin-button--danger" disabled={self} onClick={() => remove(user)}>{t("delete")}</button>
                     </div>
                   </td>
                 </tr>
@@ -79,7 +82,7 @@ const UsersPage = () => {
           </tbody>
         </table>
       )}
-      <p className="admin-muted">訪客帳號不會列在這裡；超過 7 天沒用的訪客帳號會自動清除。</p>
+      <p className="admin-muted">{t("users.guestNote")}</p>
     </div>
   );
 };

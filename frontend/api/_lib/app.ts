@@ -6,12 +6,13 @@ import {meRoutes} from "./routes/me";
 import {uploadRoutes} from "./routes/uploads";
 import {adminRoutes} from "./routes/admin";
 import {userRoutes} from "./routes/users";
+import {fail} from "./i18n";
 
 export const app = new Hono<AuthEnv>().basePath("/api");
 
 app.onError((error, c) => {
   console.error(error);
-  return c.json({error: "伺服器發生錯誤"}, 500);
+  return fail(c, 500, "server.error");
 });
 
 app.route("/", publicRoutes);
@@ -21,4 +22,4 @@ app.route("/uploads", uploadRoutes);
 app.route("/admin", adminRoutes);
 app.route("/users", userRoutes);
 
-app.notFound((c) => c.json({error: "找不到這個 API"}, 404));
+app.notFound((c) => fail(c, 404, "api.notFound"));

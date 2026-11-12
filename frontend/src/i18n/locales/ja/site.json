@@ -1,0 +1,118 @@
+{
+  "untitled": "無題",
+  "nav": {
+    "home": "ホーム",
+    "gallery": "3D ギャラリー",
+    "ranking": "ランキング",
+    "likes": "いいねした作品",
+    "mine": "マイページ",
+    "myPage": "マイプロフィール",
+    "myWorks": "マイ作品",
+    "becomeArtist": "アーティストになる",
+    "admin": "管理",
+    "review": "審査",
+    "applications": "アーティスト申請",
+    "allArtworks": "すべての作品",
+    "exhibition": "展示レイアウト",
+    "users": "ユーザー",
+    "lightMode": "ライトモード",
+    "darkMode": "ダークモード"
+  },
+  "top": {
+    "menu": "メニュー",
+    "searchPlaceholder": "作品・作者・キャラクターを検索",
+    "search": "検索",
+    "post": "作品を投稿",
+    "inbox": "受信箱",
+    "notifications": "通知",
+    "login": "ログイン",
+    "accountMenu": "アカウントメニュー",
+    "editProfile": "プロフィールを編集",
+    "commissionSettings": "依頼受付の設定",
+    "logout": "ログアウト"
+  },
+  "home": {
+    "bannerTitle": "3D 展示室へ",
+    "bannerText": "キャラクターを操作して美術館を散策し、絵の前で立ち止まってじっくり鑑賞したり、ポータルをくぐって浮遊展示室へ向かったりできます。",
+    "enterGallery": "ギャラリーに入る",
+    "curated": "おすすめ",
+    "latest": "新着",
+    "artworks": "作品",
+    "searchResults": "「{{query}}」の検索結果",
+    "searchResultsTotal": "「{{query}}」の検索結果（{{total}}）",
+    "noMatches": "該当する作品が見つかりません。別のキーワードでお試しください。",
+    "noArtworks": "まだ作品がありません。"
+  },
+  "artwork": {
+    "backToArtist": "← 作者のページへ戻る",
+    "openOriginal": "原寸の画像を開く",
+    "edit": "作品を編集",
+    "liked": "いいね済み",
+    "like": "いいね",
+    "manage": "管理",
+    "viewIn3D": "3D ギャラリーで見る",
+    "author": "作者",
+    "character": "キャラ",
+    "ai": "AI",
+    "publishedAt": "公開日",
+    "story": "作品の背景にある物語",
+    "moreBy": "{{name}} のほかの作品",
+    "viewAll": "すべて見る →"
+  },
+  "card": {
+    "like": "いいね",
+    "unlike": "いいねを取り消す"
+  },
+  "inbox": {
+    "title": "受信箱は近日公開予定です",
+    "text": "今後、ここからクリエイターと連絡を取れるようになります。作品へのいいねや審査結果などのお知らせは、現在は通知に表示されます。",
+    "viewNotifications": "通知を見る"
+  },
+  "likes": {
+    "title": "いいねした作品",
+    "guestHint": "ゲストはいいねできません。会員登録すると、気に入った作品を保存できます。",
+    "loginHint": "ログインすると、気に入った作品を保存できます。",
+    "register": "会員登録",
+    "empty": "いいねした作品はまだありません。作品の ♥ を押すと、ここに保存されます。"
+  },
+  "ranking": {
+    "title": "アーティストランキング",
+    "subtitle": "公開作品が集めたいいね数で順位を決めています。同数の場合は作品数の多いアーティストが上位です。",
+    "empty": "ランクインしているアーティストはまだいません。作品が審査を通過すると、ここに載る可能性があります。",
+    "works_one": "{{count}} 作品",
+    "works_other": "{{count}} 作品"
+  },
+  "user": {
+    "noCommissionSelf": "依頼受付の情報はまだ設定されていません。",
+    "noCommissionOther": "{{name}} さんは現在、依頼を受け付けていません。",
+    "setUpCommissions": "依頼受付を設定",
+    "editCommissions": "依頼受付の設定を編集",
+    "commissionsOpen": "依頼受付中",
+    "commissionsClosed": "依頼受付停止中",
+    "contact": "ご依頼の連絡先",
+    "openBadge": "依頼受付中",
+    "joined": "{{date}} に参加",
+    "applyArtist": "アーティストに申請",
+    "commission": "依頼する",
+    "message": "メッセージを送る",
+    "stats": {
+      "works_one": "作品 <b>{{count}}</b> 点",
+      "works_other": "作品 <b>{{count}}</b> 点",
+      "likes_one": "いいね <b>{{count}}</b>",
+      "likes_other": "いいね <b>{{count}}</b>",
+      "favorites_one": "お気に入り <b>{{count}}</b>",
+      "favorites_other": "お気に入り <b>{{count}}</b>"
+    },
+    "tabs": {
+      "works": "作品 {{total}}",
+      "commissions": "依頼",
+      "favorites": "お気に入り",
+      "favoritesTotal": "お気に入り {{total}}"
+    },
+    "emptyWorksSelf": "公開中の作品はまだありません。アップロードした作品は、審査を通過するとここに表示されます。",
+    "emptyWorks": "公開中の作品はまだありません。",
+    "favoritesPrivate": "{{name}} さんのお気に入りは非公開です。",
+    "favoritesEmpty": "お気に入りの作品はまだありません。",
+    "favoritesOnlyYou": "お気に入りはあなたにだけ表示されています。プロフィールで公開に設定できます。"
+  }
+}

@@ -13,7 +13,7 @@ const HallEnvironment = ({theme, season}) => {
   return (
     <Environment
       // rebuild the map when the look changes; it is only rendered once
-      key={`${theme.name}:${season.name}`}
+      key={`${theme.id}:${season.id}`}
       frames={1}
       resolution={128}
       environmentIntensity={theme.environment}
