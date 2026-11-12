@@ -1,4 +1,5 @@
 import {placeOn, viewingSpot, normalize} from "./geometry";
+import {FESTIVAL_ARRIVAL} from "./mainHall";
 
 // Summer festival: a round courtyard gallery at dusk (meters, +x east, +z south).
 // A covered walkway runs around the outside, with the paintings on its back wall;
@@ -62,7 +63,7 @@ export const COLLIDERS = {
 
 export const INTERACTABLES = [
   // arrive in front of the main hall's festival portal, where the visitor left
-  {id: "portal", type: "portal", position: viewingSpot(PORTAL, 1.2), radius: 1.6, label: "回到主展廳", target: "main", arrival: {position: [-0.75, 7.6], heading: Math.PI}},
+  {id: "portal", type: "portal", position: viewingSpot(PORTAL, 1.2), radius: 1.6, label: "回到主展廳", target: "main", arrival: FESTIVAL_ARRIVAL},
 ];
 
 // the third person camera stays under the walkway roof and inside the wall

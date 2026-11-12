@@ -5,7 +5,7 @@ import {segmentNormal, placeOn, lerpPoint, viewingSpot, capsule, boxCapsule, nor
 //            curved north wall (paintings n1 n2 n3)
 //        D ⌒⌒⌒⌒⌒⌒⌒⌒⌒⌒⌒⌒⌒⌒⌒⌒ E
 //   graffiti /    benches   \ portal
-//          C       (●)        F       ● floating piece on a platform
+//          C       (●)        F       ● floating piece on a platform, the way to the festival
 //   e1     |   P2 ╲    ╱ P1   |   w1   P1 / P2 freestanding partitions
 //          B ─ door ─ window ─ A       south wall, opens to the outdoors
 export const WALL_HEIGHT = 5.4;
@@ -89,8 +89,11 @@ export const PLATFORM = {center: [0, -2.6], radius: 1.7, height: 0.22};
 
 const chamferNormal = (a, b) => segmentNormal(a, b, CENTER);
 export const PORTAL = {...placeOn(lerpPoint(E, F, 0.5), chamferNormal(E, F), 0.45, 0), target: "annex"};
-// on the south wall between the window and the door, leading out to the summer festival
-export const FESTIVAL_PORTAL = {...placeOn([-0.75, 10], [0, -1], 0.45, 0), target: "festival"};
+// The piece floating above the platform is also the way to the summer festival:
+// walk up to the platform and step through it.
+export const FESTIVAL_GATE = {position: PLATFORM.center, radius: PLATFORM.radius + 1.1, target: "festival"};
+// where the visitor lands when coming back from the festival, facing the platform
+export const FESTIVAL_ARRIVAL = {position: [0, 0.4], heading: Math.PI};
 export const GRAFFITI = {...placeOn(lerpPoint(C, D, 0.5), chamferNormal(C, D), 0.04, 1.95), width: 5, height: 2.6};
 
 export const SPAWN = {position: [3, 4.2], heading: Math.PI};
@@ -113,7 +116,7 @@ export const COLLIDERS = {
 export const INTERACTABLES = [
   ...BENCHES.map((bench, i) => ({id: `bench${i}`, type: "bench", position: bench.position, radius: 1.5, label: "坐下", seat: bench})),
   {id: "portal", type: "portal", position: viewingSpot(PORTAL, 1.2), radius: 1.6, label: "進入懸浮展廳", target: "annex"},
-  {id: "festival", type: "portal", position: viewingSpot(FESTIVAL_PORTAL, 1.2), radius: 1.6, label: "前往夏日祭典", target: "festival"},
+  {id: "festival", type: "portal", position: FESTIVAL_GATE.position, radius: FESTIVAL_GATE.radius, label: "前往夏日祭典", target: "festival"},
   {id: "graffiti", type: "graffiti", position: viewingSpot(GRAFFITI, 2.2), radius: 2.2, label: "開始塗鴉"},
 ];
 

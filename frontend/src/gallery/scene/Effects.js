@@ -1,14 +1,15 @@
 import * as React from "react";
 import * as THREE from "three";
 import {useFrame} from "@react-three/fiber";
-import {EffectComposer, Bloom, DepthOfField, Vignette, SMAA} from "@react-three/postprocessing";
+import {EffectComposer, N8AO, Bloom, DepthOfField, Vignette, SMAA} from "@react-three/postprocessing";
 import {useGalleryStore, getGalleryState} from "../store";
 import {runtime} from "../runtime";
 
 const FOCUS_RANGE = {explore: 1.6, photo: 1.2};
 
-// Post-processing: bloom for the light strips and glows, vignette, and depth of
-// field while looking at a painting or in photo mode. Skipped on low quality.
+// Post-processing: ambient occlusion (soft contact shadows in corners and under
+// furniture) on high quality, bloom for the light strips and glows, vignette, and
+// depth of field while looking at a painting or in photo mode. Skipped on low quality.
 const Effects = () => {
   const quality = useGalleryStore((state) => state.resolvedQuality());
   const focusedId = useGalleryStore((state) => state.focusedId);
@@ -37,6 +38,7 @@ const Effects = () => {
     // No MSAA: blitting a multisampled depth buffer for depth of field fails on some
     // GPUs (GL_INVALID_OPERATION every frame). SMAA handles anti-aliasing instead.
     <EffectComposer multisampling={0}>
+      {quality === "high" && <N8AO aoRadius={1.2} distanceFalloff={1} intensity={3.5} quality="medium" halfRes />}
       <Bloom mipmapBlur intensity={0.5} luminanceThreshold={0.85} luminanceSmoothing={0.2} />
       {depthOfField && <DepthOfField ref={depth} worldFocusDistance={4} worldFocusRange={1.6} bokehScale={mode === "photo" ? 5 : 3} height={540} />}
       <Vignette offset={0.28} darkness={0.55} />

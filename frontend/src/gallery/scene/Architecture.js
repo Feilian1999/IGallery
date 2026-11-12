@@ -1,23 +1,80 @@
 /* eslint-disable react/no-unknown-property, react/prop-types */
 import * as React from "react";
 import * as THREE from "three";
-import {MeshReflectorMaterial} from "@react-three/drei";
+import {MeshReflectorMaterial, useTexture} from "@react-three/drei";
+import {RoundedBoxGeometry} from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import {runtime} from "../runtime";
-import {plasterTexture, concreteTexture, woodTexture, radialTexture} from "../textures";
+import {plasterTexture, concreteTexture, woodTexture, radialTexture, haloTexture, SURFACES, setupSurfaceTexture} from "../textures";
 import {
   BOUNDARY, PERIMETER_WALLS, SOUTH_WALL, PARTITIONS, PARTITION_HEIGHT, PARTITION_THICKNESS,
-  WALL_HEIGHT, BENCHES, BENCH_SIZE, PLATFORM, ARC,
+  WALL_HEIGHT, BENCHES, BENCH_SIZE, PLATFORM, ARC, SLOT_PLACEMENTS,
 } from "../layout/mainHall";
 
 const BENCH_WOOD = {night: "#4a3426", white: "#d9c3a0", warm: "#7a4c2c"};
 
-// A texture copy with its own repeat; copies share the source canvas.
+// A texture copy with its own repeat; copies share the source image.
 const repeated = (texture, x, y) => {
   const copy = texture.clone();
   copy.repeat.set(x, y);
   copy.needsUpdate = true;
   return copy;
 };
+
+const SURFACE_URLS = {
+  concreteAlbedo: SURFACES.concrete.albedo,
+  concreteNormal: SURFACES.concrete.normal,
+  concreteArm: SURFACES.concrete.arm,
+  woodAlbedo: SURFACES.wood.albedo,
+  woodNormal: SURFACES.wood.normal,
+  woodArm: SURFACES.wood.arm,
+  plasterNormal: SURFACES.plaster.normal,
+};
+useTexture.preload(Object.values(SURFACE_URLS));
+
+// Loads the scanned PBR surfaces. Suspends until they are ready, so callers
+// render the canvas-texture version as the fallback.
+export const useSurfaces = () => {
+  const loaded = useTexture(SURFACE_URLS);
+  return React.useMemo(() => ({
+    concrete: {
+      albedo: setupSurfaceTexture(loaded.concreteAlbedo, true),
+      normal: setupSurfaceTexture(loaded.concreteNormal),
+      arm: setupSurfaceTexture(loaded.concreteArm),
+    },
+    wood: {
+      albedo: setupSurfaceTexture(loaded.woodAlbedo, true),
+      normal: setupSurfaceTexture(loaded.woodNormal),
+      arm: setupSurfaceTexture(loaded.woodArm),
+    },
+    plaster: {normal: setupSurfaceTexture(loaded.plasterNormal)},
+  }), [loaded]);
+};
+
+// Fine paint texture on walls: a plaster normal map sized in meters.
+const PLASTER_NORMAL_SCALE = new THREE.Vector2(0.45, 0.45);
+const usePlasterNormal = (surfaces) => {
+  const maps = React.useMemo(() => new Map(), [surfaces]);
+  return (width, height) => {
+    if (!surfaces) return null;
+    const x = Math.max(1, Math.round(width / SURFACES.plaster.size));
+    const y = Math.max(1, Math.round(height / SURFACES.plaster.size));
+    const key = `${x}:${y}`;
+    if (!maps.has(key)) maps.set(key, repeated(surfaces.plaster.normal, x, y));
+    return maps.get(key);
+  };
+};
+
+// A soft dark patch on the floor under furniture: baked ambient occlusion that
+// grounds the object even where screen-space AO is off or too faint.
+const CONTACT_MARGIN = 0.45;
+const ContactShadow = ({width, depth, opacity = 0.5}) => (
+  <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, 0]} renderOrder={1}>
+    <planeGeometry args={[width + CONTACT_MARGIN * 2, depth + CONTACT_MARGIN * 2]} />
+    <meshBasicMaterial map={haloTexture()} color="#000000" transparent opacity={opacity} depthWrite={false} />
+  </mesh>
+);
+
+const roundedBox = (width, height, depth, radius) => new RoundedBoxGeometry(width, height, depth, 3, radius);
 
 const segmentPose = (start, end) => {
   const dx = end[0] - start[0];
@@ -41,20 +98,34 @@ const Occluder = ({children, ...props}) => {
   return <mesh ref={ref} {...props}>{children}</mesh>;
 };
 
-export const Floor = ({theme, reflective}) => {
+const FLOOR_NORMAL_SCALE = new THREE.Vector2(0.7, 0.7);
+
+export const Floor = ({theme, reflective, surfaces}) => {
   const geometry = React.useMemo(() => {
     const shape = new THREE.Shape(BOUNDARY.map(([x, z]) => new THREE.Vector2(x, -z)));
     return new THREE.ShapeGeometry(shape);
   }, []);
-  const map = React.useMemo(
-      () => repeated(theme.floorTexture === "wood" ? woodTexture() : concreteTexture(), 0.16, 0.16),
-      [theme.floorTexture],
-  );
+  // the floor's UVs are in meters
+  const maps = React.useMemo(() => {
+    const kind = theme.floorTexture === "wood" ? "wood" : "concrete";
+    if (!surfaces) return {map: repeated(kind === "wood" ? woodTexture() : concreteTexture(), 0.16, 0.16)};
+    const scale = 1 / SURFACES[kind].size;
+    const surface = surfaces[kind];
+    const arm = repeated(surface.arm, scale, scale);
+    return {
+      map: repeated(surface.albedo, scale, scale),
+      normalMap: repeated(surface.normal, scale, scale),
+      normalScale: FLOOR_NORMAL_SCALE,
+      roughnessMap: arm,
+      aoMap: arm,
+      aoMapIntensity: 0.7,
+    };
+  }, [theme.floorTexture, surfaces]);
   return (
     <mesh geometry={geometry} rotation={[-Math.PI / 2, 0, 0]}>
       {reflective ? (
         <MeshReflectorMaterial
-          map={map}
+          {...maps}
           color={theme.floor}
           roughness={0.85}
           metalness={0.35}
@@ -68,7 +139,7 @@ export const Floor = ({theme, reflective}) => {
           maxDepthThreshold={1.3}
         />
       ) : (
-        <meshStandardMaterial map={map} color={theme.floor} roughness={theme.floorRoughness} />
+        <meshStandardMaterial {...maps} color={theme.floor} roughness={theme.floorRoughness} />
       )}
     </mesh>
   );
@@ -111,8 +182,15 @@ export const Ceiling = ({theme}) => {
   );
 };
 
-export const PerimeterWalls = ({theme}) => {
+// Painted walls: with the PBR surfaces loaded they are flat paint over a fine
+// plaster relief, otherwise the older blotchy canvas texture.
+const wallMaterialProps = (surfaces, plasterNormal, canvasMap, width, height) => (surfaces ?
+  {normalMap: plasterNormal(width, height), normalScale: PLASTER_NORMAL_SCALE} :
+  {map: canvasMap});
+
+export const PerimeterWalls = ({theme, surfaces}) => {
   const plaster = plasterTexture();
+  const plasterNormal = usePlasterNormal(surfaces);
   const maps = React.useMemo(() => new Map(), []);
   const mapFor = (length) => {
     const key = Math.max(1, Math.round(length / 4));
@@ -128,11 +206,19 @@ export const PerimeterWalls = ({theme}) => {
           <group key={i} position={[pose.mid[0], 0, pose.mid[1]]} rotation={[0, rotationY, 0]}>
             <mesh position={[0, WALL_HEIGHT / 2, 0]}>
               <planeGeometry args={[pose.length + 0.02, WALL_HEIGHT]} />
-              <meshStandardMaterial map={mapFor(pose.length)} color={theme.wall} roughness={0.95} />
+              <meshStandardMaterial
+                {...wallMaterialProps(surfaces, plasterNormal, mapFor(pose.length), pose.length, WALL_HEIGHT)}
+                color={theme.wall}
+                roughness={0.92}
+              />
             </mesh>
-            {/* shadow gap at the floor */}
+            {/* shadow gaps where the wall meets the floor and the ceiling */}
             <mesh position={[0, 0.04, 0.004]}>
               <planeGeometry args={[pose.length + 0.02, 0.08]} />
+              <meshBasicMaterial color={theme.trim} />
+            </mesh>
+            <mesh position={[0, WALL_HEIGHT - 0.03, 0.004]}>
+              <planeGeometry args={[pose.length + 0.02, 0.06]} />
               <meshBasicMaterial color={theme.trim} />
             </mesh>
           </group>
@@ -144,7 +230,7 @@ export const PerimeterWalls = ({theme}) => {
 
 // The south wall is built from boxes around a window and the entrance door, so it
 // also reads correctly from outside during the entrance sequence.
-export const SouthWall = ({theme}) => {
+export const SouthWall = ({theme, surfaces}) => {
   const {thickness, window: win, door} = SOUTH_WALL;
   const z = SOUTH_WALL.start[1] + thickness / 2;
   const pieces = [
@@ -156,6 +242,7 @@ export const SouthWall = ({theme}) => {
     [door.to, 14, 0, WALL_HEIGHT],
   ];
   const plaster = React.useMemo(() => repeated(plasterTexture(), 2, 1), []);
+  const plasterNormal = usePlasterNormal(surfaces);
   const sign = React.useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 1024;
@@ -180,8 +267,19 @@ export const SouthWall = ({theme}) => {
       {pieces.map(([x0, x1, y0, y1], i) => (
         <Occluder key={i} position={[(x0 + x1) / 2, (y0 + y1) / 2, z]}>
           <boxGeometry args={[x1 - x0, y1 - y0, thickness]} />
-          <meshStandardMaterial map={plaster} color={theme.wall} roughness={0.95} />
+          <meshStandardMaterial
+            {...wallMaterialProps(surfaces, plasterNormal, plaster, x1 - x0, y1 - y0)}
+            color={theme.wall}
+            roughness={0.92}
+          />
         </Occluder>
+      ))}
+      {/* shadow gap along the floor on the inside */}
+      {pieces.filter(([, , y0]) => y0 === 0).map(([x0, x1], i) => (
+        <mesh key={i} position={[(x0 + x1) / 2, 0.04, z - thickness / 2 - 0.004]} rotation={[0, Math.PI, 0]}>
+          <planeGeometry args={[x1 - x0, 0.08]} />
+          <meshBasicMaterial color={theme.trim} />
+        </mesh>
       ))}
       {/* window glass and mullions */}
       <mesh position={[windowCenter[0], windowCenter[1], z]}>
@@ -229,8 +327,16 @@ export const WindowLight = ({color, strength}) => {
   );
 };
 
-export const Partitions = ({theme}) => {
+const PARTITION_EDGE = 0.012;
+
+export const Partitions = ({theme, surfaces}) => {
   const plaster = React.useMemo(() => repeated(plasterTexture(), 1, 1), []);
+  const plasterNormal = usePlasterNormal(surfaces);
+  // slightly rounded edges catch a highlight, like real drywall corner beads
+  const geometries = React.useMemo(() => PARTITIONS.map((partition) => {
+    const {length} = segmentPose(partition.start, partition.end);
+    return roundedBox(length, PARTITION_HEIGHT, PARTITION_THICKNESS, PARTITION_EDGE);
+  }), []);
   return (
     <group>
       {PARTITIONS.map((partition, i) => {
@@ -238,14 +344,18 @@ export const Partitions = ({theme}) => {
         return (
           <group key={i} position={[pose.mid[0], 0, pose.mid[1]]} rotation={[0, pose.rotationY, 0]}>
             {/* the wall floats on a recessed dark plinth */}
-            <Occluder position={[0, PARTITION_HEIGHT / 2 + 0.06, 0]}>
-              <boxGeometry args={[pose.length, PARTITION_HEIGHT, PARTITION_THICKNESS]} />
-              <meshStandardMaterial map={plaster} color={theme.partition} roughness={0.9} />
+            <Occluder geometry={geometries[i]} position={[0, PARTITION_HEIGHT / 2 + 0.06, 0]}>
+              <meshStandardMaterial
+                {...wallMaterialProps(surfaces, plasterNormal, plaster, pose.length, PARTITION_HEIGHT)}
+                color={theme.partition}
+                roughness={0.9}
+              />
             </Occluder>
             <mesh position={[0, 0.03, 0]}>
               <boxGeometry args={[pose.length - 0.12, 0.06, PARTITION_THICKNESS - 0.08]} />
               <meshBasicMaterial color={theme.trim} />
             </mesh>
+            <ContactShadow width={pose.length} depth={PARTITION_THICKNESS + 0.2} opacity={theme.dark ? 0.6 : 0.35} />
           </group>
         );
       })}
@@ -253,34 +363,128 @@ export const Partitions = ({theme}) => {
   );
 };
 
-export const Benches = ({themeId}) => (
-  <group>
-    {BENCHES.map((bench, i) => (
-      <group key={i} position={[bench.position[0], 0, bench.position[1]]} rotation={[0, bench.rotationY, 0]}>
-        <mesh position={[0, BENCH_SIZE.height - 0.04, 0]}>
-          <boxGeometry args={[BENCH_SIZE.length, 0.08, BENCH_SIZE.depth]} />
-          <meshStandardMaterial color={BENCH_WOOD[themeId]} roughness={0.55} />
-        </mesh>
-        {[-1, 1].map((side) => (
-          <mesh key={side} position={[side * (BENCH_SIZE.length / 2 - 0.2), (BENCH_SIZE.height - 0.08) / 2, 0]}>
-            <boxGeometry args={[0.05, BENCH_SIZE.height - 0.08, BENCH_SIZE.depth - 0.06]} />
-            <meshStandardMaterial color="#1c1c1e" metalness={0.6} roughness={0.35} />
-          </mesh>
-        ))}
-      </group>
-    ))}
-  </group>
-);
+const BENCH_TOP = 0.07;
+const LEG_INSET = 0.24;
+const STEEL = {color: "#1c1c1e", metalness: 0.75, roughness: 0.32};
 
-export const Platform = ({theme}) => (
-  <group position={[PLATFORM.center[0], 0, PLATFORM.center[1]]}>
-    <mesh position={[0, PLATFORM.height / 2, 0]}>
-      <cylinderGeometry args={[PLATFORM.radius, PLATFORM.radius + 0.05, PLATFORM.height, 64]} />
-      <meshStandardMaterial color={theme.partition} roughness={0.6} />
-    </mesh>
-    <mesh position={[0, PLATFORM.height + 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-      <ringGeometry args={[PLATFORM.radius - 0.08, PLATFORM.radius - 0.04, 96]} />
-      <meshBasicMaterial color={theme.accent} toneMapped={false} />
-    </mesh>
-  </group>
-);
+// A solid wood slab on two flat steel frames joined by a stretcher.
+export const Benches = ({themeId, surfaces}) => {
+  const top = React.useMemo(() => roundedBox(BENCH_SIZE.length, BENCH_TOP, BENCH_SIZE.depth, 0.018), []);
+  const grain = React.useMemo(() => surfaces && {
+    map: repeated(surfaces.wood.albedo, BENCH_SIZE.length / SURFACES.wood.size, 0.4),
+    normalMap: repeated(surfaces.wood.normal, BENCH_SIZE.length / SURFACES.wood.size, 0.4),
+  }, [surfaces]);
+  const legHeight = BENCH_SIZE.height - BENCH_TOP;
+  return (
+    <group>
+      {BENCHES.map((bench, i) => (
+        <group key={i} position={[bench.position[0], 0, bench.position[1]]} rotation={[0, bench.rotationY, 0]}>
+          <mesh geometry={top} position={[0, BENCH_SIZE.height - BENCH_TOP / 2, 0]}>
+            <meshStandardMaterial {...grain} color={BENCH_WOOD[themeId]} roughness={0.5} />
+          </mesh>
+          {[-1, 1].map((side) => (
+            <group key={side} position={[side * (BENCH_SIZE.length / 2 - LEG_INSET), 0, 0]}>
+              {/* an open rectangular frame: two posts, a foot and a cap */}
+              {[-1, 1].map((end) => (
+                <mesh key={end} position={[0, legHeight / 2, end * (BENCH_SIZE.depth / 2 - 0.07)]}>
+                  <boxGeometry args={[0.04, legHeight, 0.04]} />
+                  <meshStandardMaterial {...STEEL} />
+                </mesh>
+              ))}
+              <mesh position={[0, 0.012, 0]}>
+                <boxGeometry args={[0.05, 0.024, BENCH_SIZE.depth - 0.1]} />
+                <meshStandardMaterial {...STEEL} />
+              </mesh>
+              <mesh position={[0, legHeight - 0.012, 0]}>
+                <boxGeometry args={[0.05, 0.024, BENCH_SIZE.depth - 0.1]} />
+                <meshStandardMaterial {...STEEL} />
+              </mesh>
+            </group>
+          ))}
+          <mesh position={[0, 0.14, 0]}>
+            <boxGeometry args={[BENCH_SIZE.length - LEG_INSET * 2, 0.03, 0.03]} />
+            <meshStandardMaterial {...STEEL} />
+          </mesh>
+          <ContactShadow width={BENCH_SIZE.length} depth={BENCH_SIZE.depth} opacity={0.85} />
+        </group>
+      ))}
+    </group>
+  );
+};
+
+// A lathed profile with a softened top edge and a slight flare at the base.
+export const Platform = ({theme}) => {
+  const geometry = React.useMemo(() => {
+    const {radius: r, height: h} = PLATFORM;
+    const profile = [
+      [0, 0], [r + 0.05, 0], [r + 0.04, h - 0.03], [r + 0.03, h - 0.012], [r + 0.012, h - 0.002], [r, h], [0, h],
+    ].map(([x, y]) => new THREE.Vector2(x, y));
+    return new THREE.LatheGeometry(profile, 96);
+  }, []);
+  return (
+    <group position={[PLATFORM.center[0], 0, PLATFORM.center[1]]}>
+      <mesh geometry={geometry}>
+        <meshStandardMaterial color={theme.partition} roughness={0.6} />
+      </mesh>
+      <mesh position={[0, PLATFORM.height + 0.005, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[PLATFORM.radius - 0.08, PLATFORM.radius - 0.04, 96]} />
+        <meshBasicMaterial color={theme.accent} toneMapped={false} />
+      </mesh>
+    </group>
+  );
+};
+
+// How far out from the wall each picture light hangs, and how far it drops.
+const FIXTURE_REACH = 1.7;
+const FIXTURE_DROP = 0.55;
+const UP = new THREE.Vector3(0, 1, 0);
+
+// Ceiling-hung spotlights aimed at every wall slot. They give the baked light
+// pools on the walls a visible source.
+export const TrackLights = ({theme}) => {
+  const fixtures = React.useMemo(() => Object.values(SLOT_PLACEMENTS).map(({position, normal}) => {
+    const x = position[0] + normal[0] * FIXTURE_REACH;
+    const z = position[2] + normal[1] * FIXTURE_REACH;
+    const head = new THREE.Vector3(x, WALL_HEIGHT - FIXTURE_DROP, z);
+    // aim a little above the painting's center, where the light pool starts
+    const target = new THREE.Vector3(position[0], position[1] + 0.6, position[2]);
+    const aim = new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().lookAt(target, head, UP));
+    return {x, z, head, aim};
+  }), []);
+  const body = theme.dark ? "#1c1c1e" : "#ecebe8";
+  return (
+    <group>
+      {fixtures.map(({x, z, head, aim}, i) => (
+        <group key={i}>
+          <mesh position={[x, WALL_HEIGHT - 0.012, z]}>
+            <cylinderGeometry args={[0.055, 0.055, 0.024, 24]} />
+            <meshStandardMaterial color={body} metalness={0.5} roughness={0.4} />
+          </mesh>
+          <mesh position={[x, WALL_HEIGHT - FIXTURE_DROP / 2, z]}>
+            <cylinderGeometry args={[0.007, 0.007, FIXTURE_DROP, 8]} />
+            <meshStandardMaterial color={body} metalness={0.6} roughness={0.35} />
+          </mesh>
+          <group position={head} quaternion={aim}>
+            {/* the head's axis runs along +z, toward the painting */}
+            <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.02]}>
+              <cylinderGeometry args={[0.05, 0.042, 0.2, 24, 1, true]} />
+              <meshStandardMaterial color={body} metalness={0.6} roughness={0.35} side={THREE.DoubleSide} />
+            </mesh>
+            <mesh position={[0, 0, -0.08]} rotation={[0, Math.PI, 0]}>
+              <circleGeometry args={[0.042, 24]} />
+              <meshStandardMaterial color={body} metalness={0.6} roughness={0.35} />
+            </mesh>
+            <mesh position={[0, 0, 0.1]}>
+              <circleGeometry args={[0.04, 24]} />
+              <meshBasicMaterial color={theme.pool} toneMapped={false} />
+            </mesh>
+            <mesh position={[0, 0.062, 0]}>
+              <sphereGeometry args={[0.014, 12, 8]} />
+              <meshStandardMaterial color={body} metalness={0.6} roughness={0.35} />
+            </mesh>
+          </group>
+        </group>
+      ))}
+    </group>
+  );
+};

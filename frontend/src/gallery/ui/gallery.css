@@ -475,6 +475,12 @@
   backdrop-filter: blur(8px);
 }
 
+.gallery-portal-label--festival {
+  background: rgba(40, 14, 20, 0.6);
+  border-color: rgba(255, 179, 107, 0.55);
+  color: #ffe9d2;
+}
+
 /* ---------- map ---------- */
 
 .minimap {

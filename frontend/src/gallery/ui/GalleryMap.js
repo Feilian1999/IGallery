@@ -47,16 +47,12 @@ const MainHallPlan = ({id}) => {
           transform={`translate(${bench.position[0]} ${bench.position[1]}) rotate(${(-bench.rotationY * 180) / Math.PI})`} />
       ))}
       <circle cx={mainHall.PLATFORM.center[0]} cy={mainHall.PLATFORM.center[1]} r={mainHall.PLATFORM.radius} fill="none" stroke="var(--g-accent)" strokeOpacity="0.6" strokeWidth="0.08" strokeDasharray="0.3 0.25" />
-      <text x={mainHall.PLATFORM.center[0]} y={mainHall.PLATFORM.center[1] + 0.25} className="map-svg__note" textAnchor="middle">懸浮展台</text>
+      <circle cx={mainHall.FESTIVAL_GATE.position[0]} cy={mainHall.FESTIVAL_GATE.position[1]} r="1.4" fill="#ffb36b" fillOpacity="0.16" filter={`url(#${id}-glow)`} />
+      <text x={mainHall.PLATFORM.center[0]} y={mainHall.PLATFORM.center[1] + 0.25} className="map-svg__note" textAnchor="middle">往夏日祭典</text>
       <g transform={`translate(${mainHall.PORTAL.position[0]} ${mainHall.PORTAL.position[2]})`}>
         <circle r="1.1" fill="#7fd8ff" fillOpacity="0.18" filter={`url(#${id}-glow)`} />
         <circle r="0.5" fill="none" stroke="#7fd8ff" strokeWidth="0.12" />
         <text y="1.9" className="map-svg__note" textAnchor="middle">傳送門</text>
-      </g>
-      <g transform={`translate(${mainHall.FESTIVAL_PORTAL.position[0]} ${mainHall.FESTIVAL_PORTAL.position[2]})`}>
-        <circle r="1.1" fill="#ffb36b" fillOpacity="0.2" filter={`url(#${id}-glow)`} />
-        <circle r="0.5" fill="none" stroke="#ffb36b" strokeWidth="0.12" />
-        <text y="-1.3" className="map-svg__note" textAnchor="middle">往夏日祭典</text>
       </g>
       <g transform={`translate(${mainHall.GRAFFITI.position[0]} ${mainHall.GRAFFITI.position[2]}) rotate(${(-mainHall.GRAFFITI.rotationY * 180) / Math.PI})`}>
         {["#ff5a5f", "#f2c94c", "#5aa9e6", "#7bc47f"].map((color, i) => (

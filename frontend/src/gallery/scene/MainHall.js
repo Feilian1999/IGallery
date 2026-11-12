@@ -3,20 +3,25 @@ import * as React from "react";
 import * as THREE from "three";
 import {useFrame} from "@react-three/fiber";
 import THEMES, {SEASONS} from "../themes";
-import {PLATFORM, PORTAL, FESTIVAL_PORTAL} from "../layout/mainHall";
+import {PLATFORM, PORTAL} from "../layout/mainHall";
 import {useGalleryStore} from "../store";
 import Painting from "./Painting";
 import Portal from "./Portal";
+import FestivalGate from "./FestivalGate";
 import GraffitiWall from "./GraffitiWall";
 import Ball from "./Ball";
 import Outdoors from "./Outdoors";
-import {Floor, Ceiling, PerimeterWalls, SouthWall, WindowLight, Partitions, Benches, Platform} from "./Architecture";
+import {
+  Floor, Ceiling, PerimeterWalls, SouthWall, WindowLight, Partitions, Benches, Platform, TrackLights, useSurfaces,
+} from "./Architecture";
+import HallEnvironment from "./HallEnvironment";
 
 const FLOAT_HEIGHT = 2.35;
 const FEATURE_ANCHOR = [PLATFORM.center[0], FLOAT_HEIGHT, PLATFORM.center[1]];
 const FEATURE_PLACEMENT = {position: [0, 0, 0], rotationY: 0};
 
-// The featured piece hovers and slowly turns above the central platform.
+// The featured piece hovers and slowly turns above the central platform; it is
+// also the gate to the summer festival (see FestivalGate).
 // It stops animating while it is off screen.
 const FloatingFeature = ({artwork}) => {
   const group = React.useRef();
@@ -38,6 +43,20 @@ const FloatingFeature = ({artwork}) => {
   );
 };
 
+// Floor, walls and furniture. Rendered with the canvas textures until the
+// scanned PBR surfaces have loaded.
+const Shell = ({theme, themeId, reflective, surfaces = null}) => (
+  <>
+    <Floor theme={theme} reflective={reflective} surfaces={surfaces} />
+    <PerimeterWalls theme={theme} surfaces={surfaces} />
+    <SouthWall theme={theme} surfaces={surfaces} />
+    <Partitions theme={theme} surfaces={surfaces} />
+    <Benches themeId={themeId} surfaces={surfaces} />
+  </>
+);
+
+const TexturedShell = (props) => <Shell {...props} surfaces={useSurfaces()} />;
+
 const MainHall = () => {
   const themeId = useGalleryStore((state) => state.theme);
   const seasonId = useGalleryStore((state) => state.season);
@@ -46,24 +65,25 @@ const MainHall = () => {
   const theme = THEMES[themeId];
   const room = useGalleryStore((state) => state.exhibition.rooms.main);
   const feature = useGalleryStore((state) => state.exhibition.feature);
+  const reflective = theme.reflective && quality === "high";
 
   return (
     <group>
-      <Floor theme={theme} reflective={theme.reflective && quality === "high"} />
+      <HallEnvironment theme={theme} season={SEASONS[seasonId]} />
+      <React.Suspense fallback={<Shell theme={theme} themeId={themeId} reflective={reflective} />}>
+        <TexturedShell theme={theme} themeId={themeId} reflective={reflective} />
+      </React.Suspense>
       <Ceiling theme={theme} />
-      <PerimeterWalls theme={theme} />
-      <SouthWall theme={theme} />
+      <TrackLights theme={theme} />
       <WindowLight color={SEASONS[seasonId].light} strength={weather === "rain" ? 0.12 : 0.28} />
-      <Partitions theme={theme} />
-      <Benches themeId={themeId} />
       <Platform theme={theme} />
+      <FestivalGate />
       {feature && (
         <React.Suspense fallback={null}>
           <FloatingFeature artwork={feature} />
         </React.Suspense>
       )}
       <Portal placement={PORTAL} colors={["#3b2a7a", "#7fd8ff"]} label="→ 懸浮展廳" />
-      <Portal placement={FESTIVAL_PORTAL} colors={["#7a2a3b", "#ffb36b"]} label="→ 夏日祭典" />
       <GraffitiWall />
       <Ball />
       <Outdoors />

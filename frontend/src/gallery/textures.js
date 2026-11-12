@@ -203,3 +203,36 @@ export const footprintTexture = () => cached("footprint", () => {
   context.fill();
   return new THREE.CanvasTexture(canvas);
 });
+
+// Scanned PBR surfaces from Poly Haven (CC0), stored in public/textures. The
+// albedo maps were converted to light grayscale so the theme color tints them,
+// the same way as the canvas textures above. `size` is how many meters one
+// copy of the texture covers.
+const surfaceFile = (name) => `${process.env.PUBLIC_URL}/textures/${name}.webp`;
+export const SURFACES = {
+  concrete: {
+    size: 2.5,
+    albedo: surfaceFile("concrete_floor_worn_001_albedo"),
+    normal: surfaceFile("concrete_floor_worn_001_nor"),
+    arm: surfaceFile("concrete_floor_worn_001_arm"),
+  },
+  wood: {
+    size: 1.6,
+    albedo: surfaceFile("laminate_floor_02_albedo"),
+    normal: surfaceFile("laminate_floor_02_nor"),
+    arm: surfaceFile("laminate_floor_02_arm"),
+  },
+  plaster: {
+    size: 2,
+    normal: surfaceFile("plaster_grey_04_nor"),
+  },
+};
+
+// Prepares a loaded surface texture: color maps are sRGB, the rest stay linear.
+export const setupSurfaceTexture = (texture, color) => {
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.anisotropy = 8;
+  if (color) texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+};
