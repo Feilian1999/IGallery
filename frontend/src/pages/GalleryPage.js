@@ -18,10 +18,10 @@ import "../gallery/ui/gallery.css";
 const KEY_MAP = [
   {name: "forward", keys: ["ArrowUp", "KeyW"]},
   {name: "backward", keys: ["ArrowDown", "KeyS"]},
-  {name: "left", keys: ["ArrowLeft", "KeyA"]},
-  {name: "right", keys: ["ArrowRight", "KeyD"]},
-  {name: "turnLeft", keys: ["KeyQ"]},
-  {name: "turnRight", keys: ["KeyE"]},
+  {name: "turnLeft", keys: ["ArrowLeft", "KeyA"]},
+  {name: "turnRight", keys: ["ArrowRight", "KeyD"]},
+  {name: "left", keys: ["KeyQ"]},
+  {name: "right", keys: ["KeyE"]},
   {name: "run", keys: ["ShiftLeft", "ShiftRight"]},
 ];
 

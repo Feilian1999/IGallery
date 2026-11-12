@@ -21,7 +21,7 @@ const IntroScreen = () => {
           {status === "loading" ? "展覽載入中…" : "進入展覽"}
         </button>
         <div className="intro__hints">
-          {status === "offline" ? "暫時連不上伺服器，先展示範例作品" : "建議戴上耳機 · WASD 走路 · 拖曳滑鼠轉動視角"}
+          {status === "offline" ? "暫時連不上伺服器，先展示範例作品" : "建議戴上耳機 · W/S 前進後退 · A/D 轉向"}
         </div>
       </div>
     );

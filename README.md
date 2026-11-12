@@ -21,10 +21,15 @@
 
 ![3D 展廳](docs/screenshots/gallery.jpg)
 
-- **自由漫步**：WASD 走路、拖曳轉視角，靠近畫作會自動聚焦，牆上說明牌顯示作品名稱、作者、角色與描述
+- **自由漫步**：W/S 前進後退、A/D 轉向，鏡頭始終跟在角色背後，Q/E 橫移、拖曳暫時環顧四周；靠近畫作會自動聚焦，牆上說明牌顯示作品名稱、作者、角色與描述
 - **細看作品**：點擊進入細節頁，看原圖、作者標記的細節熱點與作品背後的故事
 - **導覽地圖**：左下角小地圖顯示位置與足跡，`M` 開啟完整地圖，點作品直接前往；看過的作品會點亮並記錄參觀進度
-- **多個展廳**：穿過主展廳的暖色傳送門是黃昏的「夏日祭典」：環形迴廊圍著枯山水庭園，竹林、盛開的百日紅與漂浮的和傘，天上不時放煙火；穿過傳送門則到懸浮展廳。主展廳還有一面可以留下自己塗鴉的牆
+- **美術館級的展場**：掃描 PBR 材質的地板與牆面、環境光與環境光遮蔽；每幅畫背後有深色主題色牆、頭頂有對準它的投射燈；獨立展牆兩端彎成弧形翼牆，背面是流線柱紋浮雕
+- **三個展廳**：
+  - **主展廳**：中央展台上漂浮旋轉的畫作就是通往「夏日祭典」的入口；還有一面可以留下自己塗鴉的牆
+  - **夏日祭典**：黃昏的環形迴廊圍著枯山水庭園，竹林、盛開的百日紅與漂浮的和傘，天上不時放煙火；作品掛在床之間風格的展示凹室裡，由和紙燈箱打光
+  - **懸浮展廳**：畫作漂浮在星空下的發光展台上，天花板的投影機把聚焦的作品投在地面
+- **看得見對面的傳送門**：細金屬拱門裡會即時顯示目的地展廳的景象與展出的畫，換角度看有視差，像一扇真的門
 - **氛圍**：夜間美術館／白盒／暖木三種主題；主展廳與夏日祭典各有自己的配樂，換展廳時交叉淡入，懸浮展廳是即時合成的音樂；腳步聲、進場運鏡與聚光燈
 - **小機器人**：可以換裝、揮手、跳舞、跳躍；攝影模式能調整景深拍下自己的參觀照
 
@@ -57,14 +62,22 @@
 
 ## 技術架構
 
-| 位置 | 內容 | 技術 |
+| 功能 | 內容 | 技術 |
 |---|---|---|
-| `frontend/src/` | 網站、3D 畫廊（`#gallery`）、工作室（`#me`、`#admin`） | React 19、MUI、Three.js（React Three Fiber） |
-| `frontend/api/` | 後端 API，部署成 Vercel Function | Node.js、TypeScript、Hono |
+| 網站 | 首頁、作品頁、作者個人頁、排行榜、通知；手機版 | React 19、MUI、hash 路由 |
+| 3D 展廳 | 三個展廳、角色操控、碰撞、導覽地圖、攝影模式 | Three.js、React Three Fiber、drei、Zustand |
+| 展場質感 | 掃描 PBR 材質、程序生成的弧形展牆與浮雕、投射燈與接觸陰影 | Poly Haven CC0 材質（WebP）、ExtrudeGeometry、烘焙頂點光影 |
+| 光影與後製 | 環境光、環境光遮蔽、光暈、景深、暗角、反射地板 | drei Environment／Lightformer、N8AO、postprocessing、MeshReflectorMaterial |
+| 傳送門 | 門內即時渲染目的地展廳，有視差 | drei MeshPortalMaterial |
+| 音效與配樂 | 各展廳配樂交叉淡入、即時合成音樂、腳步聲 | Web Audio API |
+| 效能 | 依裝置自動選畫質；靜止時降到低幀率；畫作先載預覽圖，走近才換原圖 | 按需渲染（frameloop demand）、sharp 產生預覽圖 |
+| 工作室與後台 | 上傳作品、送審、審核、藝術家申請、展場配置、使用者管理 | React、MUI、SVG 平面圖 |
+| 後端 API | 帳號、作品、喜歡、通知、展位；部署成 Vercel Function | Node.js、TypeScript、Hono、HttpOnly cookie |
 | 資料庫 | 使用者、作品、喜歡、通知、展位 | PostgreSQL（正式環境 Neon，本機內嵌 PGlite） |
 | 圖片 | 原圖與預覽圖 | Vercel Blob（瀏覽器直接上傳） |
+| 數據 | 頁面瀏覽統計 | Vercel Analytics |
 
-整個專案都在 [`frontend/`](frontend)，前端與 API 部署成同一個 Vercel 專案。
+整個專案都在 [`frontend/`](frontend)，前端與 API 部署成同一個 Vercel 專案。資料庫結構變更寫在 `api/_lib/db.ts` 的 `MIGRATIONS`，部署後第一次呼叫 API 時自動套用；欄位長度等限制放在 `src/shared/artworkLimits.json`，前端表單和後端驗證共用同一份。
 
 ## 本機開發
 
@@ -121,40 +134,6 @@ npm run dev
 
 作品狀態：草稿 → 送審（審核中）→ 管理者核准（已公開）或退回（附原因，修改後可再送審）。只有已公開的作品會出現在首頁、排行與畫廊。
 
-## API
-
-| 方法 | 路徑 | 權限 | 說明 |
-|---|---|---|---|
-| GET | `/api/artworks`、`/api/artworks/:id` | 公開 | 已公開的作品（含上傳者、AI 標註、喜歡數） |
-| POST／DELETE | `/api/artworks/:id/like` | 會員 | 喜歡／取消喜歡（不能對自己的作品） |
-| GET | `/api/artists/ranking` | 公開 | 依作品收到的喜歡數排名 |
-| GET | `/api/users/:id` | 公開 | 作者個人頁：資料、約稿資訊、統計 |
-| GET | `/api/users/:id/artworks` | 公開 | 作者已公開的作品 |
-| GET | `/api/users/:id/favorites` | 公開 | 作者的收藏（未公開時只有本人看得到） |
-| GET | `/api/exhibition` | 公開 | 3D 畫廊用：已公開作品與展位配置 |
-| POST | `/api/auth/register`、`login`、`guest`、`logout` | 公開 | 註冊、登入、訪客進入、登出（HttpOnly cookie） |
-| GET | `/api/auth/me` | 登入 | 目前的使用者 |
-| POST | `/api/auth/upgrade` | 訪客 | 升級成會員 |
-| PUT | `/api/auth/password` | 會員 | 變更密碼 |
-| PATCH | `/api/me/profile` | 登入 | 顯示名稱、自我介紹、收藏是否公開、約稿設定 |
-| GET | `/api/me/dashboard` | 登入 | 自己的作品統計 |
-| GET | `/api/me/notifications`、`/api/me/notifications/unread` | 登入 | 通知列表／未讀數（前端每分鐘輪詢） |
-| POST | `/api/me/notifications/read` | 登入 | 標為已讀（帶 `ids` 只標指定的，不帶就全部） |
-| GET／POST | `/api/me/artist-application` | 會員 | 自己最新的藝術家申請／送出申請 |
-| GET／POST | `/api/me/artworks` | 藝術家 | 自己的作品／新增作品 |
-| GET／PATCH／DELETE | `/api/me/artworks/:id` | 擁有者或管理者 | 讀取／修改／刪除 |
-| POST | `/api/me/artworks/:id/submit`、`withdraw` | 擁有者 | 送審／撤回（管理者送出即公開） |
-| POST | `/api/uploads/blob`、`/api/uploads/local` | 藝術家 | 圖片上傳授權（正式環境）／本機上傳 |
-| GET／PATCH／DELETE | `/api/admin/artworks[/:id]` | 管理者 | 所有作品 |
-| POST | `/api/admin/artworks/:id/approve`、`reject` | 管理者 | 核准／退回 |
-| PUT | `/api/admin/artworks/order` | 管理者 | 排序 |
-| GET／PUT | `/api/admin/exhibition` | 管理者 | 展位配置 |
-| GET／PATCH／DELETE | `/api/admin/users[/:id]`、POST `/:id/password` | 管理者 | 使用者管理 |
-| GET | `/api/admin/artist-applications` | 管理者 | 待審核的藝術家申請 |
-| POST | `/api/admin/artist-applications/:id/approve`、`reject` | 管理者 | 核准／不通過（附原因） |
-
-所有修改請求都必須是 JSON 並帶 `x-igallery: 1` 標頭（防 CSRF）。資料庫結構變更寫在 `api/_lib/db.ts` 的 `MIGRATIONS`，部署後第一次呼叫 API 時自動套用。欄位長度等限制放在 `src/shared/artworkLimits.json`，前端表單和後端驗證共用同一份。
-
 ## 範例作品
 
 `frontend/public/artworks/` 內附的範例作品都是已進入公有領域的名畫，圖檔取自 Wikimedia Commons：
@@ -168,3 +147,5 @@ npm run dev
 | 神奈川沖浪裏 | 葛飾北齋 | 約 1831 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Tsunami_by_hokusai_19th_century.jpg) |
 | 印象・日出 | 克勞德・莫內 | 1872 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:Monet_-_Impression,_Sunrise.jpg) |
 | 吻 | 古斯塔夫・克林姆 | 1907–1908 | [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:The_Kiss_-_Gustav_Klimt_-_Google_Cultural_Institute.jpg) |
+
+展廳的地板與牆面材質來自 [Poly Haven](https://polyhaven.com/)（CC0）：`concrete_floor_worn_001`、`laminate_floor_02`、`plaster_grey_04`，轉成可依主題染色的 WebP 放在 `frontend/public/textures/`。

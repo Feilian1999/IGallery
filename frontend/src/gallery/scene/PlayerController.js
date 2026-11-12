@@ -12,6 +12,9 @@ import audio from "../audio/AudioEngine";
 const WALK_SPEED = 3.2;
 const RUN_SPEED = 5.6;
 const TURN_SPEED = 2;
+// How fast the camera swings back behind the robot: quickly while walking or
+// turning, gently after the visitor lets go of a camera drag.
+const FOLLOW_RATE = {active: 10, idle: 2.5};
 const BODY_RADIUS = 0.38;
 const FOCUS_RANGE = 2.3;
 const STRIDE = 0.72;
@@ -126,14 +129,16 @@ const PlayerController = () => {
     const keys = getKeys();
     let moveX = 0;
     let moveZ = 0;
+    // A/D turn the robot, W/S walk along where it faces, Q/E step sideways
+    const turn = canMove ? Number(keys.turnLeft) - Number(keys.turnRight) : 0;
     if (canMove) {
-      runtime.camera.yaw += (Number(keys.turnLeft) - Number(keys.turnRight)) * TURN_SPEED * dt;
-      const yaw = runtime.camera.yaw;
+      player.heading += turn * TURN_SPEED * dt;
+      const heading = player.heading;
       const forward = Number(keys.forward) - Number(keys.backward);
       const right = Number(keys.right) - Number(keys.left);
-      // movement follows the camera heading, so "up" always walks away from the camera
-      moveX = -Math.sin(yaw) * forward + Math.cos(yaw) * right;
-      moveZ = -Math.cos(yaw) * forward - Math.sin(yaw) * right;
+      moveX = Math.sin(heading) * forward - Math.cos(heading) * right;
+      moveZ = Math.cos(heading) * forward + Math.sin(heading) * right;
+      if (turn) markActive(400);
     }
     const length = Math.hypot(moveX, moveZ);
     player.moving = length > 0;
@@ -145,8 +150,22 @@ const PlayerController = () => {
       const speed = player.running ? RUN_SPEED : WALK_SPEED;
       player.position.x += (moveX / length) * speed * dt;
       player.position.z += (moveZ / length) * speed * dt;
-      player.heading = lerpAngle(player.heading, Math.atan2(moveX, moveZ), 1 - Math.exp(-dt * 12));
       markActive(400);
+    }
+
+    // --- the camera stays behind the robot ---------------------------------
+    // A drag looks around for a moment (in first person it turns the robot too);
+    // once released, the camera swings back behind it.
+    if (state.phase === "explore" && state.mode === "explore") {
+      if (runtime.dragging) {
+        if (state.cameraMode === "first") player.heading = runtime.camera.yaw - Math.PI;
+      } else {
+        const behind = player.heading + Math.PI;
+        const rate = player.moving || turn ? FOLLOW_RATE.active : FOLLOW_RATE.idle;
+        const yaw = lerpAngle(runtime.camera.yaw, behind, 1 - Math.exp(-dt * rate));
+        if (Math.abs(yaw - runtime.camera.yaw) > 1e-4) markActive(100);
+        runtime.camera.yaw = yaw;
+      }
     }
     if (!player.seat) resolveCircle(player.position, BODY_RADIUS, room.colliders);
     const moved = player.position.distanceTo(l.lastPosition);
