@@ -217,8 +217,12 @@
 }
 
 .admin-segmented button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 28px;
   padding: 0 12px;
+  line-height: 1;
   border: 0;
   border-radius: 7px;
   background: transparent;
@@ -1157,4 +1161,4 @@ a.admin-notification:hover {
 
 /* main hall / festival switch on the exhibition page */
 .admin-hall-tabs { display: inline-flex; margin-bottom: 16px; }
-.admin-hall-tabs button { padding: 7px 18px; }
+.admin-hall-tabs button { height: 34px; padding: 0 18px; }

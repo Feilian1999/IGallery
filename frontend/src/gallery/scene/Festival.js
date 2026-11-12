@@ -326,6 +326,15 @@ const PAPER_LIGHT = "#ffe2b8";
 // how far the curved wall bows away from a straight line at `x` from the center
 const wallSag = (x) => WALL_RADIUS - Math.sqrt(WALL_RADIUS * WALL_RADIUS - x * x);
 
+// The wall light stays inside the alcove: from the paper light box down to the
+// base, and narrow enough that its ends do not dip behind the curved panel.
+const alcovePool = (placement) => ({
+  y: (ALCOVE.top - 0.12 + ALCOVE.bottom) / 2 - placement.position[1],
+  height: ALCOVE.top - 0.12 - ALCOVE.bottom,
+  width: ALCOVE.postX * 2 - 1.4,
+  spread: 1.7,
+});
+
 const Alcove = ({angle}) => {
   const half = ALCOVE.width / 2 / WALL_RADIUS;
   const front = wallSag(ALCOVE.postX) + 0.1;
@@ -647,7 +656,7 @@ const Festival = () => {
       <Portal placement={PORTAL} colors={["#7a2a3b", "#ffb36b"]} label="← 回到主展廳" />
       <React.Suspense fallback={null}>
         {room.artworks.map(({artwork, placement}) => (
-          <Painting key={artwork.id} artwork={artwork} placement={placement} />
+          <Painting key={artwork.id} artwork={artwork} placement={placement} poolBounds={alcovePool(placement)} />
         ))}
       </React.Suspense>
     </group>

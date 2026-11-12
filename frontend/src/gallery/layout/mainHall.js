@@ -98,10 +98,13 @@ const partitionFace = (partition) => {
   return placeOn(mid, normal, PARTITION_THICKNESS / 2 + HANG_OFFSET);
 };
 
+// A flat painting on the curved wall has its edges closer to the wall than its
+// center. Hang it far enough out that the widest one (about 3.3 m framed) stays
+// clear of the feature panel at both ends, and the label beside it too.
+const ARC_HANG = 0.24;
 const onArc = (angle) => {
-  const point = arcPoint(angle, ARC.radius - 0.1);
-  // the wall curves toward the label beside the painting, so hold it further out
-  return {...placeOn(point, normalize([-Math.sin(angle), Math.cos(angle)]), 0), labelDepth: 0.26};
+  const point = arcPoint(angle, ARC.radius - ARC_HANG);
+  return {...placeOn(point, normalize([-Math.sin(angle), Math.cos(angle)]), 0), labelDepth: 0.14};
 };
 
 const ARC_SLOTS = {n1: -0.42, n2: 0, n3: 0.42};

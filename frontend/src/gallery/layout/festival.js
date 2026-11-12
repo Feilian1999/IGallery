@@ -33,8 +33,9 @@ export const SLOT_ANGLES = {fn: 0, fe1: 50 * DEG, fe2: 100 * DEG, fe3: 150 * DEG
 
 export const SLOT_PLACEMENTS = Object.fromEntries(Object.entries(SLOT_ANGLES).map(([slot, angle]) => [
   slot,
-  // the wall curves toward the label beside the painting, so hold it further out (as on the main hall's arc)
-  {...placeOn(ringPoint(angle, WALL_RADIUS - 0.08), inward(angle), 0), labelDepth: 0.26},
+  // hung clear of the curved clay panel, so the ends of a wide painting do not sink
+  // into it (as on the main hall's arc); the label beside it is held further out
+  {...placeOn(ringPoint(angle, WALL_RADIUS - 0.2), inward(angle), 0), labelDepth: 0.16},
 ]));
 
 // Posts holding up the walkway roof, every 20° except in the gate gap.

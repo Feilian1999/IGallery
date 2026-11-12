@@ -46,7 +46,7 @@ const usePaintingTexture = (artwork, anchor) => {
  * A framed artwork with its wall light, focus glow and label.
  * @return {Painting} painting
  */
-const Painting = ({artwork, placement, anchor, floating = false}) => {
+const Painting = ({artwork, placement, anchor, floating = false, poolBounds}) => {
   const texture = usePaintingTexture(artwork, anchor || placement.position);
   const themeId = useGalleryStore((state) => state.theme);
   const focusedId = useGalleryStore((state) => state.focusedId);
@@ -104,8 +104,8 @@ const Painting = ({artwork, placement, anchor, floating = false}) => {
   return (
     <group position={placement.position} rotation={[0, placement.rotationY, 0]}>
       {!floating && (
-        <mesh ref={pool} position={[0, 0.55, -0.045]} renderOrder={1}>
-          <planeGeometry args={[outerWidth * 2.4, 5]} />
+        <mesh ref={pool} position={[0, poolBounds ? poolBounds.y : 0.55, -0.045]} renderOrder={1}>
+          <planeGeometry args={poolBounds ? [Math.min(outerWidth * poolBounds.spread, poolBounds.width), poolBounds.height] : [outerWidth * 2.4, 5]} />
           <meshBasicMaterial map={lightPoolTexture()} color={theme.pool} transparent opacity={theme.poolStrength} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} />
         </mesh>
       )}
@@ -171,6 +171,13 @@ Painting.propTypes = {
   // world position used for distance checks when the painting sits inside a moving group
   anchor: PropTypes.arrayOf(PropTypes.number),
   floating: PropTypes.bool,
+  // keeps the wall light inside a frame: {y (center, relative to the painting), width, height, spread (times the frame width)}
+  poolBounds: PropTypes.shape({
+    y: PropTypes.number.isRequired,
+    width: PropTypes.number.isRequired,
+    height: PropTypes.number.isRequired,
+    spread: PropTypes.number.isRequired,
+  }),
 };
 
 export default Painting;

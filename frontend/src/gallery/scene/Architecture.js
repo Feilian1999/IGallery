@@ -402,6 +402,48 @@ const usePlasterNormalMeters = (surfaces) => React.useMemo(
     [surfaces],
 );
 
+// A sculpted relief for the back of a partition: rounded vertical flutes that
+// sway gently as they rise, easing back into the flat wall at the border. The
+// back of a partition gets almost no direct light, so the grazing light from the
+// LED strip above it is baked into vertex colors, relative to the flat wall so
+// only the relief itself changes brightness.
+const RELIEF = {depth: 0.035, period: 0.15, border: 0.25, inset: 0.35, bottom: 0.3, top: 0.45};
+const GRAZING_LIGHT = new THREE.Vector3(-0.6, 0.35, 0.7).normalize();
+const reliefGeometry = (width, height) => {
+  const geometry = new THREE.PlaneGeometry(width, height, Math.round(width * 150), Math.round(height * 24));
+  const position = geometry.attributes.position;
+  const smooth = (t) => {
+    const x = Math.max(0, Math.min(1, t));
+    return x * x * (3 - 2 * x);
+  };
+  const heights = new Float32Array(position.count);
+  const edges = new Float32Array(position.count);
+  for (let i = 0; i < position.count; i++) {
+    const x = position.getX(i);
+    const y = position.getY(i);
+    edges[i] = smooth(Math.min(x + width / 2, width / 2 - x, y + height / 2, height / 2 - y) / RELIEF.border);
+    // a half-round profile per flute, with narrow grooves between them
+    const sway = 0.09 * Math.sin(y * 1.6 + x * 0.45);
+    const f = ((x + sway) / RELIEF.period) % 1;
+    const across = (f < 0 ? f + 1 : f) * 2 - 1;
+    heights[i] = Math.sqrt(Math.max(0, 1 - across * across));
+    position.setZ(i, RELIEF.depth * heights[i] * edges[i]);
+  }
+  geometry.computeVertexNormals();
+  const normal = geometry.attributes.normal;
+  const colors = new Float32Array(position.count * 3);
+  const n = new THREE.Vector3();
+  const flat = GRAZING_LIGHT.z;
+  for (let i = 0; i < position.count; i++) {
+    n.fromBufferAttribute(normal, i);
+    const lit = 1 + 0.7 * (Math.max(0, n.dot(GRAZING_LIGHT)) - flat);
+    const groove = 1 - 0.25 * (1 - heights[i]) * edges[i];
+    colors.fill(Math.max(0, lit * groove), i * 3, i * 3 + 3);
+  }
+  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  return geometry;
+};
+
 // Painting-side feature panel, matching the bays on the perimeter walls.
 const PANEL_INSET = 0.25;
 
@@ -421,6 +463,7 @@ export const Partitions = ({theme, surfaces}) => {
       wall: bandGeometry(centerline, PARTITION_THICKNESS, PARTITION_HEIGHT),
       plinth: bandGeometry(centerline, PARTITION_THICKNESS - 0.08, PLINTH_HEIGHT, 0),
       panel: bandGeometry([[-panelLength / 2, panelOffset], [panelLength / 2, panelOffset]], BAY.depth, PARTITION_HEIGHT - 0.3, 0.006),
+      relief: reliefGeometry(length - RELIEF.inset * 2, PARTITION_HEIGHT - RELIEF.bottom - RELIEF.top),
     };
   }), []);
   const material = surfaces ? {normalMap: plasterNormal, normalScale: PLASTER_NORMAL_SCALE} : {map: plaster};
@@ -428,7 +471,7 @@ export const Partitions = ({theme, surfaces}) => {
     <group>
       {PARTITIONS.map((partition, i) => {
         const pose = segmentPose(partition.start, partition.end);
-        const {wall, plinth, panel, length} = shapes[i];
+        const {wall, plinth, panel, relief, length} = shapes[i];
         return (
           <group key={i} position={[pose.mid[0], 0, pose.mid[1]]} rotation={[0, pose.rotationY, 0]}>
             <Occluder geometry={wall} position={[0, PLINTH_HEIGHT, 0]}>
@@ -437,6 +480,19 @@ export const Partitions = ({theme, surfaces}) => {
             <Occluder geometry={panel} position={[0, PLINTH_HEIGHT + 0.15, 0]}>
               <meshStandardMaterial {...material} color={theme.feature} roughness={0.85} />
             </Occluder>
+            {/* the relief on the back, facing away from the painting */}
+            <Occluder
+              geometry={relief}
+              position={[0, PLINTH_HEIGHT + RELIEF.bottom + (PARTITION_HEIGHT - RELIEF.bottom - RELIEF.top) / 2, -PARTITION_THICKNESS / 2 - 0.002]}
+              rotation={[0, Math.PI, 0]}
+            >
+              <meshStandardMaterial color={theme.partition} roughness={0.8} vertexColors />
+            </Occluder>
+            {/* the LED grazing strip that lights the relief */}
+            <mesh position={[0, PLINTH_HEIGHT + PARTITION_HEIGHT - RELIEF.top + 0.12, -PARTITION_THICKNESS / 2 - 0.02]}>
+              <boxGeometry args={[length - RELIEF.inset * 2, 0.025, 0.04]} />
+              <meshBasicMaterial color={theme.dark ? "#ffe2b8" : "#ffffff"} toneMapped={false} />
+            </mesh>
             <mesh geometry={plinth}>
               <meshBasicMaterial color={theme.trim} />
             </mesh>
