@@ -7,7 +7,7 @@ import {runtime} from "../runtime";
 import {plasterTexture, concreteTexture, woodTexture, radialTexture, haloTexture, SURFACES, setupSurfaceTexture} from "../textures";
 import {
   BOUNDARY, PERIMETER_WALLS, SOUTH_WALL, PARTITIONS, PARTITION_HEIGHT, PARTITION_THICKNESS,
-  WALL_HEIGHT, BENCHES, BENCH_SIZE, PLATFORM, ARC, SLOT_PLACEMENTS,
+  WALL_HEIGHT, BENCHES, BENCH_SIZE, PLATFORM, ARC, SLOT_PLACEMENTS, BAY, WALL_BAYS, partitionCenterline,
 } from "../layout/mainHall";
 
 const BENCH_WOOD = {night: "#4a3426", white: "#d9c3a0", warm: "#7a4c2c"};
@@ -75,6 +75,44 @@ const ContactShadow = ({width, depth, opacity = 0.5}) => (
 );
 
 const roundedBox = (width, height, depth, radius) => new RoundedBoxGeometry(width, height, depth, 3, radius);
+
+// A wall that follows a centerline in plan ([x, z] pairs): given thickness,
+// rounded ends and softened top edges. Its UVs are in meters.
+const bandGeometry = (points, thickness, height, bevel = 0.012) => {
+  // work in the extrusion's 2D space, where y is -z
+  const centerline = points.map(([x, z]) => new THREE.Vector2(x, -z));
+  const last = centerline.length - 1;
+  const half = thickness / 2 - bevel;
+  const normals = centerline.map((_, i) => {
+    const a = centerline[Math.max(0, i - 1)];
+    const b = centerline[Math.min(last, i + 1)];
+    const tangent = b.clone().sub(a).normalize();
+    return new THREE.Vector2(-tangent.y, tangent.x);
+  });
+  const side = (sign) => centerline.map((point, i) => point.clone().addScaledVector(normals[i], sign * half));
+  const left = side(1);
+  const right = side(-1).reverse();
+  const shape = new THREE.Shape();
+  shape.moveTo(left[0].x, left[0].y);
+  left.slice(1).forEach((point) => shape.lineTo(point.x, point.y));
+  // round caps that bulge outward past each end
+  const endAngle = Math.atan2(normals[last].y, normals[last].x);
+  shape.absarc(centerline[last].x, centerline[last].y, half, endAngle, endAngle - Math.PI, true);
+  right.forEach((point) => shape.lineTo(point.x, point.y));
+  const startAngle = Math.atan2(normals[0].y, normals[0].x);
+  shape.absarc(centerline[0].x, centerline[0].y, half, startAngle + Math.PI, startAngle, true);
+  const geometry = new THREE.ExtrudeGeometry(shape, {
+    depth: height - bevel * 2,
+    bevelEnabled: true,
+    bevelThickness: bevel,
+    bevelSize: bevel,
+    bevelSegments: 2,
+    curveSegments: 10,
+  });
+  geometry.rotateX(-Math.PI / 2);
+  geometry.translate(0, bevel, 0);
+  return geometry;
+};
 
 const segmentPose = (start, end) => {
   const dx = end[0] - start[0];
@@ -188,6 +226,29 @@ const wallMaterialProps = (surfaces, plasterNormal, canvasMap, width, height) =>
   {normalMap: plasterNormal(width, height), normalScale: PLASTER_NORMAL_SCALE} :
   {map: canvasMap});
 
+// Vertical shadow joints between wall panels, spaced evenly around the room.
+const JOINT_SPACING = 2.5;
+const JOINTS = (() => {
+  const joints = [];
+  let travelled = 0;
+  PERIMETER_WALLS.forEach((wall) => {
+    const pose = segmentPose(wall.start, wall.end);
+    // keep joints off the corners
+    for (let at = Math.ceil((travelled + 0.3) / JOINT_SPACING) * JOINT_SPACING; at < travelled + pose.length - 0.3; at += JOINT_SPACING) {
+      const t = (at - travelled) / pose.length;
+      joints.push({
+        position: [
+          wall.start[0] + (wall.end[0] - wall.start[0]) * t + wall.normal[0] * 0.003,
+          wall.start[1] + (wall.end[1] - wall.start[1]) * t + wall.normal[1] * 0.003,
+        ],
+        rotationY: Math.atan2(wall.normal[0], wall.normal[1]),
+      });
+    }
+    travelled += pose.length;
+  });
+  return joints;
+})();
+
 export const PerimeterWalls = ({theme, surfaces}) => {
   const plaster = plasterTexture();
   const plasterNormal = usePlasterNormal(surfaces);
@@ -224,6 +285,12 @@ export const PerimeterWalls = ({theme, surfaces}) => {
           </group>
         );
       })}
+      {JOINTS.map((joint, i) => (
+        <mesh key={`joint${i}`} position={[joint.position[0], WALL_HEIGHT / 2, joint.position[1]]} rotation={[0, joint.rotationY, 0]}>
+          <planeGeometry args={[0.014, WALL_HEIGHT - 0.14]} />
+          <meshBasicMaterial color={theme.trim} />
+        </mesh>
+      ))}
     </group>
   );
 };
@@ -327,38 +394,75 @@ export const WindowLight = ({color, strength}) => {
   );
 };
 
-const PARTITION_EDGE = 0.012;
+const PLINTH_HEIGHT = 0.06;
 
+// Plaster normal map for geometry whose UVs are in meters.
+const usePlasterNormalMeters = (surfaces) => React.useMemo(
+    () => surfaces && repeated(surfaces.plaster.normal, 1 / SURFACES.plaster.size, 1 / SURFACES.plaster.size),
+    [surfaces],
+);
+
+// Painting-side feature panel, matching the bays on the perimeter walls.
+const PANEL_INSET = 0.25;
+
+// Freestanding walls: a straight face for the painting with curved wings that
+// fold toward the viewer, rounded ends, a colored panel behind the painting,
+// and a dark recessed plinth so the wall seems to float.
 export const Partitions = ({theme, surfaces}) => {
   const plaster = React.useMemo(() => repeated(plasterTexture(), 1, 1), []);
-  const plasterNormal = usePlasterNormal(surfaces);
-  // slightly rounded edges catch a highlight, like real drywall corner beads
-  const geometries = React.useMemo(() => PARTITIONS.map((partition) => {
+  const plasterNormal = usePlasterNormalMeters(surfaces);
+  const shapes = React.useMemo(() => PARTITIONS.map((partition) => {
     const {length} = segmentPose(partition.start, partition.end);
-    return roundedBox(length, PARTITION_HEIGHT, PARTITION_THICKNESS, PARTITION_EDGE);
+    const centerline = partitionCenterline(length);
+    const panelLength = Math.min(BAY.width, length - PANEL_INSET * 2);
+    const panelOffset = PARTITION_THICKNESS / 2 + BAY.depth / 2;
+    return {
+      length,
+      wall: bandGeometry(centerline, PARTITION_THICKNESS, PARTITION_HEIGHT),
+      plinth: bandGeometry(centerline, PARTITION_THICKNESS - 0.08, PLINTH_HEIGHT, 0),
+      panel: bandGeometry([[-panelLength / 2, panelOffset], [panelLength / 2, panelOffset]], BAY.depth, PARTITION_HEIGHT - 0.3, 0.006),
+    };
   }), []);
+  const material = surfaces ? {normalMap: plasterNormal, normalScale: PLASTER_NORMAL_SCALE} : {map: plaster};
   return (
     <group>
       {PARTITIONS.map((partition, i) => {
         const pose = segmentPose(partition.start, partition.end);
+        const {wall, plinth, panel, length} = shapes[i];
         return (
           <group key={i} position={[pose.mid[0], 0, pose.mid[1]]} rotation={[0, pose.rotationY, 0]}>
-            {/* the wall floats on a recessed dark plinth */}
-            <Occluder geometry={geometries[i]} position={[0, PARTITION_HEIGHT / 2 + 0.06, 0]}>
-              <meshStandardMaterial
-                {...wallMaterialProps(surfaces, plasterNormal, plaster, pose.length, PARTITION_HEIGHT)}
-                color={theme.partition}
-                roughness={0.9}
-              />
+            <Occluder geometry={wall} position={[0, PLINTH_HEIGHT, 0]}>
+              <meshStandardMaterial {...material} color={theme.partition} roughness={0.9} />
             </Occluder>
-            <mesh position={[0, 0.03, 0]}>
-              <boxGeometry args={[pose.length - 0.12, 0.06, PARTITION_THICKNESS - 0.08]} />
+            <Occluder geometry={panel} position={[0, PLINTH_HEIGHT + 0.15, 0]}>
+              <meshStandardMaterial {...material} color={theme.feature} roughness={0.85} />
+            </Occluder>
+            <mesh geometry={plinth}>
               <meshBasicMaterial color={theme.trim} />
             </mesh>
-            <ContactShadow width={pose.length} depth={PARTITION_THICKNESS + 0.2} opacity={theme.dark ? 0.6 : 0.35} />
+            <ContactShadow width={length} depth={PARTITION_THICKNESS + 0.2} opacity={theme.dark ? 0.6 : 0.35} />
           </group>
         );
       })}
+    </group>
+  );
+};
+
+// Colored panels behind the paintings on the perimeter walls.
+export const WallBays = ({theme, surfaces}) => {
+  const plasterNormal = usePlasterNormalMeters(surfaces);
+  const geometries = React.useMemo(
+      () => WALL_BAYS.map((path) => bandGeometry(path, BAY.depth, BAY.top - BAY.bottom, 0.006)),
+      [],
+  );
+  const material = surfaces ? {normalMap: plasterNormal, normalScale: PLASTER_NORMAL_SCALE} : {};
+  return (
+    <group position={[0, BAY.bottom, 0]}>
+      {geometries.map((geometry, i) => (
+        <mesh key={i} geometry={geometry}>
+          <meshStandardMaterial {...material} color={theme.feature} roughness={0.85} />
+        </mesh>
+      ))}
     </group>
   );
 };

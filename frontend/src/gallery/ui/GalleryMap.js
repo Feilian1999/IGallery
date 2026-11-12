@@ -16,7 +16,7 @@ import {travelToArtwork} from "../actions";
 const VIEW = {
   main: {x: -15.5, y: -15.5, width: 31, height: 27},
   annex: {x: -11.5, y: -11.5, width: 23, height: 23},
-  festival: {x: -15.5, y: -15.5, width: 31, height: 31},
+  festival: {x: -(festival.WALL_RADIUS + 1.5), y: -(festival.WALL_RADIUS + 1.5), width: (festival.WALL_RADIUS + 1.5) * 2, height: (festival.WALL_RADIUS + 1.5) * 2},
 };
 const ART_RADIUS = 0.95;
 
@@ -38,9 +38,9 @@ const MainHallPlan = ({id}) => {
       <line x1={mainHall.SOUTH_WALL.window.from} y1="10" x2={mainHall.SOUTH_WALL.window.to} y2="10" stroke="#9fd2ff" strokeWidth="0.32" strokeLinecap="round" strokeOpacity="0.8" />
       <line x1={mainHall.SOUTH_WALL.door.from} y1="10" x2={mainHall.SOUTH_WALL.door.to} y2="10" stroke="#15131a" strokeWidth="0.4" />
       <text x={(mainHall.SOUTH_WALL.door.from + mainHall.SOUTH_WALL.door.to) / 2} y="11.4" className="map-svg__note" textAnchor="middle">入口</text>
-      {mainHall.PARTITIONS.map((partition, i) => (
-        <line key={i} x1={partition.start[0]} y1={partition.start[1]} x2={partition.end[0]} y2={partition.end[1]}
-          stroke="#f2ede4" strokeOpacity="0.75" strokeWidth="0.26" strokeLinecap="round" filter={`url(#${id}-ink)`} />
+      {mainHall.PARTITION_PATHS.map((path, i) => (
+        <polyline key={i} points={path.map((point) => point.join(",")).join(" ")} fill="none"
+          stroke="#f2ede4" strokeOpacity="0.75" strokeWidth="0.26" strokeLinecap="round" strokeLinejoin="round" filter={`url(#${id}-ink)`} />
       ))}
       {mainHall.BENCHES.map((bench, i) => (
         <rect key={i} x={-1.1} y={-0.28} width="2.2" height="0.56" rx="0.2" fill="#f2ede4" fillOpacity="0.18"

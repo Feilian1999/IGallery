@@ -12,7 +12,7 @@ import GraffitiWall from "./GraffitiWall";
 import Ball from "./Ball";
 import Outdoors from "./Outdoors";
 import {
-  Floor, Ceiling, PerimeterWalls, SouthWall, WindowLight, Partitions, Benches, Platform, TrackLights, useSurfaces,
+  Floor, Ceiling, PerimeterWalls, WallBays, SouthWall, WindowLight, Partitions, Benches, Platform, TrackLights, useSurfaces,
 } from "./Architecture";
 import HallEnvironment from "./HallEnvironment";
 
@@ -49,6 +49,7 @@ const Shell = ({theme, themeId, reflective, surfaces = null}) => (
   <>
     <Floor theme={theme} reflective={reflective} surfaces={surfaces} />
     <PerimeterWalls theme={theme} surfaces={surfaces} />
+    <WallBays theme={theme} surfaces={surfaces} />
     <SouthWall theme={theme} surfaces={surfaces} />
     <Partitions theme={theme} surfaces={surfaces} />
     <Benches themeId={themeId} surfaces={surfaces} />

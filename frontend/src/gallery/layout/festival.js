@@ -11,15 +11,15 @@ import {FESTIVAL_ARRIVAL} from "./mainHall";
 //        fw2    │  garden  │    fe2       walkway between GARDEN_RADIUS and WALL_RADIUS
 //          fw3   ╰────────╯   fe3
 //                    ⛩
-export const WALL_RADIUS = 14;
+export const WALL_RADIUS = 16.5;
 export const WALL_HEIGHT = 5.4;
 // the garden is not walkable; its stone curb is at this radius
 export const GARDEN_RADIUS = 10;
 export const POST_RADIUS = 10.6;
 export const BENCH_RADIUS = 10.95;
-export const ROOF = {inner: 10.2, outer: 14.4, innerHeight: 4.8, outerHeight: 5.5};
-// the south gap in the wall, where the torii stands (half-width, radians)
-export const GATE_HALF_ANGLE = 0.32;
+export const ROOF = {inner: 10.2, outer: WALL_RADIUS + 0.4, innerHeight: 4.8, outerHeight: 5.6};
+// the south gap in the wall, where the torii stands (half-width, radians): about 4.5 m wide
+export const GATE_HALF_ANGLE = 2.25 / WALL_RADIUS;
 export const BAMBOO = {inner: 7.2, outer: 9.4};
 export const TREE = {center: [0, 0], height: 6.5, crown: 3.4};
 
@@ -42,10 +42,12 @@ export const POST_ANGLES = Array.from({length: 18}, (_, i) => i * 20 * DEG).filt
 // Benches sit between posts along the garden edge.
 export const BENCH_ANGLES = POST_ANGLES.slice(0, -1).map((angle, i) => (angle + POST_ANGLES[i + 1]) / 2).filter((angle, i) => i % 2 === 0);
 export const BENCH = {length: 2.4, depth: 0.5, height: 0.45};
+// halfway across the walking area, between the benches and the back wall
+export const WALKWAY_MID = (BENCH_RADIUS + BENCH.depth / 2 + WALL_RADIUS) / 2;
 
 export const TORII = {center: [0, WALL_RADIUS - 0.2], width: 4.2, height: 4.6};
 export const PORTAL = {...placeOn([0, WALL_RADIUS - 0.35], [0, -1], 0, 0), target: "main"};
-export const SPAWN = {position: [0, 12.1], heading: Math.PI};
+export const SPAWN = {position: [0, WALL_RADIUS - 1.9], heading: Math.PI};
 
 export const COLLIDERS = {
   segments: [],

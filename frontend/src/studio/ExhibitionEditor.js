@@ -19,14 +19,14 @@ const toPath = (points) => points.map(([x, z], i) => `${i ? "L" : "M"}${x} ${z}`
 const inFront = ({position, normal}) => [position[0] + normal[0] * 1.3, position[2] + normal[1] * 1.3];
 
 const MainHallPlan = () => {
-  const {SOUTH_WALL, PARTITIONS, PLATFORM} = mainHall;
+  const {SOUTH_WALL, PARTITION_PATHS, PLATFORM} = mainHall;
   return (
     <>
       <path d={toPath(mainHall.BOUNDARY)} className="admin-plan__floor" />
       <line x1={SOUTH_WALL.door.from} y1="10" x2={SOUTH_WALL.door.to} y2="10" className="admin-plan__door" />
       <text x={(SOUTH_WALL.door.from + SOUTH_WALL.door.to) / 2} y="11.3" className="admin-plan__note">入口</text>
-      {PARTITIONS.map((partition, i) => (
-        <line key={i} x1={partition.start[0]} y1={partition.start[1]} x2={partition.end[0]} y2={partition.end[1]} className="admin-plan__wall" />
+      {PARTITION_PATHS.map((path, i) => (
+        <polyline key={i} points={path.map((point) => point.join(",")).join(" ")} fill="none" className="admin-plan__wall" />
       ))}
       <circle cx={PLATFORM.center[0]} cy={PLATFORM.center[1]} r={PLATFORM.radius} className="admin-plan__platform" />
     </>
@@ -54,7 +54,7 @@ const HALLS = {
     marker: (slotId) => (slotId === slots.feature.id ? mainHall.PLATFORM.center : inFront(mainHall.SLOT_PLACEMENTS[slotId])),
   },
   festival: {
-    name: "夏日祭典", eyebrow: "Summer Festival", viewBox: "-15.5 -15.5 31 31", Plan: FestivalPlan,
+    name: "夏日祭典", eyebrow: "Summer Festival", viewBox: `${-(festival.WALL_RADIUS + 1.5)} ${-(festival.WALL_RADIUS + 1.5)} ${(festival.WALL_RADIUS + 1.5) * 2} ${(festival.WALL_RADIUS + 1.5) * 2}`, Plan: FestivalPlan,
     slots: slots.festival,
     marker: (slotId) => inFront(festival.SLOT_PLACEMENTS[slotId]),
   },

@@ -49,10 +49,53 @@ export const PARTITIONS = [
   {start: [5.5, 3.5], end: [9, 6.5]},
 ];
 
-const partitionFace = (partition, towards) => {
-  const normal = segmentNormal(partition.start, partition.end, towards);
-  const mid = lerpPoint(partition.start, partition.end, 0.5);
-  return placeOn(mid, normal, PARTITION_THICKNESS / 2 + 0.05);
+// Each freestanding wall has a straight face for the painting and short curved
+// wings that fold toward the viewer, so it reads as a shallow bay rather than
+// a flat slab. `bend` is how far each wing turns, in radians.
+export const PARTITION_WING = {length: 1, bend: 0.95};
+const WING_STEPS = 6;
+
+// The wall's centerline in its own frame: u runs along the wall, v toward the viewer.
+export const partitionCenterline = (length) => {
+  const radius = PARTITION_WING.length / PARTITION_WING.bend;
+  const wing = Array.from({length: WING_STEPS}, (_, i) => {
+    const angle = (PARTITION_WING.bend * (i + 1)) / WING_STEPS;
+    return [length / 2 + radius * Math.sin(angle), radius * (1 - Math.cos(angle))];
+  });
+  return [...wing.map(([u, v]) => [-u, v]).reverse(), [-length / 2, 0], [length / 2, 0], ...wing];
+};
+
+// Both partitions present their painting toward the entrance.
+const VIEWER = [0, 10];
+const partitionFrame = (partition) => {
+  const length = Math.hypot(partition.end[0] - partition.start[0], partition.end[1] - partition.start[1]);
+  const direction = [(partition.end[0] - partition.start[0]) / length, (partition.end[1] - partition.start[1]) / length];
+  return {
+    length,
+    direction,
+    normal: segmentNormal(partition.start, partition.end, VIEWER),
+    mid: lerpPoint(partition.start, partition.end, 0.5),
+  };
+};
+
+// The same centerlines in world coordinates, for collisions and the map.
+export const PARTITION_PATHS = PARTITIONS.map((partition) => {
+  const {length, direction, normal, mid} = partitionFrame(partition);
+  return partitionCenterline(length).map(([u, v]) => [
+    mid[0] + direction[0] * u + normal[0] * v,
+    mid[1] + direction[1] * u + normal[1] * v,
+  ]);
+});
+
+// Colored feature panels stand slightly proud of the wall behind each painting,
+// the way many museums set works against a deep accent color.
+export const BAY = {width: 4.4, depth: 0.04, bottom: 0.1, top: WALL_HEIGHT - 0.08};
+// paintings hang this far out from a plain wall surface, clear of the panel
+const HANG_OFFSET = BAY.depth + 0.06;
+
+const partitionFace = (partition) => {
+  const {normal, mid} = partitionFrame(partition);
+  return placeOn(mid, normal, PARTITION_THICKNESS / 2 + HANG_OFFSET);
 };
 
 const onArc = (angle) => {
@@ -61,17 +104,34 @@ const onArc = (angle) => {
   return {...placeOn(point, normalize([-Math.sin(angle), Math.cos(angle)]), 0), labelDepth: 0.26};
 };
 
+const ARC_SLOTS = {n1: -0.42, n2: 0, n3: 0.42};
+const SIDE_SLOTS = {e1: {point: [14, 2.5], normal: [-1, 0]}, w1: {point: [-14, 2.5], normal: [1, 0]}};
+
 // Where each wall slot is. Which artwork hangs in a slot is decided in the admin page.
 export const SLOT_PLACEMENTS = {
-  n1: onArc(-0.42),
-  n2: onArc(0),
-  n3: onArc(0.42),
-  e1: placeOn([14, 2.5], [-1, 0], 0.06),
-  w1: placeOn([-14, 2.5], [1, 0], 0.06),
+  ...Object.fromEntries(Object.entries(ARC_SLOTS).map(([id, angle]) => [id, onArc(angle)])),
+  ...Object.fromEntries(Object.entries(SIDE_SLOTS).map(([id, {point, normal}]) => [id, placeOn(point, normal, HANG_OFFSET)])),
   // partition faces that look back toward the entrance
-  s2: partitionFace(PARTITIONS[0], [0, 10]),
-  s1: partitionFace(PARTITIONS[1], [0, 10]),
+  s2: partitionFace(PARTITIONS[0]),
+  s1: partitionFace(PARTITIONS[1]),
 };
+
+// Centerlines of the feature panels on the perimeter walls, in world coordinates.
+// The curved wall is built from straight chords, so its panels sit a little
+// further in to stay in front of every chord.
+const BAY_INSET = BAY.depth / 2 + 0.005;
+const arcBay = (angle) => {
+  const half = BAY.width / 2 / ARC.radius;
+  return Array.from({length: 17}, (_, i) => arcPoint(angle - half + (half * 2 * i) / 16, ARC.radius - BAY_INSET));
+};
+const lineBay = ({point, normal}) => {
+  const tangent = [-normal[1], normal[0]];
+  return [-1, 1].map((side) => [
+    point[0] + normal[0] * BAY_INSET + (tangent[0] * side * BAY.width) / 2,
+    point[1] + normal[1] * BAY_INSET + (tangent[1] * side * BAY.width) / 2,
+  ]);
+};
+export const WALL_BAYS = [...Object.values(ARC_SLOTS).map(arcBay), ...Object.values(SIDE_SLOTS).map(lineBay)];
 
 const benchAt = (angle) => {
   const position = arcPoint(angle, 6.6);
@@ -103,7 +163,7 @@ export const COLLIDERS = {
   segments: [
     ...PERIMETER_WALLS.map((wall) => capsule(wall.start, wall.end, 0)),
     capsule(A, B, 0.15),
-    ...PARTITIONS.map((partition) => capsule(partition.start, partition.end, PARTITION_THICKNESS / 2)),
+    ...PARTITION_PATHS.flatMap((path) => path.slice(1).map((point, i) => capsule(path[i], point, PARTITION_THICKNESS / 2))),
     ...BENCHES.map((bench) => boxCapsule(bench.position, bench.rotationY, BENCH_SIZE.length, BENCH_SIZE.depth)),
   ],
   circles: [

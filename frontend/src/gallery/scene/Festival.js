@@ -4,7 +4,7 @@ import * as THREE from "three";
 import {useFrame} from "@react-three/fiber";
 import {
   WALL_RADIUS, WALL_HEIGHT, GARDEN_RADIUS, POST_RADIUS, BENCH_RADIUS, ROOF, GATE_HALF_ANGLE, BAMBOO, TREE,
-  SLOT_ANGLES, POST_ANGLES, BENCH_ANGLES, BENCH, TORII, PORTAL, ringPoint,
+  SLOT_ANGLES, POST_ANGLES, BENCH_ANGLES, BENCH, TORII, PORTAL, WALKWAY_MID, ringPoint,
 } from "../layout/festival";
 import {useGalleryStore, getGalleryState} from "../store";
 import audio from "../audio/AudioEngine";
@@ -233,7 +233,8 @@ const Treeline = () => {
     const random = seeded(11);
     return Array.from({length: 60}, (_, i) => {
       const angle = (i / 60) * Math.PI * 2 + random() * 0.05;
-      const radius = 19 + random() * 7;
+      // the widest cone is about 5 m across its base, so keep it clear of the back wall
+      const radius = WALL_RADIUS + 6 + random() * 7;
       return {x: Math.sin(angle) * radius, z: -Math.cos(angle) * radius, scale: 0.9 + random() * 0.8};
     });
   }, []);
@@ -296,7 +297,7 @@ const Walkway = () => {
       })}
       {/* paper lanterns under the roof */}
       {POST_ANGLES.filter((_, i) => i % 2).map((angle) => {
-        const [x, z] = ringPoint(angle + 0.17, 12.4);
+        const [x, z] = ringPoint(angle + 0.17, WALKWAY_MID);
         return (
           <group key={angle} position={[x, 4.05, z]}>
             <mesh scale={[1, 1.25, 1]}>
@@ -314,7 +315,43 @@ const Walkway = () => {
   );
 };
 
-// Shoji screens between the paintings, and a red frame around each painting and its label.
+// Each painting hangs in a tokonoma-style alcove: a warm clay back panel
+// following the curve of the wall, a low lacquered base, natural cedar posts,
+// and a paper light box under the lintel. Shoji screens fill the wall between.
+const ALCOVE = {width: 6.6, bottom: 0.22, top: 3.75, postX: 3.3};
+const CLAY = "#7a6450";
+const CEDAR = "#8a6a48";
+const LACQUER = "#241913";
+const PAPER_LIGHT = "#ffe2b8";
+// how far the curved wall bows away from a straight line at `x` from the center
+const wallSag = (x) => WALL_RADIUS - Math.sqrt(WALL_RADIUS * WALL_RADIUS - x * x);
+
+const Alcove = ({angle}) => {
+  const half = ALCOVE.width / 2 / WALL_RADIUS;
+  const front = wallSag(ALCOVE.postX) + 0.1;
+  return (
+    <group>
+      {/* the clay panel, just in front of the wall and behind the painting */}
+      <mesh position={[0, (ALCOVE.bottom + ALCOVE.top) / 2, 0]}>
+        <cylinderGeometry args={[WALL_RADIUS - 0.02, WALL_RADIUS - 0.02, ALCOVE.top - ALCOVE.bottom, 32, 1, true, Math.PI - angle - half, half * 2]} />
+        <meshStandardMaterial color={CLAY} roughness={1} side={THREE.BackSide} />
+      </mesh>
+      <OnRing angle={angle} radius={WALL_RADIUS}>
+        <Box position={[0, ALCOVE.bottom / 2, front / 2]} size={[ALCOVE.width + 0.2, ALCOVE.bottom, front]} color={LACQUER} roughness={0.35} />
+        {[-1, 1].map((side) => (
+          <Box key={side} position={[side * ALCOVE.postX, (ALCOVE.bottom + ALCOVE.top) / 2, front]} size={[0.12, ALCOVE.top - ALCOVE.bottom, 0.12]} color={CEDAR} roughness={0.7} />
+        ))}
+        <Box position={[0, ALCOVE.top + 0.07, front]} size={[ALCOVE.width + 0.4, 0.14, 0.16]} color={DARK_WOOD} roughness={0.7} />
+        {/* paper light box: a soft warm glow over the painting */}
+        <mesh position={[0, ALCOVE.top - 0.1, front]}>
+          <boxGeometry args={[ALCOVE.width - 0.3, 0.14, 0.12]} />
+          <meshBasicMaterial color={PAPER_LIGHT} toneMapped={false} />
+        </mesh>
+      </OnRing>
+    </group>
+  );
+};
+
 const WallDressing = () => {
   const shoji = React.useMemo(shojiTexture, []);
   const slotAngles = Object.values(SLOT_ANGLES).sort((a, b) => a - b);
@@ -329,21 +366,7 @@ const WallDressing = () => {
           </mesh>
         </OnRing>
       ))}
-      {slotAngles.map((angle) => (
-        <OnRing key={angle} angle={angle} radius={WALL_RADIUS - 0.35}>
-          {/* wide enough for a landscape painting and the label beside it */}
-          {[-1, 1].map((side) => (
-            <Box key={side} position={[side * 3.3, 1.75, 0]} size={[0.14, 3.5, 0.14]} color={SHRINE_RED} roughness={0.6} />
-          ))}
-          <Box position={[0, 3.55, 0]} size={[7.2, 0.16, 0.18]} color={SHRINE_RED} roughness={0.6} />
-          <Box position={[0, 3.25, 0]} size={[6.7, 0.08, 0.1]} color={SHRINE_RED} roughness={0.6} />
-          {/* a thin teal line glowing under the beam */}
-          <mesh position={[0, 3.18, 0.06]}>
-            <planeGeometry args={[6.4, 0.03]} />
-            <meshBasicMaterial color="#38c9b8" toneMapped={false} />
-          </mesh>
-        </OnRing>
-      ))}
+      {slotAngles.map((angle) => <Alcove key={angle} angle={angle} />)}
     </group>
   );
 };
@@ -590,8 +613,8 @@ const FestivalLights = () => (
     <directionalLight position={[-20, 9, 18]} color="#ffb27a" intensity={0.9} />
     <pointLight position={[0, 2.5, 0]} color="#ffc3d0" intensity={22} distance={14} decay={1.6} />
     {[45, 135, 225, 315].map((degrees) => {
-      const [x, z] = ringPoint((degrees * Math.PI) / 180, 12.3);
-      return <pointLight key={degrees} position={[x, 3.1, z]} color="#ffb36b" intensity={12} distance={11} decay={1.6} />;
+      const [x, z] = ringPoint((degrees * Math.PI) / 180, WALKWAY_MID);
+      return <pointLight key={degrees} position={[x, 3.1, z]} color="#ffb36b" intensity={14} distance={13} decay={1.6} />;
     })}
   </group>
 );
