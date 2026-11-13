@@ -1,4 +1,4 @@
-/* eslint-disable react/no-unknown-property */
+/* eslint-disable react/no-unknown-property, react/prop-types */
 import * as React from "react";
 import * as THREE from "three";
 import {useFrame} from "@react-three/fiber";
@@ -13,6 +13,7 @@ const ROBOT_HEIGHT = 1.7;
 // The Sitting clip lowers the hips to the floor; lift the robot so it lands on the bench.
 const SEAT_LIFT = 0.42;
 const SPAWN_MS = 900;
+const FIRST_PERSON_HIDE = 1.3;
 const ONE_SHOT = new Set(["Wave", "ThumbsUp", "Yes", "Jump", "Sitting", "Standing"]);
 
 const easeOutBack = (t) => 1 + 2.2 * Math.pow(t - 1, 3) + 1.2 * Math.pow(t - 1, 2);
@@ -93,7 +94,9 @@ const prepareModel = (scene) => {
   return gallery;
 };
 
-const Robot = () => {
+// `player` is the body to show. `self` marks the local visitor's own robot, which
+// steps out of the way of a first person camera.
+const Robot = ({player = runtime.player, self = true}) => {
   const root = React.useRef();
   const body = React.useRef();
   const shadow = React.useRef();
@@ -134,9 +137,8 @@ const Robot = () => {
     a.finished = false;
   };
 
-  useFrame((_, delta) => {
+  useFrame(({camera}, delta) => {
     const a = anim.current;
-    const player = runtime.player;
     const dt = Math.min(delta, 0.1);
 
     if (player.seat) {
@@ -151,11 +153,11 @@ const Robot = () => {
       play(player.running ? "Running" : "Walking", 0.2);
       if (actions[a.current]) actions[a.current].timeScale = player.running ? 1 : 1.15;
       a.state = "moving";
-      runtime.emote = null;
-    } else if (runtime.emote) {
-      play(runtime.emote, 0.2);
-      if (a.current === runtime.emote) a.state = "emote";
-      runtime.emote = null;
+      player.emote = null;
+    } else if (player.emote) {
+      play(player.emote, 0.2);
+      if (a.current === player.emote) a.state = "emote";
+      player.emote = null;
     } else if (a.state === "moving" || (a.finished && (a.state === "emote" || a.state === "standing"))) {
       play("Idle", 0.3);
       a.state = "idle";
@@ -181,9 +183,12 @@ const Robot = () => {
       face.morphTargetInfluences[face.morphTargetDictionary.Surprised] = a.surprise;
     });
 
-    // out of the way in first person and while painting the graffiti wall
-    const {cameraMode, mode} = getGalleryState();
-    root.current.visible = mode === "photo" || (cameraMode !== "first" && mode !== "graffiti");
+    // out of the way while painting the graffiti wall, and in first person once the
+    // camera has moved into the robot's head
+    const {cameraMode, mode, phase} = getGalleryState();
+    const cameraInside = Math.hypot(camera.position.x - player.position.x, camera.position.z - player.position.z) < FIRST_PERSON_HIDE;
+    root.current.visible = !self || mode === "photo" || phase !== "explore" ||
+      (mode !== "graffiti" && !(cameraMode === "first" && cameraInside));
   });
 
   return (

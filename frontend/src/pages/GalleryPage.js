@@ -18,17 +18,25 @@ import "../gallery/ui/gallery.css";
 const KEY_MAP = [
   {name: "forward", keys: ["ArrowUp", "KeyW"]},
   {name: "backward", keys: ["ArrowDown", "KeyS"]},
-  {name: "turnLeft", keys: ["ArrowLeft", "KeyA"]},
-  {name: "turnRight", keys: ["ArrowRight", "KeyD"]},
-  {name: "left", keys: ["KeyQ"]},
-  {name: "right", keys: ["KeyE"]},
+  {name: "left", keys: ["KeyA"]},
+  {name: "right", keys: ["KeyD"]},
+  {name: "turnLeft", keys: ["ArrowLeft", "KeyQ"]},
+  {name: "turnRight", keys: ["ArrowRight", "KeyE"]},
   {name: "run", keys: ["ShiftLeft", "ShiftRight"]},
 ];
 
 const EMOTE_KEYS = {Digit1: "Wave", Digit2: "ThumbsUp", Digit3: "Dance", Digit4: "Yes", Space: "Jump"};
 const DPR = {high: [1, 2], balanced: [1, 1.5], low: 1};
-const DRAG_YAW = 0.005;
-const DRAG_PITCH = 0.004;
+// Radians of view turn per pixel: for a captured mouse, and for a drag (touch, or
+// a mouse that hasn't been captured).
+const LOCKED_LOOK = 0.0022;
+const DRAG_LOOK = {yaw: 0.005, pitch: 0.004};
+// a captured mouse sometimes reports one huge jump (e.g. as the capture starts); drop those
+const LOOK_SPIKE = 400;
+
+// The mouse is only worth capturing while the visitor is walking around with nothing open.
+const wantsMouseLook = (state) => state.phase === "explore" && state.mode === "explore" &&
+  !state.detailId && !state.mapOpen && !state.panel;
 
 // Keyboard shortcuts that aren't movement (movement is read by KeyboardControls).
 const handleShortcut = (event) => {
@@ -103,6 +111,8 @@ const GalleryPage = () => {
   const quality = useGalleryStore((state) => state.resolvedQuality());
   const theme = THEMES[themeId];
   const drag = React.useRef(null);
+  const surface = React.useRef(null);
+  const dragged = React.useRef(false);
 
   React.useEffect(() => {
     getGalleryState().loadExhibition();
@@ -158,10 +168,66 @@ const GalleryPage = () => {
     return useGalleryStore.subscribe(sync);
   }, []);
 
-  // camera drag. Listening on window (instead of capturing the pointer) keeps the
-  // canvas's own click events working for paintings and the graffiti wall.
+  // Mouse look: a click on the scene captures the mouse, which then turns the view
+  // directly until Esc (or anything that needs the cursor) lets it go.
+  React.useEffect(() => {
+    const isLocked = () => Boolean(surface.current) && document.pointerLockElement === surface.current;
+    const onLockChange = () => {
+      getGalleryState().set({pointerLocked: isLocked(), hoveredId: null});
+      document.body.style.cursor = "";
+      markActive();
+    };
+    const onMouseMove = (event) => {
+      if (!isLocked()) return;
+      const {movementX = 0, movementY = 0} = event;
+      if (Math.abs(movementX) > LOOK_SPIKE || Math.abs(movementY) > LOOK_SPIKE) return;
+      runtime.look.dx += movementX * LOCKED_LOOK;
+      runtime.look.dy += movementY * LOCKED_LOOK;
+      markActive();
+    };
+    const unsubscribe = useGalleryStore.subscribe((state) => {
+      if (isLocked() && !wantsMouseLook(state)) document.exitPointerLock();
+    });
+    document.addEventListener("pointerlockchange", onLockChange);
+    document.addEventListener("mousemove", onMouseMove);
+    return () => {
+      unsubscribe();
+      document.removeEventListener("pointerlockchange", onLockChange);
+      document.removeEventListener("mousemove", onMouseMove);
+      if (isLocked()) document.exitPointerLock();
+      getGalleryState().set({pointerLocked: false});
+    };
+  }, []);
+
+  const handleClick = (event) => {
+    const state = getGalleryState();
+    if (state.pointerLocked) {
+      // with the mouse captured, a click acts on whatever the visitor is facing
+      requestInteract();
+      return;
+    }
+    // a painting under the cursor has already opened by now, which rules the capture out
+    const element = surface.current;
+    const pointerType = event.nativeEvent.pointerType;
+    if (dragged.current || !wantsMouseLook({...state, panel: null}) || !element.requestPointerLock) return;
+    if (pointerType && pointerType !== "mouse") return;
+    state.set({panel: null});
+    try {
+      // refused for a moment right after Esc; dragging still looks around meanwhile
+      const request = element.requestPointerLock();
+      if (request && request.catch) request.catch(() => {});
+    } catch (error) {
+      // same
+    }
+  };
+
+  // Dragging looks around too: on touch screens, and with a mouse that isn't captured.
+  // Listening on window (instead of capturing the pointer) keeps the canvas's own
+  // click events working for paintings and the graffiti wall.
   const handlePointerDown = (event) => {
-    if (event.button !== 0 || getGalleryState().mode === "graffiti") return;
+    const state = getGalleryState();
+    if (event.button !== 0 || state.mode === "graffiti" || state.pointerLocked) return;
+    dragged.current = false;
     drag.current = {x: event.clientX, y: event.clientY, moved: false};
     const onMove = (moveEvent) => {
       const start = drag.current;
@@ -170,9 +236,10 @@ const GalleryPage = () => {
       const dy = moveEvent.clientY - start.y;
       if (!start.moved && Math.hypot(dx, dy) < 3) return;
       start.moved = true;
+      dragged.current = true;
       runtime.dragging = true;
-      runtime.camera.yaw -= dx * DRAG_YAW;
-      runtime.camera.pitch = Math.max(-0.9, Math.min(0.7, runtime.camera.pitch - dy * DRAG_PITCH));
+      runtime.look.dx += dx * DRAG_LOOK.yaw;
+      runtime.look.dy += dy * DRAG_LOOK.pitch;
       start.x = moveEvent.clientX;
       start.y = moveEvent.clientY;
       markActive();
@@ -199,7 +266,9 @@ const GalleryPage = () => {
         <div
           className={`gallery__canvas${mode === "graffiti" ? " gallery__canvas--draw" : ""}`}
           style={{filter: mode === "photo" ? PHOTO_FILTERS[photoFilter].css : "none"}}
+          ref={surface}
           onPointerDown={handlePointerDown}
+          onClick={handleClick}
           onWheel={handleWheel}
         >
           <Canvas

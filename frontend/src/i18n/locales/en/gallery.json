@@ -79,20 +79,21 @@
     "music": "Background music",
     "on": "On",
     "off": "Off",
-    "volume": "Volume {{percent}}%"
+    "volume": "Volume {{percent}}%",
+    "sensitivity": "Look sensitivity {{value}}×",
+    "invertY": "Invert vertical look"
   },
   "help": {
     "title": "Controls",
     "keyNames": {
-      "drag": "Drag"
+      "mouse": "Mouse"
     },
     "keys": {
-      "move": "Walk forward and back (arrow keys work too)",
-      "turn": "Turn left and right; the camera follows behind",
-      "strafe": "Step sideways",
+      "move": "Walk forward, back and sideways (↑ ↓ walk too)",
+      "turn": "Turn left and right (← → turn too)",
       "run": "Hold to run",
-      "look": "Look around; the camera returns behind you when you let go",
-      "interact": "Interact: sit, portals, graffiti",
+      "look": "Click the scene, then move the mouse to look around; Esc frees the cursor, and dragging works too",
+      "interact": "Interact: sit, portals, graffiti (or click while looking around)",
       "view": "View the artwork in front of you",
       "emotes": "Wave, thumbs up, dance, nod",
       "jump": "Jump",
@@ -116,7 +117,9 @@
     "musicOn": "Play music",
     "settings": "Settings",
     "help": "Controls ?",
-    "leave": "Leave the gallery"
+    "leave": "Leave the gallery",
+    "lookHint": "Click the scene to look around with the mouse",
+    "releaseHint": "Esc shows the cursor · click to interact"
   },
   "prompt": {
     "standUp": "Stand up",
@@ -140,7 +143,7 @@
     "loading": "Loading the exhibition…",
     "enter": "Enter the exhibition",
     "offline": "Can't reach the server right now, so sample works are on view",
-    "hints": "Headphones recommended · W/S to walk · A/D to turn",
+    "hints": "Headphones recommended · WASD to walk · mouse to look",
     "hallOfLight": "Hall of Light",
     "skip": "Skip ›"
   },

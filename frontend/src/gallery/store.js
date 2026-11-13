@@ -3,7 +3,7 @@ import {sampleExhibition, emptyExhibition, fetchExhibition, buildExhibition} fro
 
 const STORAGE_KEY = "igallery:preferences";
 // Only these keys survive a reload; everything else is session state.
-const PERSISTED_KEYS = ["theme", "season", "weather", "outfit", "musicOn", "volume", "quality", "visited", "cameraMode"];
+const PERSISTED_KEYS = ["theme", "season", "weather", "outfit", "musicOn", "volume", "quality", "visited", "cameraMode", "lookSensitivity", "invertY"];
 
 const loadPreferences = () => {
   try {
@@ -27,7 +27,12 @@ export const useGalleryStore = create((set, get) => ({
   room: "main",
   // explore | photo | graffiti
   mode: "explore",
-  cameraMode: "third",
+  cameraMode: "first",
+  // multiplies how far the view turns for a given mouse or finger movement
+  lookSensitivity: 1,
+  invertY: false,
+  // the mouse is captured and turns the view directly
+  pointerLocked: false,
   focusedId: null,
   hoveredId: null,
   detailId: null,

@@ -15,7 +15,7 @@ export const playEmote = (name) => {
   const state = getGalleryState();
   if (state.phase !== "explore" || state.detailId) return;
   runtime.player.seat = null;
-  runtime.emote = name;
+  runtime.player.emote = name;
   markActive();
 };
 
@@ -77,7 +77,7 @@ export const startIntro = () => {
   markActive(8000);
   // wave hello once the robot has appeared
   setTimeout(() => {
-    runtime.emote = "Wave";
+    runtime.player.emote = "Wave";
     markActive();
   }, 3600);
   setTimeout(() => {

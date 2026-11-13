@@ -105,6 +105,8 @@ const SettingsPanel = () => {
   const musicOn = useGalleryStore((state) => state.musicOn);
   const volume = useGalleryStore((state) => state.volume);
   const cameraMode = useGalleryStore((state) => state.cameraMode);
+  const lookSensitivity = useGalleryStore((state) => state.lookSensitivity);
+  const invertY = useGalleryStore((state) => state.invertY);
   const set = useGalleryStore((state) => state.set);
   const {t} = useTranslation("gallery");
   return (
@@ -116,6 +118,14 @@ const SettingsPanel = () => {
         <div className="chips">
           <button className={`chip${cameraMode === "third" ? " chip--active" : ""}`} onClick={() => set({cameraMode: "third"})}>{t("settings.thirdPerson")}</button>
           <button className={`chip${cameraMode === "first" ? " chip--active" : ""}`} onClick={() => set({cameraMode: "first"})}>{t("settings.firstPerson")}</button>
+        </div>
+      </div>
+      <div className="panel__section">
+        <div className="panel__label">{t("settings.sensitivity", {value: lookSensitivity.toFixed(1)})}</div>
+        <input className="range" type="range" min="0.3" max="2.5" step="0.1" value={lookSensitivity}
+          onChange={(event) => set({lookSensitivity: Number(event.target.value)})} />
+        <div className="chips" style={{marginTop: 12}}>
+          <button className={`chip${invertY ? " chip--active" : ""}`} onClick={() => set({invertY: !invertY})}>{t("settings.invertY")}</button>
         </div>
       </div>
       <div className="panel__section">
@@ -144,13 +154,12 @@ const SettingsPanel = () => {
 };
 
 // Each row: the keys to show and a gallery:help.keys.<id> description. Key caps
-// listed in TRANSLATED_KEYS are words (e.g. "drag") and are translated too.
+// listed in TRANSLATED_KEYS are words (e.g. "mouse") and are translated too.
 const KEYS = [
-  [["W", "S"], "move"],
-  [["A", "D"], "turn"],
-  [["Q", "E"], "strafe"],
+  [["W", "A", "S", "D"], "move"],
+  [["mouse"], "look"],
+  [["Q", "E"], "turn"],
   [["Shift"], "run"],
-  [["drag"], "look"],
   [["F"], "interact"],
   [["Enter"], "view"],
   [["1", "2", "3", "4"], "emotes"],
@@ -162,7 +171,7 @@ const KEYS = [
   [["T"], "theme"],
   [["Esc"], "close"],
 ];
-const TRANSLATED_KEYS = ["drag"];
+const TRANSLATED_KEYS = ["mouse"];
 
 const HelpPanel = () => {
   const {t} = useTranslation("gallery");

@@ -87,7 +87,8 @@ const Painting = ({artwork, placement, anchor, floating = false, poolBounds}) =>
 
   const handleOver = (event) => {
     event.stopPropagation();
-    if (getGalleryState().mode !== "explore") return;
+    // a captured mouse has no cursor to point with
+    if (getGalleryState().mode !== "explore" || getGalleryState().pointerLocked) return;
     getGalleryState().set({hoveredId: artwork.id});
     document.body.style.cursor = "pointer";
   };
@@ -98,7 +99,8 @@ const Painting = ({artwork, placement, anchor, floating = false, poolBounds}) =>
   const handleClick = (event) => {
     event.stopPropagation();
     // ignore the click that ends a camera drag
-    if (event.delta > 6 || getGalleryState().mode !== "explore" || getGalleryState().phase !== "explore") return;
+    const state = getGalleryState();
+    if (event.delta > 6 || state.mode !== "explore" || state.phase !== "explore" || state.pointerLocked) return;
     document.body.style.cursor = "";
     openDetail(artwork.id);
   };

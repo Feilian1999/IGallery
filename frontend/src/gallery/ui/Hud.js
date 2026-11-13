@@ -36,6 +36,7 @@ const Hud = () => {
   const cameraMode = useGalleryStore((state) => state.cameraMode);
   const prompt = useGalleryStore((state) => state.prompt);
   const detailId = useGalleryStore((state) => state.detailId);
+  const pointerLocked = useGalleryStore((state) => state.pointerLocked);
   const set = useGalleryStore((state) => state.set);
   const togglePanel = useGalleryStore((state) => state.togglePanel);
   const {t} = useTranslation("gallery");
@@ -82,6 +83,8 @@ const Hud = () => {
       <Panels />
       <MiniMap />
 
+      {pointerLocked && cameraMode === "first" && <div className="crosshair" />}
+
       <div className="dock">
         {prompt && (
           <div className="prompt glass" key={`${prompt.key}${prompt.label}`}>
@@ -89,6 +92,7 @@ const Hud = () => {
             {t(prompt.label)}
           </div>
         )}
+        <div className="look-hint">{pointerLocked ? t("hud.releaseHint") : t("hud.lookHint")}</div>
         <div className="emotes glass">
           {EMOTES.map((emote) => (
             <button key={emote.id} className="emote" onClick={() => playEmote(emote.id)}>

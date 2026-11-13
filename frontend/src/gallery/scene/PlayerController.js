@@ -5,17 +5,16 @@ import {useKeyboardControls} from "@react-three/drei";
 import {runtime, markActive} from "../runtime";
 import {getGalleryState} from "../store";
 import {GRAFFITI, WALL_HEIGHT} from "../layout/mainHall";
-import {resolveCircle} from "../collision";
+import {stepPlayer} from "../player";
 import {enterPortal, openDetail} from "../actions";
 import audio from "../audio/AudioEngine";
 
-const WALK_SPEED = 3.2;
-const RUN_SPEED = 5.6;
-const TURN_SPEED = 2;
-// How fast the camera swings back behind the robot: quickly while walking or
-// turning, gently after the visitor lets go of a camera drag.
-const FOLLOW_RATE = {active: 10, idle: 2.5};
-const BODY_RADIUS = 0.38;
+// radians per second while a turn key is held
+const TURN_SPEED = 2.4;
+// How quickly the camera reaches its place: the third person camera trails the robot a
+// little, and a first person camera gliding in from elsewhere arrives and then stays put.
+const FOLLOW_RATE = {third: 10, firstArrive: 12};
+const PHOTO_PITCH = [-0.9, 0.7];
 const FOCUS_RANGE = 2.3;
 const STRIDE = 0.72;
 const TRAIL_STEP = 0.6;
@@ -23,12 +22,12 @@ const TRAIL_LIMIT = 500;
 const FOOTPRINT_LIMIT = 160;
 const FOLLOW_DISTANCE = 4.8;
 const EYE_HEIGHT = 1.55;
+const SEATED_EYE_HEIGHT = 1.12;
 const FOCUS_DISTANCE = 3.9;
 // Shift the focus shot right so the wall label beside the painting is in frame.
 const FOCUS_SHIFT = 0.7;
 const DWELL_TO_VISIT_MS = 1500;
 
-const lerpAngle = (from, to, t) => from + Math.atan2(Math.sin(to - from), Math.cos(to - from)) * t;
 const smoothstep = (t) => t * t * (3 - 2 * t);
 
 // The entrance camera move: from outside the door, gliding in to the follow position.
@@ -38,8 +37,6 @@ const INTRO_PATH = [
 ];
 const INTRO_BLEND_END = 5.8;
 
-const forwardOf = (yaw) => [-Math.sin(yaw), -Math.cos(yaw)];
-
 const PlayerController = () => {
   const [, getKeys] = useKeyboardControls();
   const {camera} = useThree();
@@ -48,6 +45,11 @@ const PlayerController = () => {
     lookAt: new THREE.Vector3(),
     lastPosition: new THREE.Vector3(),
     snap: true,
+    // which camera pose is in charge, and whether a first person camera has arrived at the eyes
+    pose: null,
+    settled: false,
+    eye: EYE_HEIGHT,
+    mode: null,
     stride: 0,
     trailStep: 0,
     footSide: 1,
@@ -65,10 +67,10 @@ const PlayerController = () => {
 
   const placeAt = (position, heading) => {
     runtime.player.position.set(position[0], 0, position[1]);
+    runtime.player.velocity.set(0, 0, 0);
     runtime.player.heading = heading;
+    runtime.player.pitch = 0;
     runtime.player.seat = null;
-    runtime.camera.yaw = heading + Math.PI;
-    runtime.camera.pitch = -0.12;
     local.current.snap = true;
     local.current.lastPosition.copy(runtime.player.position);
   };
@@ -78,10 +80,11 @@ const PlayerController = () => {
     placeAt(room.spawn.position, room.spawn.heading);
   }, []);
 
+  // The third person camera: behind the robot, raised or lowered by where the visitor looks.
   const followPose = (target, look) => {
     const player = runtime.player;
-    const {yaw, pitch} = runtime.camera;
-    const elevation = THREE.MathUtils.clamp(0.36 - pitch, 0.1, 1.05);
+    const yaw = player.heading + Math.PI;
+    const elevation = THREE.MathUtils.clamp(0.48 - player.pitch, 0.1, 1.05);
     // rooms with a low roof over the visitor (the festival walkway) set their own ceiling
     const state = getGalleryState();
     const layout = state.exhibition.rooms[state.room].layout;
@@ -124,52 +127,45 @@ const PlayerController = () => {
       runtime.teleport = null;
     }
 
-    // --- movement -------------------------------------------------------
-    const canMove = state.phase === "explore" && state.mode === "explore" && !state.detailId && !state.transition && !state.mapOpen;
+    // --- looking and moving ----------------------------------------------
+    const lookFree = state.phase === "explore" && !state.detailId && !state.mapOpen;
+    const canMove = lookFree && state.mode === "explore" && !state.transition;
     const keys = getKeys();
-    let moveX = 0;
-    let moveZ = 0;
-    // A/D turn the robot, W/S walk along where it faces, Q/E step sideways
-    const turn = canMove ? Number(keys.turnLeft) - Number(keys.turnRight) : 0;
-    if (canMove) {
-      player.heading += turn * TURN_SPEED * dt;
-      const heading = player.heading;
-      const forward = Number(keys.forward) - Number(keys.backward);
-      const right = Number(keys.right) - Number(keys.left);
-      moveX = Math.sin(heading) * forward - Math.cos(heading) * right;
-      moveZ = Math.cos(heading) * forward + Math.sin(heading) * right;
-      if (turn) markActive(400);
-    }
-    const length = Math.hypot(moveX, moveZ);
-    player.moving = length > 0;
-    player.running = player.moving && keys.run;
-    if (player.moving && player.seat) player.seat = null;
+    const lookX = runtime.look.dx * state.lookSensitivity;
+    const lookY = runtime.look.dy * state.lookSensitivity * (state.invertY ? -1 : 1);
+    runtime.look.dx = 0;
+    runtime.look.dy = 0;
 
-    l.lastPosition.copy(player.position);
-    if (player.moving) {
-      const speed = player.running ? RUN_SPEED : WALK_SPEED;
-      player.position.x += (moveX / length) * speed * dt;
-      player.position.z += (moveZ / length) * speed * dt;
-      markActive(400);
-    }
-
-    // --- the camera stays behind the robot ---------------------------------
-    // A drag looks around for a moment (in first person it turns the robot too);
-    // once released, the camera swings back behind it.
-    if (state.phase === "explore" && state.mode === "explore") {
-      if (runtime.dragging) {
-        if (state.cameraMode === "first") player.heading = runtime.camera.yaw - Math.PI;
-      } else {
-        const behind = player.heading + Math.PI;
-        const rate = player.moving || turn ? FOLLOW_RATE.active : FOLLOW_RATE.idle;
-        const yaw = lerpAngle(runtime.camera.yaw, behind, 1 - Math.exp(-dt * rate));
-        if (Math.abs(yaw - runtime.camera.yaw) > 1e-4) markActive(100);
-        runtime.camera.yaw = yaw;
+    // photo mode starts behind the robot, then orbits it without turning it
+    if (l.mode !== state.mode) {
+      l.mode = state.mode;
+      if (state.mode === "photo") {
+        runtime.camera.yaw = player.heading + Math.PI;
+        runtime.camera.pitch = -0.12;
       }
     }
-    if (!player.seat) resolveCircle(player.position, BODY_RADIUS, room.colliders);
+
+    // The mouse (or a drag) turns the view directly, with no smoothing in between;
+    // W/S/A/D walk relative to it and Q/E or the arrow keys turn it from the keyboard.
+    const intent = {forward: 0, strafe: 0, run: Boolean(keys.run), heading: player.heading, pitch: player.pitch};
+    if (lookFree && state.mode === "photo") {
+      runtime.camera.yaw -= lookX;
+      runtime.camera.pitch = THREE.MathUtils.clamp(runtime.camera.pitch - lookY, ...PHOTO_PITCH);
+    } else if (lookFree && state.mode === "explore") {
+      const turn = Number(keys.turnLeft) - Number(keys.turnRight);
+      intent.heading += turn * TURN_SPEED * dt - lookX;
+      intent.pitch -= lookY;
+      if (turn) markActive(400);
+    }
+    if (canMove) {
+      intent.forward = Number(keys.forward) - Number(keys.backward);
+      intent.strafe = Number(keys.right) - Number(keys.left);
+    }
+
+    l.lastPosition.copy(player.position);
+    stepPlayer(player, intent, dt, room.colliders);
     const moved = player.position.distanceTo(l.lastPosition);
-    player.velocity.subVectors(player.position, l.lastPosition).divideScalar(dt || 1 / 60);
+    if (player.moving || moved > 0) markActive(400);
 
     // --- footsteps, footprints and the map trail -------------------------
     if (moved > 0) {
@@ -200,7 +196,7 @@ const PlayerController = () => {
     // --- what is the visitor looking at? --------------------------------
     let focus = null;
     if (state.phase === "explore" && state.mode === "explore" && !state.transition) {
-      const facing = forwardOf(runtime.camera.yaw);
+      const facing = [Math.sin(player.heading), Math.cos(player.heading)];
       let best = FOCUS_RANGE;
       room.artworks.forEach((entry) => {
         const distance = Math.hypot(entry.spot[0] - player.position.x, entry.spot[1] - player.position.z);
@@ -255,7 +251,6 @@ const PlayerController = () => {
           player.seat = seat;
           player.position.set(seat.position[0], 0, seat.position[1]);
           player.heading = seat.heading;
-          runtime.camera.yaw = seat.heading + Math.PI;
         } else if (interactable.type === "portal") {
           enterPortal(interactable.target, interactable.arrival);
         } else if (interactable.type === "graffiti") {
@@ -272,7 +267,9 @@ const PlayerController = () => {
     const target = scratch.position;
     const look = scratch.look;
     let follow = 1 - Math.exp(-dt * 4);
+    let pose = "third";
     if (state.phase !== "explore") {
+      pose = "intro";
       const t = state.phase === "gate" ? 0 : (now - runtime.introStartedAt) / 1000;
       const [from, to] = INTRO_PATH;
       if (t <= to.t) {
@@ -287,6 +284,7 @@ const PlayerController = () => {
       }
       follow = 1;
     } else if (state.mode === "photo") {
+      pose = "photo";
       const {yaw, pitch, photoDistance} = runtime.camera;
       const elevation = THREE.MathUtils.clamp(0.3 - pitch, -0.1, 1.3);
       target.set(
@@ -297,18 +295,24 @@ const PlayerController = () => {
       look.set(player.position.x, 1.1, player.position.z);
       follow = 1 - Math.exp(-dt * 10);
     } else if (state.mode === "graffiti") {
+      pose = "graffiti";
       target.set(GRAFFITI.position[0] + GRAFFITI.normal[0] * 4.6, 2.1, GRAFFITI.position[2] + GRAFFITI.normal[1] * 4.6);
       look.set(GRAFFITI.position[0], GRAFFITI.position[1], GRAFFITI.position[2]);
     } else if (state.cameraMode === "first") {
-      const {yaw, pitch} = runtime.camera;
-      target.set(player.position.x, EYE_HEIGHT, player.position.z);
+      pose = "first";
+      const {heading, pitch} = player;
+      l.eye = THREE.MathUtils.lerp(l.eye, player.seat ? SEATED_EYE_HEIGHT : EYE_HEIGHT, 1 - Math.exp(-dt * 8));
+      if (Math.abs(l.eye - (player.seat ? SEATED_EYE_HEIGHT : EYE_HEIGHT)) > 0.002) markActive(200);
+      target.set(player.position.x, l.eye, player.position.z);
       look.set(
-          target.x - Math.sin(yaw) * Math.cos(pitch),
+          target.x + Math.sin(heading) * Math.cos(pitch),
           target.y + Math.sin(pitch),
-          target.z - Math.cos(yaw) * Math.cos(pitch),
+          target.z + Math.cos(heading) * Math.cos(pitch),
       );
-      follow = 1 - Math.exp(-dt * 18);
+      // once the camera is at the eyes it is locked to them: any lag here is felt as mouse lag
+      follow = l.settled ? 1 : 1 - Math.exp(-dt * FOLLOW_RATE.firstArrive);
     } else if (focus) {
+      pose = "focus";
       const {position, normal} = focus.placement;
       const right = [-normal[1], normal[0]];
       // drift slowly closer the longer the visitor looks
@@ -318,6 +322,11 @@ const PlayerController = () => {
       if (now - l.focusSince < 9000) markActive(200);
     } else {
       followPose(target, look);
+      follow = 1 - Math.exp(-dt * FOLLOW_RATE.third);
+    }
+    if (pose !== l.pose) {
+      l.pose = pose;
+      l.settled = false;
     }
 
     const before = scratch.head.copy(camera.position);
@@ -325,9 +334,11 @@ const PlayerController = () => {
       camera.position.copy(target);
       l.lookAt.copy(look);
       l.snap = false;
+      l.settled = true;
     } else {
       camera.position.lerp(target, follow);
       l.lookAt.lerp(look, follow);
+      if (!l.settled && camera.position.distanceToSquared(target) < 0.001 && l.lookAt.distanceToSquared(look) < 0.01) l.settled = true;
     }
     camera.lookAt(l.lookAt);
     if (before.distanceToSquared(camera.position) > 1e-6) markActive(250);

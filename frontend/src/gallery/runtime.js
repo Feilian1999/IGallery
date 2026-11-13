@@ -1,24 +1,19 @@
 import * as THREE from "three";
+import {createPlayer} from "./player";
 
 // Per-frame state shared between the 3D scene and the overlay UI. It lives
 // outside React so updating it every frame never triggers a re-render.
 export const runtime = {
-  player: {
-    position: new THREE.Vector3(),
-    velocity: new THREE.Vector3(),
-    heading: Math.PI,
-    moving: false,
-    running: false,
-    // null, or the bench interactable the robot is sitting on
-    seat: null,
-  },
+  // the local visitor's body; the view follows its heading and pitch
+  player: createPlayer(() => new THREE.Vector3()),
+  // the photo mode camera, orbiting the robot
   camera: {
     yaw: 0,
     pitch: -0.12,
     photoDistance: 4.5,
   },
-  // emote requested by the UI or keyboard, consumed by the robot
-  emote: null,
+  // mouse and touch look travel (radians) not yet applied by the player controller
+  look: {dx: 0, dy: 0},
   // {position: [x, z], heading} requested by the map or a portal, applied by the player controller
   teleport: null,
   // ms timestamp (performance.now) when the robot last appeared, drives the spawn effect
