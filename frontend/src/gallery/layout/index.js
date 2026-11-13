@@ -3,6 +3,7 @@ import {viewingSpot} from "./geometry";
 import * as mainHall from "./mainHall";
 import * as annex from "./annex";
 import * as festival from "./festival";
+import * as parkour from "./parkour";
 
 const entry = (artwork, placement) => ({artwork, placement, spot: viewingSpot(placement)});
 
@@ -10,6 +11,7 @@ const entry = (artwork, placement) => ({artwork, placement, spot: viewingSpot(pl
 // Room names are translated at render time with common:rooms.<id>.
 export const ROOM_INFO = {
   main: {id: "main", subtitle: "Main Hall", spawn: mainHall.SPAWN, bounds: mainHall.BOUNDS},
+  parkour: {id: "parkour", subtitle: "Upstairs", spawn: parkour.SPAWN, bounds: parkour.BOUNDS},
   annex: {id: "annex", subtitle: "Floating Room", spawn: annex.SPAWN, bounds: annex.BOUNDS},
   festival: {id: "festival", subtitle: "Summer Festival", spawn: festival.SPAWN, bounds: festival.BOUNDS},
 };
@@ -36,9 +38,16 @@ export const buildRooms = (artworks, placements) => {
       artworks: mainArtworks,
       layout: mainHall,
     },
+    parkour: {
+      ...ROOM_INFO.parkour,
+      colliders: parkour.COLLIDERS,
+      interactables: parkour.INTERACTABLES,
+      artworks: [],
+      layout: parkour,
+    },
     annex: {
       ...ROOM_INFO.annex,
-      colliders: annex.colliders(ring),
+      colliders: annex.COLLIDERS,
       interactables: annex.INTERACTABLES,
       artworks: ring.map((placement, i) => entry(artworks[i], placement)),
       layout: annex,

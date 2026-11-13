@@ -29,6 +29,7 @@
   "requestFailed": "請求失敗（{{status}}）",
   "rooms": {
     "main": "主展廳",
+    "parkour": "樓上跑酷",
     "annex": "懸浮展廳",
     "festival": "夏日祭典"
   },

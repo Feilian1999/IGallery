@@ -29,6 +29,7 @@
   "requestFailed": "リクエストに失敗しました（{{status}}）",
   "rooms": {
     "main": "メインホール",
+    "parkour": "上階パルクール",
     "annex": "浮遊展示室",
     "festival": "夏祭り"
   },

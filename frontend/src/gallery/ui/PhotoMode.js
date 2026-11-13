@@ -2,10 +2,8 @@ import * as React from "react";
 import {useTranslation} from "react-i18next";
 import CloseIcon from "@mui/icons-material/Close";
 import DownloadIcon from "@mui/icons-material/Download";
-import {EMOTES} from "../outfits";
 import {runtime} from "../runtime";
 import {useGalleryStore} from "../store";
-import {playEmote} from "../actions";
 import audio from "../audio/AudioEngine";
 import {formatDate} from "../../i18n";
 
@@ -94,11 +92,6 @@ const PhotoMode = () => {
         <div className="chips" style={{flexDirection: "column"}}>
           <button className={`chip${photo.depthOfField ? " chip--active" : ""}`} onClick={() => setPhoto({depthOfField: !photo.depthOfField})}>{t("photo.depthOfField")}</button>
           <button className={`chip${photo.frame ? " chip--active" : ""}`} onClick={() => setPhoto({frame: !photo.frame})}>{t("photo.frame")}</button>
-        </div>
-        <div className="chips" style={{maxWidth: 170}}>
-          {EMOTES.slice(0, 4).map((emote) => (
-            <button key={emote.id} className="chip" onClick={() => playEmote(emote.id)}>{t(`emotes.${emote.id}`)}</button>
-          ))}
         </div>
         <button className="shutter" onClick={shoot} aria-label={t("photo.shoot")} />
       </div>

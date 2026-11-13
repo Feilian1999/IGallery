@@ -13,15 +13,18 @@ import FrameDriver from "./FrameDriver";
 // The other rooms are only downloaded when the visitor first goes there.
 const Annex = React.lazy(() => import("./Annex"));
 const Festival = React.lazy(() => import("./Festival"));
+const Parkour = React.lazy(() => import("./Parkour"));
 
-const ANNEX_FOG = ["#07070c", 14, 30];
+const ANNEX_FOG = ["#07070c", 18, 40];
+const PARKOUR_FOG = ["#06070d", 30, 110];
 const FESTIVAL_FOG = ["#4a3550", 30, 90];
 
 const GalleryScene = () => {
   const themeId = useGalleryStore((state) => state.theme);
   const roomId = useGalleryStore((state) => state.room);
   const theme = THEMES[themeId];
-  const fog = roomId === "annex" ? ANNEX_FOG : roomId === "festival" ? FESTIVAL_FOG : theme.fog;
+  const fog = {annex: ANNEX_FOG, festival: FESTIVAL_FOG, parkour: PARKOUR_FOG}[roomId] || theme.fog;
+  const Room = {main: MainHall, festival: Festival, parkour: Parkour}[roomId] || Annex;
 
   return (
     <>
@@ -29,7 +32,7 @@ const GalleryScene = () => {
       <fog attach="fog" args={fog} />
       <Lighting />
       <React.Suspense fallback={null}>
-        {roomId === "main" ? <MainHall /> : roomId === "festival" ? <Festival /> : <Annex />}
+        <Room />
       </React.Suspense>
       <React.Suspense fallback={null}>
         <Robot />

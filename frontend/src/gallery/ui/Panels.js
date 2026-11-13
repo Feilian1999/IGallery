@@ -2,9 +2,8 @@ import * as React from "react";
 import {useTranslation} from "react-i18next";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import THEMES, {SEASONS, WEATHERS} from "../themes";
-import {BODY_COLORS, TRIM_COLORS, ACCESSORIES, EMOTES} from "../outfits";
+import {BODY_COLORS, TRIM_COLORS, ACCESSORIES} from "../outfits";
 import {useGalleryStore} from "../store";
-import {playEmote} from "../actions";
 
 // translated with gallery:qualities.<id>
 const QUALITIES = ["auto", "high", "balanced", "low"];
@@ -46,14 +45,6 @@ const OutfitPanel = () => {
             <button key={id} className={`chip${outfit.accessory === id ? " chip--active" : ""}`} onClick={() => setOutfit({accessory: id})}>
               {t(`outfits.accessory.${id}`)}
             </button>
-          ))}
-        </div>
-      </div>
-      <div className="panel__section">
-        <div className="panel__label">{t("outfit.tryEmote")}</div>
-        <div className="chips">
-          {EMOTES.map((emote) => (
-            <button key={emote.id} className="chip" onClick={() => playEmote(emote.id)}>{t(`emotes.${emote.id}`)}</button>
           ))}
         </div>
       </div>
@@ -162,8 +153,8 @@ const KEYS = [
   [["Shift"], "run"],
   [["F"], "interact"],
   [["Enter"], "view"],
-  [["1", "2", "3", "4"], "emotes"],
   [["Space"], "jump"],
+  [["X"], "crouch"],
   [["V"], "camera"],
   [["M"], "map"],
   [["P"], "photo"],

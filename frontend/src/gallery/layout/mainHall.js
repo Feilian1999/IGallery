@@ -1,10 +1,10 @@
-import {segmentNormal, placeOn, lerpPoint, viewingSpot, capsule, boxCapsule, normalize} from "./geometry";
+import {segmentNormal, placeOn, lerpPoint, viewingSpot, capsule, boxCapsule, normalize, slab} from "./geometry";
 
 // Main hall floor plan (meters, +x east, +z south):
 //
 //            curved north wall (paintings n1 n2 n3)
 //        D ⌒⌒⌒⌒⌒⌒⌒⌒⌒⌒⌒⌒⌒⌒⌒⌒ E
-//   graffiti /    benches   \ portal
+//   graffiti /    benches   \ stairs up
 //          C       (●)        F       ● floating piece on a platform, the way to the festival
 //   e1     |   P2 ╲    ╱ P1   |   w1   P1 / P2 freestanding partitions
 //          B ─ door ─ window ─ A       south wall, opens to the outdoors
@@ -151,7 +151,29 @@ export const BENCH_SIZE = {length: 2.2, depth: 0.55, height: 0.46};
 export const PLATFORM = {center: [0, -2.6], radius: 1.7, height: 0.22};
 
 const chamferNormal = (a, b) => segmentNormal(a, b, CENTER);
-export const PORTAL = {...placeOn(lerpPoint(E, F, 0.5), chamferNormal(E, F), 0.45, 0), target: "annex"};
+// A flight of stairs climbs the north-west wall to a landing, where a portal leads
+// upstairs. `foot`, `head` and `wall` are where the flight starts, where it meets the
+// landing and where the landing meets the wall.
+const STAIR_STEPS = 9;
+const stairWall = lerpPoint(E, F, 0.5);
+const stairOut = chamferNormal(E, F);
+const stairPoint = (distance) => [stairWall[0] + stairOut[0] * distance, stairWall[1] + stairOut[1] * distance];
+export const STAIRS = {
+  steps: STAIR_STEPS,
+  rise: STAIR_STEPS * 0.2,
+  run: STAIR_STEPS * 0.35,
+  width: 2.6,
+  landing: 1.7,
+  // the way up, on the floor plan
+  direction: [-stairOut[0], -stairOut[1]],
+  rotationY: Math.atan2(stairOut[0], stairOut[1]),
+  wall: stairWall,
+};
+STAIRS.head = stairPoint(STAIRS.landing);
+STAIRS.foot = stairPoint(STAIRS.landing + STAIRS.run);
+export const PORTAL = {...placeOn(stairWall, stairOut, 0.3, STAIRS.rise), target: "parkour"};
+// where the visitor lands when coming back down: at the foot of the stairs, facing the hall
+export const STAIRS_ARRIVAL = {position: stairPoint(STAIRS.landing + STAIRS.run + 1.4), heading: Math.atan2(stairOut[0], stairOut[1])};
 // The piece floating above the platform is also the way to the summer festival:
 // walk up to the platform and step through it.
 export const FESTIVAL_GATE = {position: PLATFORM.center, radius: PLATFORM.radius + 1.1, target: "festival"};
@@ -173,13 +195,18 @@ export const COLLIDERS = {
     [PLATFORM.center[0], PLATFORM.center[1], PLATFORM.radius],
   ],
   rings: [],
+  slabs: [
+    // the flight is one ramp underfoot, so walking it is smooth
+    slab({center: stairPoint(STAIRS.landing + STAIRS.run / 2), direction: STAIRS.direction, length: STAIRS.run, width: STAIRS.width, top: [0, STAIRS.rise]}),
+    slab({center: stairPoint(STAIRS.landing / 2), direction: STAIRS.direction, length: STAIRS.landing, width: STAIRS.width, top: STAIRS.rise}),
+  ],
 };
 
 // Things the visitor can press F on. `radius` is how close they need to be.
 // `label` is a gallery: translation key for the on-screen prompt.
 export const INTERACTABLES = [
   ...BENCHES.map((bench, i) => ({id: `bench${i}`, type: "bench", position: bench.position, radius: 1.5, label: "prompt.sit", seat: bench})),
-  {id: "portal", type: "portal", position: viewingSpot(PORTAL, 1.2), radius: 1.6, label: "prompt.enterAnnex", target: "annex"},
+  {id: "portal", type: "portal", position: stairPoint(STAIRS.landing / 2), radius: 1.5, minHeight: STAIRS.rise - 0.4, label: "prompt.toParkour", target: "parkour"},
   {id: "festival", type: "portal", position: FESTIVAL_GATE.position, radius: FESTIVAL_GATE.radius, label: "prompt.toFestival", target: "festival"},
   {id: "graffiti", type: "graffiti", position: viewingSpot(GRAFFITI, 2.2), radius: 2.2, label: "prompt.startGraffiti"},
 ];

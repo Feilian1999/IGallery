@@ -45,13 +45,6 @@
       "headphones": "Headphones"
     }
   },
-  "emotes": {
-    "Wave": "Wave",
-    "ThumbsUp": "Thumbs up",
-    "Dance": "Dance",
-    "Yes": "Nod",
-    "Jump": "Jump"
-  },
   "qualities": {
     "auto": "Auto",
     "high": "High",
@@ -62,8 +55,7 @@
     "title": "Outfit",
     "body": "Body color",
     "trim": "Joints and trim",
-    "accessory": "Accessory",
-    "tryEmote": "Try a move"
+    "accessory": "Accessory"
   },
   "theme": {
     "title": "Gallery theme",
@@ -91,18 +83,18 @@
     "keys": {
       "move": "Walk forward, back and sideways (↑ ↓ walk too)",
       "turn": "Turn left and right (← → turn too)",
-      "run": "Hold to run",
+      "run": "Hold to sprint (while walking forward)",
       "look": "Click the scene, then move the mouse to look around; Esc frees the cursor, and dragging works too",
       "interact": "Interact: sit, portals, graffiti (or click while looking around)",
       "view": "View the artwork in front of you",
-      "emotes": "Wave, thumbs up, dance, nod",
       "jump": "Jump",
       "camera": "Switch first / third person",
       "map": "Gallery map",
       "photo": "Photo mode",
       "outfit": "Outfit",
       "theme": "Theme and weather",
-      "close": "Close panels, leave a mode"
+      "close": "Close panels, leave a mode",
+      "crouch": "Hold to crouch and slow down"
     }
   },
   "hud": {
@@ -128,12 +120,14 @@
     "enterAnnex": "Enter the Floating Room",
     "toFestival": "Go to the Summer Festival",
     "startGraffiti": "Start drawing",
-    "backToMain": "Back to the Main Hall"
+    "backToMain": "Back to the Main Hall",
+    "toParkour": "Go upstairs to the parkour run"
   },
   "portal": {
     "toAnnex": "→ Floating Room",
     "toFestival": "→ Summer Festival",
-    "backToMain": "← Back to the Main Hall"
+    "backToMain": "← Back to the Main Hall",
+    "toParkour": "→ Upstairs Run"
   },
   "painting": {
     "hoverHint": "Click for artwork details"
@@ -203,7 +197,6 @@
   "map": {
     "entrance": "Entrance",
     "toFestival": "To the Summer Festival",
-    "portal": "Portal",
     "graffiti": "Graffiti wall",
     "projection": "Projection",
     "backToMain": "To the Main Hall",
@@ -215,6 +208,7 @@
     "visited": "Visited {{seen}} / {{total}}",
     "visitedGo": "Visited · Click to go",
     "go": "Click to go",
-    "close": "Close map"
+    "close": "Close map",
+    "stairs": "Stairs"
   }
 }

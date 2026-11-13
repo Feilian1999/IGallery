@@ -31,8 +31,10 @@ const Lighting = () => {
     const state = getGalleryState();
     const k = 1 - Math.exp(-Math.min(delta, 0.1) * 3);
     // the annex and the night festival are lit mostly by their own lights
-    const roomScale = roomId === "annex" ? 0.45 : roomId === "festival" ? 0.4 : 1;
-    const dimGoal = state.focusedId ? FOCUS_DIM : 1;
+    const roomScale = roomId === "annex" || roomId === "parkour" ? 0.45 : roomId === "festival" ? 0.4 : 1;
+    // a room that leaves the camera alone when a piece is looked at keeps its light too
+    const spotlit = state.focusedId && state.exhibition.rooms[roomId].layout.FOCUS_ZOOM !== false;
+    const dimGoal = spotlit ? FOCUS_DIM : 1;
     if (Math.abs(dim.current - dimGoal) > 0.002) {
       dim.current = THREE.MathUtils.lerp(dim.current, dimGoal, k);
       markActive(100);
@@ -41,7 +43,7 @@ const Lighting = () => {
     hemisphere.current.intensity = theme.hemisphere[2] * dim.current * roomScale;
     key.current.intensity = theme.key * dim.current * roomScale;
 
-    const entry = state.focusedId && state.exhibition.rooms[roomId].artworks.find((item) => item.artwork.id === state.focusedId);
+    const entry = spotlit && state.exhibition.rooms[roomId].artworks.find((item) => item.artwork.id === state.focusedId);
     if (entry) {
       const {position, normal} = entry.placement;
       spot.current.position.set(position[0] + normal[0] * 2.4, position[1] + 2.6, position[2] + normal[1] * 2.4);

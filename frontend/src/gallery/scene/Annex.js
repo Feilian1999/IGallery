@@ -4,38 +4,39 @@ import * as THREE from "three";
 import {useFrame, useThree} from "@react-three/fiber";
 import {useTranslation} from "react-i18next";
 import {MeshReflectorMaterial, useTexture} from "@react-three/drei";
-import {RADIUS, PROJECTION, PORTAL} from "../layout/annex";
+import {RADIUS, WALL_HEIGHT, PROJECTION, PORTAL, ORBIT, livePosition} from "../layout/annex";
 import {useGalleryStore, getGalleryState} from "../store";
 import {markActive} from "../runtime";
 import Painting from "./Painting";
 import Portal from "./Portal";
 
-const WALL_HEIGHT = 7;
 const PROJECTOR_HEIGHT = 6.4;
+const ORIGIN = {position: [0, 0, 0], rotationY: 0};
 const CYCLE_MS = 7000;
 
-// One artwork hovering above its glowing pedestal disc.
-const FloatingPiece = ({entry, index}) => {
+// One artwork riding the carousel: it circles the middle of the hall on its own
+// orbit, rising and sinking a little, with a pool of light following on the floor.
+const FloatingPiece = ({entry}) => {
   const group = React.useRef();
-  const {placement} = entry;
-  const frustum = React.useMemo(() => new THREE.Frustum(), []);
-  const matrix = React.useMemo(() => new THREE.Matrix4(), []);
-  const bounds = React.useMemo(() => new THREE.Sphere(new THREE.Vector3(...placement.position), 1.8), [placement]);
-  useFrame(({camera, clock}) => {
-    // pieces behind the camera don't need to bob
-    matrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-    frustum.setFromProjectionMatrix(matrix);
-    if (!frustum.intersectsSphere(bounds)) return;
-    const time = clock.elapsedTime + index * 1.3;
-    group.current.position.y = Math.sin(time * 0.7) * 0.1;
-    group.current.rotation.y = Math.sin(time * 0.3) * 0.06;
+  const glow = React.useRef();
+  // where the piece is now, for the painting's own distance checks
+  const anchor = React.useMemo(() => [...entry.placement.position], [entry]);
+  useFrame(() => {
+    const [x, y, z, angle] = livePosition(entry);
+    group.current.position.set(x, y, z);
+    // facing out from the middle; both faces show the artwork
+    group.current.rotation.y = Math.PI - angle;
+    glow.current.position.set(x, 0.01, z);
+    anchor[0] = x;
+    anchor[1] = y;
+    anchor[2] = z;
   });
   return (
     <group>
       <group ref={group}>
-        <Painting artwork={entry.artwork} placement={placement} floating />
+        <Painting artwork={entry.artwork} placement={ORIGIN} anchor={anchor} floating />
       </group>
-      <mesh position={[placement.position[0], 0.01, placement.position[2]]} rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh ref={glow} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.42, 0.55, 48]} />
         <meshBasicMaterial color="#9fdcff" toneMapped={false} transparent opacity={0.6} />
       </mesh>
@@ -131,6 +132,9 @@ const Annex = () => {
     getGalleryState().set({focusedId: null});
   }, []);
 
+  // the carousel never stops, so this room always renders at the full frame rate
+  useFrame(() => markActive(200));
+
   return (
     <group>
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
@@ -146,7 +150,7 @@ const Annex = () => {
         <circleGeometry args={[PROJECTION.radius, 64]} />
         <meshStandardMaterial color="#8d8b99" roughness={0.9} />
       </mesh>
-      {[PROJECTION.radius + 0.06, RADIUS - 0.25].map((radius) => (
+      {[PROJECTION.radius + 0.06, ORBIT.minRadius, ORBIT.maxRadius, RADIUS - 0.25].map((radius) => (
         <mesh key={radius} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.006, 0]}>
           <ringGeometry args={[radius, radius + 0.03, 128]} />
           <meshBasicMaterial color="#7fd8ff" toneMapped={false} transparent opacity={0.7} />
@@ -174,8 +178,8 @@ const Annex = () => {
       <React.Suspense fallback={null}>
         {/* nothing to project until something is published */}
         {room.artworks.length > 0 && <Projector />}
-        {room.artworks.map((entry, index) => (
-          <FloatingPiece key={entry.artwork.id} entry={entry} index={index} />
+        {room.artworks.map((entry) => (
+          <FloatingPiece key={entry.artwork.id} entry={entry} />
         ))}
       </React.Suspense>
       <Portal placement={PORTAL} colors={["#7a3b2a", "#ffd27f"]} label={t("portal.backToMain")} />

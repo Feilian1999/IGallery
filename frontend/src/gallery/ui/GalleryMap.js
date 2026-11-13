@@ -7,6 +7,7 @@ import {ROOM_INFO} from "../layout";
 import * as mainHall from "../layout/mainHall";
 import * as annex from "../layout/annex";
 import * as festival from "../layout/festival";
+import * as parkour from "../layout/parkour";
 import {runtime} from "../runtime";
 import {useGalleryStore} from "../store";
 import {travelToArtwork} from "../actions";
@@ -16,7 +17,8 @@ import {travelToArtwork} from "../actions";
 // a dotted trail of footsteps; you are a glowing comet.
 const VIEW = {
   main: {x: -15.5, y: -15.5, width: 31, height: 27},
-  annex: {x: -11.5, y: -11.5, width: 23, height: 23},
+  parkour: {x: parkour.BOUNDS.minX - 5, y: parkour.BOUNDS.minZ - 1, width: parkour.BOUNDS.maxZ - parkour.BOUNDS.minZ + 2, height: parkour.BOUNDS.maxZ - parkour.BOUNDS.minZ + 2},
+  annex: {x: -(annex.RADIUS + 1.5), y: -(annex.RADIUS + 1.5), width: (annex.RADIUS + 1.5) * 2, height: (annex.RADIUS + 1.5) * 2},
   festival: {x: -(festival.WALL_RADIUS + 1.5), y: -(festival.WALL_RADIUS + 1.5), width: (festival.WALL_RADIUS + 1.5) * 2, height: (festival.WALL_RADIUS + 1.5) * 2},
 };
 const ART_RADIUS = 0.95;
@@ -54,7 +56,7 @@ const MainHallPlan = ({id}) => {
       <g transform={`translate(${mainHall.PORTAL.position[0]} ${mainHall.PORTAL.position[2]})`}>
         <circle r="1.1" fill="#7fd8ff" fillOpacity="0.18" filter={`url(#${id}-glow)`} />
         <circle r="0.5" fill="none" stroke="#7fd8ff" strokeWidth="0.12" />
-        <text y="1.9" className="map-svg__note" textAnchor="middle">{t("map.portal")}</text>
+        <text y="1.9" className="map-svg__note" textAnchor="middle">{t("map.stairs")}</text>
       </g>
       <g transform={`translate(${mainHall.GRAFFITI.position[0]} ${mainHall.GRAFFITI.position[2]}) rotate(${(-mainHall.GRAFFITI.rotationY * 180) / Math.PI})`}>
         {["#ff5a5f", "#f2c94c", "#5aa9e6", "#7bc47f"].map((color, i) => (
@@ -72,7 +74,9 @@ const AnnexPlan = ({id}) => {
     <g>
       <circle r={annex.RADIUS} fill={`url(#${id}-wash)`} />
       <circle r={annex.RADIUS} fill="none" stroke="var(--g-accent)" strokeWidth="0.16" filter={`url(#${id}-ink)`} />
-      <circle r={annex.RING_RADIUS} fill="none" stroke="#f2ede4" strokeOpacity="0.15" strokeWidth="0.05" strokeDasharray="0.2 0.3" />
+      {[annex.ORBIT.minRadius, annex.ORBIT.maxRadius].map((radius) => (
+        <circle key={radius} r={radius} fill="none" stroke="#f2ede4" strokeOpacity="0.15" strokeWidth="0.05" strokeDasharray="0.2 0.3" />
+      ))}
       <circle r={annex.PROJECTION.radius} fill="#9fdcff" fillOpacity="0.08" stroke="#9fdcff" strokeOpacity="0.5" strokeWidth="0.06" />
       <text y="0.25" className="map-svg__note" textAnchor="middle">{t("map.projection")}</text>
       <g transform={`translate(${annex.PORTAL.position[0]} ${annex.PORTAL.position[2]})`}>
@@ -80,6 +84,28 @@ const AnnexPlan = ({id}) => {
         <circle r="0.5" fill="none" stroke="#ffd27f" strokeWidth="0.12" />
         <text y="1.7" className="map-svg__note" textAnchor="middle">{t("map.backToMain")}</text>
       </g>
+    </g>
+  );
+};
+
+// The run upstairs: every platform to scale, the checkpoints and both doors.
+const ParkourPlan = ({id}) => {
+  const {t} = useTranslation("gallery");
+  const door = (portal, color, label) => (
+    <g transform={`translate(${portal.position[0]} ${portal.position[2]})`}>
+      <circle r="1.1" fill={color} fillOpacity="0.2" filter={`url(#${id}-glow)`} />
+      <circle r="0.5" fill="none" stroke={color} strokeWidth="0.12" />
+      <text y="1.7" className="map-svg__note" textAnchor="middle">{label}</text>
+    </g>
+  );
+  return (
+    <g>
+      {parkour.PLATFORMS.map(({center, size, kind}) => (
+        <rect key={center.join()} x={center[0] - size[0] / 2} y={center[1] - size[1] / 2} width={size[0]} height={size[1]} rx="0.15"
+          fill={`url(#${id}-wash)`} stroke={kind === "deck" ? "#ffd27f" : "var(--g-accent)"} strokeWidth="0.12" filter={`url(#${id}-ink)`} />
+      ))}
+      {door(parkour.PORTAL_HOME, "#ffd27f", t("map.backToMain"))}
+      {door(parkour.PORTAL_ANNEX, "#7fd8ff", t("portal.toAnnex"))}
     </g>
   );
 };
@@ -173,7 +199,8 @@ export const MapSvg = ({roomId, interactive, showTitles}) => {
         ))}
       </defs>
 
-      {roomId === "main" ? <MainHallPlan id={id} /> : roomId === "festival" ? <FestivalPlan id={id} /> : <AnnexPlan id={id} />}
+      {roomId === "main" ? <MainHallPlan id={id} /> : roomId === "festival" ? <FestivalPlan id={id} /> :
+        roomId === "parkour" ? <ParkourPlan id={id} /> : <AnnexPlan id={id} />}
 
       {here && (
         <polyline ref={trail} fill="none" stroke="#f2ede4" strokeOpacity="0.55" strokeWidth="0.14" strokeLinecap="round" strokeDasharray="0.01 0.42" />
@@ -219,7 +246,7 @@ export const MapSvg = ({roomId, interactive, showTitles}) => {
 };
 
 MapSvg.propTypes = {
-  roomId: PropTypes.oneOf(["main", "annex", "festival"]).isRequired,
+  roomId: PropTypes.oneOf(["main", "parkour", "annex", "festival"]).isRequired,
   interactive: PropTypes.bool,
   showTitles: PropTypes.bool,
 };

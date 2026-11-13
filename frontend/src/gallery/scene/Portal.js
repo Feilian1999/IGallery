@@ -181,7 +181,24 @@ const MainView = () => {
   );
 };
 
-const VIEWS = {annex: AnnexView, main: MainView};
+const PARKOUR_SLABS = [[0, -0.4, -4, 2.4], [1.6, 0.1, -8, 1.8], [-1.2, 0.7, -12, 1.8], [1, 1.4, -16, 1.6], [-0.6, 2.1, -20, 2.6]];
+
+// Upstairs: glowing platforms stepping away into the dark.
+const ParkourView = () => (
+  <>
+    <color attach="background" args={["#06070d"]} />
+    <fog attach="fog" args={["#06070d", 6, 30]} />
+    <Stars color="#cfe0ff" seed={7} />
+    {PARKOUR_SLABS.map(([x, y, z, size]) => (
+      <mesh key={z} position={[x, y, z]} rotation={[-Math.PI / 2, 0, 0]}>
+        <planeGeometry args={[size, size]} />
+        <meshBasicMaterial color="#7fd8ff" transparent opacity={0.75} toneMapped={false} />
+      </mesh>
+    ))}
+  </>
+);
+
+const VIEWS = {annex: AnnexView, main: MainView, parkour: ParkourView};
 
 /**
  * A slim metal archway that opens onto another room: you see the destination

@@ -1,5 +1,5 @@
 // Outfit options for the robot. body tints the "Main" material, trim the "Grey" one.
-// Names are translated at render time: gallery:outfits.<group>.<id> and gallery:emotes.<id>.
+// Names are translated at render time: gallery:outfits.<group>.<id>.
 export const BODY_COLORS = {
   orange: {color: "#d9772b"},
   mint: {color: "#4fb59a"},
@@ -21,11 +21,3 @@ export const ACCESSORIES = {
   scarf: {},
   headphones: {},
 };
-
-export const EMOTES = [
-  {id: "Wave", key: "1"},
-  {id: "ThumbsUp", key: "2"},
-  {id: "Dance", key: "3"},
-  {id: "Yes", key: "4"},
-  {id: "Jump", key: "Space"},
-];

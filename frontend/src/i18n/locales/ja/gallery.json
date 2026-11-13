@@ -45,13 +45,6 @@
       "headphones": "ヘッドホン"
     }
   },
-  "emotes": {
-    "Wave": "手を振る",
-    "ThumbsUp": "いいね",
-    "Dance": "ダンス",
-    "Yes": "うなずく",
-    "Jump": "ジャンプ"
-  },
   "qualities": {
     "auto": "自動",
     "high": "高画質",
@@ -62,8 +55,7 @@
     "title": "着せ替え",
     "body": "ボディカラー",
     "trim": "関節・アクセントカラー",
-    "accessory": "アクセサリー",
-    "tryEmote": "動きを試す"
+    "accessory": "アクセサリー"
   },
   "theme": {
     "title": "ギャラリーのテーマ",
@@ -91,18 +83,18 @@
     "keys": {
       "move": "前後左右に移動（↑ ↓ でも前進・後退できます）",
       "turn": "左右に旋回（← → でも操作できます）",
-      "run": "押している間ダッシュ",
+      "run": "押している間ダッシュ（前進中）",
       "look": "画面をクリックしてからマウスで見回す（Esc でカーソルを戻す。ドラッグでも操作できます）",
       "interact": "インタラクト：座る・ポータル・落書き（見回し中はクリックでも可）",
       "view": "鑑賞中の作品を詳しく見る",
-      "emotes": "手を振る・いいね・ダンス・うなずく",
       "jump": "ジャンプ",
       "camera": "一人称／三人称の切り替え",
       "map": "館内マップ",
       "photo": "フォトモード",
       "outfit": "着せ替え",
       "theme": "テーマと天気",
-      "close": "パネルを閉じる・モードを終了"
+      "close": "パネルを閉じる・モードを終了",
+      "crouch": "押している間しゃがんでゆっくり歩く"
     }
   },
   "hud": {
@@ -128,12 +120,14 @@
     "enterAnnex": "浮遊展示室へ入る",
     "toFestival": "夏祭りへ向かう",
     "startGraffiti": "落書きを始める",
-    "backToMain": "メインホールへ戻る"
+    "backToMain": "メインホールへ戻る",
+    "toParkour": "上の階のパルクールへ"
   },
   "portal": {
     "toAnnex": "→ 浮遊展示室",
     "toFestival": "→ 夏祭り",
-    "backToMain": "← メインホールへ戻る"
+    "backToMain": "← メインホールへ戻る",
+    "toParkour": "→ 上階パルクール"
   },
   "painting": {
     "hoverHint": "クリックで作品の詳細を表示"
@@ -203,7 +197,6 @@
   "map": {
     "entrance": "入口",
     "toFestival": "夏祭りへ",
-    "portal": "ポータル",
     "graffiti": "落書きの壁",
     "projection": "投影",
     "backToMain": "メインホールへ",
@@ -215,6 +208,7 @@
     "visited": "鑑賞済み {{seen}} / {{total}}",
     "visitedGo": "鑑賞済み · クリックで移動",
     "go": "クリックで移動",
-    "close": "マップを閉じる"
+    "close": "マップを閉じる",
+    "stairs": "階段"
   }
 }

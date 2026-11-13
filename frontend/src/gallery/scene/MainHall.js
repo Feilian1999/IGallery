@@ -13,7 +13,7 @@ import GraffitiWall from "./GraffitiWall";
 import Ball from "./Ball";
 import Outdoors from "./Outdoors";
 import {
-  Floor, Ceiling, PerimeterWalls, WallBays, SouthWall, WindowLight, Partitions, Benches, Platform, TrackLights, useSurfaces,
+  Floor, Ceiling, PerimeterWalls, WallBays, SouthWall, WindowLight, Partitions, Benches, Platform, Stairs, TrackLights, useSurfaces,
 } from "./Architecture";
 import HallEnvironment from "./HallEnvironment";
 
@@ -80,13 +80,14 @@ const MainHall = () => {
       <TrackLights theme={theme} />
       <WindowLight color={SEASONS[seasonId].light} strength={weather === "rain" ? 0.12 : 0.28} />
       <Platform theme={theme} />
+      <Stairs theme={theme} />
       <FestivalGate />
       {feature && (
         <React.Suspense fallback={null}>
           <FloatingFeature artwork={feature} />
         </React.Suspense>
       )}
-      <Portal placement={PORTAL} colors={["#3b2a7a", "#7fd8ff"]} label={t("portal.toAnnex")} />
+      <Portal placement={PORTAL} colors={["#3b2a7a", "#7fd8ff"]} label={t("portal.toParkour")} />
       <GraffitiWall />
       <Ball />
       <Outdoors />

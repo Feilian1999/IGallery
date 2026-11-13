@@ -34,7 +34,7 @@ const Footprints = () => {
       const age = now - print.time;
       if (print.room !== roomId || age > LIFETIME_MS || count >= MAX_PRINTS) return;
       const scale = Math.min(1, (LIFETIME_MS - age) / FADE_MS);
-      dummy.position.set(print.x, 0.008, print.z);
+      dummy.position.set(print.x, (print.y || 0) + 0.008, print.z);
       dummy.rotation.set(-Math.PI / 2, print.heading + Math.PI, 0);
       dummy.scale.setScalar(scale);
       dummy.updateMatrix();

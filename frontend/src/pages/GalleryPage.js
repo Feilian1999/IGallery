@@ -11,7 +11,7 @@ import IntroScreen, {TransitionOverlay} from "../gallery/ui/IntroScreen";
 import THEMES from "../gallery/themes";
 import {useGalleryStore, getGalleryState} from "../gallery/store";
 import {runtime, markActive} from "../gallery/runtime";
-import {requestInteract, openDetail, playEmote, skipIntro, startIntro} from "../gallery/actions";
+import {requestInteract, openDetail, skipIntro, startIntro} from "../gallery/actions";
 import audio from "../gallery/audio/AudioEngine";
 import "../gallery/ui/gallery.css";
 
@@ -23,9 +23,9 @@ const KEY_MAP = [
   {name: "turnLeft", keys: ["ArrowLeft", "KeyQ"]},
   {name: "turnRight", keys: ["ArrowRight", "KeyE"]},
   {name: "run", keys: ["ShiftLeft", "ShiftRight"]},
+  {name: "crouch", keys: ["KeyX"]},
 ];
 
-const EMOTE_KEYS = {Digit1: "Wave", Digit2: "ThumbsUp", Digit3: "Dance", Digit4: "Yes", Space: "Jump"};
 const DPR = {high: [1, 2], balanced: [1, 1.5], low: 1};
 // Radians of view turn per pixel: for a captured mouse, and for a drag (touch, or
 // a mouse that hasn't been captured).
@@ -62,9 +62,9 @@ const handleShortcut = (event) => {
     if (event.code === "KeyF") state.set({mode: "explore"});
     return;
   }
-  if (EMOTE_KEYS[event.code] && (state.mode === "explore" || state.mode === "photo")) {
+  if (event.code === "Space" && state.mode === "explore") {
     event.preventDefault();
-    playEmote(EMOTE_KEYS[event.code]);
+    runtime.jumpRequested = true;
     return;
   }
   switch (event.code) {

@@ -265,39 +265,6 @@
   pointer-events: none;
 }
 
-.emotes {
-  display: flex;
-  gap: 4px;
-  padding: 6px;
-  border-radius: 999px;
-}
-
-.emote {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 38px;
-  padding: 0 14px 0 10px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--g-text);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.emote:hover {
-  background: var(--g-hover);
-}
-
-.emote .kbd {
-  min-width: 18px;
-  height: 18px;
-  font-size: 10px;
-}
-
 /* ---------- panels ---------- */
 
 .panel {
@@ -1397,7 +1364,6 @@
   .brand { top: 12px; left: 12px; min-width: 0; }
   .toolbar { top: auto; bottom: 86px; right: 12px; flex-wrap: wrap; max-width: 220px; border-radius: 20px; }
   .minimap { display: none; }
-  .emote span:not(.kbd) { display: none; }
   .panel { left: 12px; right: 12px; width: auto; top: 72px; }
   .map-card, .detail__body { grid-template-columns: 1fr; }
   .detail__stage { margin: 0 12px; min-height: 50vh; }

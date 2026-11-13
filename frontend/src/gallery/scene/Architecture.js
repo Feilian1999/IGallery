@@ -7,7 +7,7 @@ import {runtime} from "../runtime";
 import {plasterTexture, concreteTexture, woodTexture, radialTexture, haloTexture, SURFACES, setupSurfaceTexture} from "../textures";
 import {
   BOUNDARY, PERIMETER_WALLS, SOUTH_WALL, PARTITIONS, PARTITION_HEIGHT, PARTITION_THICKNESS,
-  WALL_HEIGHT, BENCHES, BENCH_SIZE, PLATFORM, ARC, SLOT_PLACEMENTS, BAY, WALL_BAYS, partitionCenterline,
+  WALL_HEIGHT, BENCHES, BENCH_SIZE, PLATFORM, STAIRS, ARC, SLOT_PLACEMENTS, BAY, WALL_BAYS, partitionCenterline,
 } from "../layout/mainHall";
 
 const BENCH_WOOD = {night: "#4a3426", white: "#d9c3a0", warm: "#7a4c2c"};
@@ -590,6 +590,40 @@ export const Platform = ({theme}) => {
         <ringGeometry args={[PLATFORM.radius - 0.08, PLATFORM.radius - 0.04, 96]} />
         <meshBasicMaterial color={theme.accent} toneMapped={false} />
       </mesh>
+    </group>
+  );
+};
+
+// The stairs up to the portal: solid steps rising toward the wall, then a landing.
+// In the group's own frame +z runs out from the wall, so the landing sits at the origin.
+export const Stairs = ({theme}) => {
+  const {steps, rise, run, width, landing, wall, rotationY} = STAIRS;
+  const tread = run / steps;
+  const riser = rise / steps;
+  return (
+    <group position={[wall[0], 0, wall[1]]} rotation={[0, rotationY, 0]}>
+      <mesh position={[0, rise / 2, landing / 2]} castShadow receiveShadow>
+        <boxGeometry args={[width, rise, landing]} />
+        <meshStandardMaterial color={theme.partition} roughness={0.7} />
+      </mesh>
+      {Array.from({length: steps}, (_, i) => {
+        // step 0 is the lowest, furthest from the wall
+        const height = riser * (i + 1);
+        const z = landing + run - tread * (i + 0.5);
+        return (
+          <group key={i} position={[0, 0, z]}>
+            <mesh position={[0, height / 2, 0]} castShadow receiveShadow>
+              <boxGeometry args={[width, height, tread]} />
+              <meshStandardMaterial color={theme.partition} roughness={0.7} />
+            </mesh>
+            {/* a bright nosing along the front edge of each tread */}
+            <mesh position={[0, height + 0.004, tread / 2 - 0.03]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[width - 0.2, 0.03]} />
+              <meshBasicMaterial color={theme.accent} toneMapped={false} />
+            </mesh>
+          </group>
+        );
+      })}
     </group>
   );
 };

@@ -18,14 +18,17 @@ const Effects = () => {
   const depth = React.useRef();
   const subject = React.useMemo(() => new THREE.Vector3(), []);
 
-  const depthOfField = (mode === "photo" && photoDepth) || (mode === "explore" && focusedId && quality === "high");
+  // rooms that leave the camera alone when a piece is looked at don't pull focus either
+  const focusZoom = useGalleryStore((state) => state.exhibition.rooms[state.room].layout.FOCUS_ZOOM !== false);
+  const depthOfField = (mode === "photo" && photoDepth) || (mode === "explore" && focusedId && focusZoom && quality === "high");
 
   // keep the subject exactly on the focal plane as the camera moves
   useFrame(({camera}) => {
     const effect = depth.current;
     if (!effect) return;
     const state = getGalleryState();
-    const entry = state.focusedId && state.exhibition.rooms[state.room].artworks.find((item) => item.artwork.id === state.focusedId);
+    const room = state.exhibition.rooms[state.room];
+    const entry = state.focusedId && room.layout.FOCUS_ZOOM !== false && room.artworks.find((item) => item.artwork.id === state.focusedId);
     if (state.mode === "photo" || !entry) subject.set(runtime.player.position.x, 1.1, runtime.player.position.z);
     else subject.fromArray(entry.placement.position);
     effect.cocMaterial.worldFocusDistance = camera.position.distanceTo(subject);

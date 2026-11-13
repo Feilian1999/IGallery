@@ -11,14 +11,6 @@ export const requestInteract = () => {
   markActive();
 };
 
-export const playEmote = (name) => {
-  const state = getGalleryState();
-  if (state.phase !== "explore" || state.detailId) return;
-  runtime.player.seat = null;
-  runtime.player.emote = name;
-  markActive();
-};
-
 export const openDetail = (id) => {
   const state = getGalleryState();
   state.set({detailId: id, hoveredId: null});
@@ -50,11 +42,13 @@ export const travelToArtwork = (roomId, artworkId) => {
     const state = getGalleryState();
     if (state.room !== roomId) state.set({room: roomId});
     runtime.player.seat = null;
-    runtime.teleport = {position: entry.spot, heading: headingToward(entry.placement.normal)};
+    // a room whose pieces move says where to stand right now
+    const {viewingPose} = state.exhibition.rooms[roomId].layout;
+    runtime.teleport = viewingPose ? viewingPose(entry) : {position: entry.spot, heading: headingToward(entry.placement.normal)};
   });
 };
 
-// `arrival` ({position, heading}) overrides the room's usual spawn point.
+// `arrival` ({position, heading, height?}) overrides the room's usual spawn point.
 export const enterPortal = (target, arrival) => {
   if (getGalleryState().transition) return;
   audio.whoosh();
@@ -63,7 +57,7 @@ export const enterPortal = (target, arrival) => {
   fadeTransition({room: target}, () => {
     getGalleryState().set({room: target, focusedId: null, prompt: null, hoveredId: null});
     runtime.player.seat = null;
-    runtime.teleport = {position: spawn.position, heading: spawn.heading};
+    runtime.teleport = {position: spawn.position, heading: spawn.heading, height: spawn.height};
     runtime.spawnedAt = performance.now();
   }, "portal");
 };

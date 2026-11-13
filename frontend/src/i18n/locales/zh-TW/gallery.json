@@ -45,13 +45,6 @@
       "headphones": "耳機"
     }
   },
-  "emotes": {
-    "Wave": "揮手",
-    "ThumbsUp": "按讚",
-    "Dance": "跳舞",
-    "Yes": "點頭",
-    "Jump": "跳躍"
-  },
   "qualities": {
     "auto": "自動",
     "high": "高畫質",
@@ -62,8 +55,7 @@
     "title": "角色服裝",
     "body": "機身顏色",
     "trim": "關節與配色",
-    "accessory": "配件",
-    "tryEmote": "試試動作"
+    "accessory": "配件"
   },
   "theme": {
     "title": "畫廊主題",
@@ -91,18 +83,18 @@
     "keys": {
       "move": "前後左右移動（↑ ↓ 也可以前進、後退）",
       "turn": "左轉、右轉（← → 也可以）",
-      "run": "按住跑步",
+      "run": "按住衝刺（往前走時）",
       "look": "點一下畫面後轉動視角；Esc 放開游標，也可以按住拖曳",
       "interact": "互動：坐下、傳送門、塗鴉（轉動視角時點滑鼠也可以）",
       "view": "查看正在欣賞的作品",
-      "emotes": "揮手、按讚、跳舞、點頭",
       "jump": "跳躍",
       "camera": "切換第一／第三人稱",
       "map": "導覽地圖",
       "photo": "攝影模式",
       "outfit": "角色服裝",
       "theme": "主題與天氣",
-      "close": "關閉面板、離開模式"
+      "close": "關閉面板、離開模式",
+      "crouch": "按住蹲下，放慢腳步"
     }
   },
   "hud": {
@@ -128,12 +120,14 @@
     "enterAnnex": "進入懸浮展廳",
     "toFestival": "前往夏日祭典",
     "startGraffiti": "開始塗鴉",
-    "backToMain": "回到主展廳"
+    "backToMain": "回到主展廳",
+    "toParkour": "上樓挑戰跑酷"
   },
   "portal": {
     "toAnnex": "→ 懸浮展廳",
     "toFestival": "→ 夏日祭典",
-    "backToMain": "← 回到主展廳"
+    "backToMain": "← 回到主展廳",
+    "toParkour": "→ 樓上跑酷"
   },
   "painting": {
     "hoverHint": "點擊查看作品細節"
@@ -203,7 +197,6 @@
   "map": {
     "entrance": "入口",
     "toFestival": "往夏日祭典",
-    "portal": "傳送門",
     "graffiti": "塗鴉牆",
     "projection": "投影",
     "backToMain": "回主展廳",
@@ -215,6 +208,7 @@
     "visited": "已參觀 {{seen}} / {{total}}",
     "visitedGo": "已參觀 · 點擊前往",
     "go": "點擊前往",
-    "close": "關閉地圖"
+    "close": "關閉地圖",
+    "stairs": "樓梯"
   }
 }

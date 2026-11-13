@@ -149,6 +149,11 @@ const Robot = ({player = runtime.player, self = true}) => {
     } else if (a.state === "sitting") {
       play("Standing", 0.2);
       a.state = "standing";
+    } else if (!player.onGround) {
+      if (a.state !== "air") {
+        play("Jump", 0.1);
+        a.state = "air";
+      }
     } else if (player.moving) {
       play(player.running ? "Running" : "Walking", 0.2);
       if (actions[a.current]) actions[a.current].timeScale = player.running ? 1 : 1.15;
@@ -158,7 +163,7 @@ const Robot = ({player = runtime.player, self = true}) => {
       play(player.emote, 0.2);
       if (a.current === player.emote) a.state = "emote";
       player.emote = null;
-    } else if (a.state === "moving" || (a.finished && (a.state === "emote" || a.state === "standing"))) {
+    } else if (a.state === "moving" || a.state === "air" || (a.finished && (a.state === "emote" || a.state === "standing"))) {
       play("Idle", 0.3);
       a.state = "idle";
     } else if (!a.current) {
@@ -167,7 +172,10 @@ const Robot = ({player = runtime.player, self = true}) => {
     if (a.state !== "idle") markActive(300);
 
     a.lift = THREE.MathUtils.lerp(a.lift, player.seat ? SEAT_LIFT : 0, 1 - Math.exp(-dt * 6));
-    root.current.position.set(player.position.x, a.lift, player.position.z);
+    root.current.position.set(player.position.x, a.lift + player.position.y, player.position.z);
+    // the shadow stays on the surface below during a jump, and there is none over a drop
+    shadow.current.visible = Number.isFinite(player.ground);
+    shadow.current.position.y = 0.012 + (shadow.current.visible ? player.ground - player.position.y : 0);
     root.current.rotation.y = player.heading;
 
     const spawn = Math.min(1, (performance.now() - runtime.spawnedAt) / SPAWN_MS);

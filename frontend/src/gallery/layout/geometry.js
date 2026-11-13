@@ -49,3 +49,12 @@ export const boxCapsule = ([x, z], rotationY, length, depth) => {
       depth / 2,
   );
 };
+
+// A solid box to stand on (see resolveBody in collision.js). `direction` is the way its
+// length runs; `top` is one height, or [from, to] for a ramp rising along that direction.
+// Anything in `extra` (e.g. a checkpoint) rides along on the collider.
+export const slab = ({center, direction = [1, 0], length, width, top, bottom = 0, ...extra}) => {
+  const [ux, uz] = normalize(direction);
+  const [top0, top1] = Array.isArray(top) ? top : [top, top];
+  return {x: center[0], z: center[1], ux, uz, halfLength: length / 2, halfWidth: width / 2, top0, top1, bottom, ...extra};
+};

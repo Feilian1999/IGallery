@@ -14,7 +14,7 @@ export const runtime = {
   },
   // mouse and touch look travel (radians) not yet applied by the player controller
   look: {dx: 0, dy: 0},
-  // {position: [x, z], heading} requested by the map or a portal, applied by the player controller
+  // {position: [x, z], heading, height?} requested by the map or a portal, applied by the player controller
   teleport: null,
   // ms timestamp (performance.now) when the robot last appeared, drives the spawn effect
   spawnedAt: 0,
@@ -22,10 +22,12 @@ export const runtime = {
   // wall meshes that fade out when they block the third person camera
   occluders: new Set(),
   // recent walking path per room for the map, as [x, z] pairs
-  trail: {main: [], annex: [], festival: []},
-  // footprints left on the floor: {room, x, z, heading, side, time}
+  trail: {main: [], parkour: [], annex: [], festival: []},
+  // footprints left on the floor: {room, x, y, z, heading, time}
   footprints: [],
   interactRequested: false,
+  // the jump key went down since the last frame
+  jumpRequested: false,
   // until when (performance.now) the scene renders at full frame rate
   activeUntil: 0,
   keysDown: new Set(),

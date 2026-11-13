@@ -29,6 +29,7 @@
   "requestFailed": "Request failed ({{status}})",
   "rooms": {
     "main": "Main Hall",
+    "parkour": "Upstairs Run",
     "annex": "Floating Room",
     "festival": "Summer Festival"
   },

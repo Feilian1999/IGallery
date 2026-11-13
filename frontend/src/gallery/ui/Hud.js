@@ -13,9 +13,7 @@ import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import {ROOM_INFO} from "../layout";
-import {EMOTES} from "../outfits";
 import {useGalleryStore} from "../store";
-import {playEmote} from "../actions";
 import Panels from "./Panels";
 import {MiniMap} from "./GalleryMap";
 
@@ -93,14 +91,6 @@ const Hud = () => {
           </div>
         )}
         <div className="look-hint">{pointerLocked ? t("hud.releaseHint") : t("hud.lookHint")}</div>
-        <div className="emotes glass">
-          {EMOTES.map((emote) => (
-            <button key={emote.id} className="emote" onClick={() => playEmote(emote.id)}>
-              <span className="kbd">{emote.key === "Space" ? "␣" : emote.key}</span>
-              <span>{t(`emotes.${emote.id}`)}</span>
-            </button>
-          ))}
-        </div>
       </div>
     </div>
   );
