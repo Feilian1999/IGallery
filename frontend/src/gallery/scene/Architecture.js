@@ -125,7 +125,7 @@ const segmentPose = (start, end) => {
   };
 };
 
-// A mesh that fades out when it hides the robot from the camera.
+// A mesh that fades out when it hides the mascot from the camera.
 const Occluder = ({children, ...props}) => {
   const ref = React.useRef();
   React.useEffect(() => {

@@ -28,8 +28,8 @@ const stripeTexture = () => {
   return texture;
 };
 
-// A beach ball the robot can kick around. Simple 2D physics on the floor plane:
-// friction, bounces off walls and benches, and a push from the robot.
+// A beach ball the mascot can kick around. Simple 2D physics on the floor plane:
+// friction, bounces off walls and benches, and a push from the mascot.
 const Ball = () => {
   const mesh = React.useRef();
   const texture = React.useMemo(stripeTexture, []);

@@ -4,7 +4,7 @@ import THEMES from "../themes";
 import {useGalleryStore} from "../store";
 import Lighting from "./Lighting";
 import MainHall from "./MainHall";
-import Robot from "./Robot";
+import Mascot from "./Mascot";
 import Footprints from "./Footprints";
 import PlayerController from "./PlayerController";
 import Effects from "./Effects";
@@ -34,9 +34,7 @@ const GalleryScene = () => {
       <React.Suspense fallback={null}>
         <Room />
       </React.Suspense>
-      <React.Suspense fallback={null}>
-        <Robot />
-      </React.Suspense>
+      <Mascot />
       <Footprints />
       <PlayerController />
       <Effects />

@@ -3,7 +3,7 @@ import {useFrame, useThree} from "@react-three/fiber";
 import {runtime} from "../runtime";
 import {getGalleryState} from "../store";
 
-// While nothing is happening the scene keeps idling (robot breathing, particles)
+// While nothing is happening the scene keeps idling (mascot breathing, particles)
 // at a low frame rate instead of rendering flat out.
 const IDLE_FPS = 20;
 

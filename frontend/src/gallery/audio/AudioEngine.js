@@ -1,11 +1,12 @@
 /* eslint-disable require-jsdoc */
-// The gallery's sound: a recorded soundtrack in the main hall and the festival, and
-// everything else (the annex ambience, footsteps, rain, chimes) synthesized with the
+// The gallery's sound: a recorded soundtrack for each room, and everything else
+// (footsteps, rain, chimes, and music to fall back on) synthesized with the
 // Web Audio API. The context can only start after a user gesture, which is why the
 // gallery opens with an "enter" button.
 
-// Rooms with a recorded soundtrack; the others get the synthesized ambience.
-const TRACKS = {main: "/audio/hikari.mp3", festival: "/audio/kagura.mp3"};
+// Each room's recorded soundtrack; a room without one gets the synthesized ambience.
+// Rooms that share a recording keep it playing as the visitor walks between them.
+const TRACKS = {main: "/audio/hikari.mp3", festival: "/audio/kagura.mp3", parkour: "/audio/mori.mp3", annex: "/audio/mori.mp3"};
 // the recordings are mastered loud; this keeps them behind the sound effects
 const TRACK_LEVEL = 0.32;
 const CROSSFADE_SECONDS = 2.4;
@@ -95,13 +96,13 @@ class AudioEngine {
     this.applyRoom(0.5);
 
     document.addEventListener("visibilitychange", () => {
-      const track = this.tracks[this.room];
+      const track = this.tracks[TRACKS[this.room]];
       if (document.hidden) {
         context.suspend();
         track?.element.pause();
       } else if (this.active) {
         context.resume();
-        if (track && this.musicOn && !this.failedTracks.has(this.room)) this.playTrack(this.room);
+        if (track && this.musicOn && this.hasTrack()) this.playTrack(this.room);
       }
     });
   }
@@ -124,20 +125,22 @@ class AudioEngine {
     }, 500);
   }
 
-  // The soundtrack element for a room, wired into the music bus.
+  // The soundtrack element for a room, wired into the music bus. They are kept by
+  // recording, so rooms that share one share its element.
   track(room) {
-    if (!TRACKS[room]) return null;
-    if (!this.tracks[room]) {
-      const element = new Audio(TRACKS[room]);
+    const url = TRACKS[room];
+    if (!url) return null;
+    if (!this.tracks[url]) {
+      const element = new Audio(url);
       element.loop = true;
       element.preload = "auto";
       element.addEventListener("error", () => this.trackFailed(room));
       const gain = this.context.createGain();
       gain.gain.value = 0;
       this.context.createMediaElementSource(element).connect(gain).connect(this.music);
-      this.tracks[room] = {element, gain};
+      this.tracks[url] = {element, gain};
     }
-    return this.tracks[room];
+    return this.tracks[url];
   }
 
   // Walking into another room crossfades to its music.
@@ -149,7 +152,7 @@ class AudioEngine {
 
   // whether this room plays its recording (otherwise the synthesized music)
   hasTrack(room = this.room) {
-    return Boolean(TRACKS[room]) && !this.failedTracks.has(room);
+    return Boolean(TRACKS[room]) && !this.failedTracks.has(TRACKS[room]);
   }
 
   playTrack(room) {
@@ -158,28 +161,29 @@ class AudioEngine {
 
   // A missing file, an undecodable one or a blocked play() falls back to the synthesized music.
   trackFailed(room) {
-    if (this.failedTracks.has(room)) return;
+    if (this.failedTracks.has(TRACKS[room])) return;
     console.warn(`[igallery] the ${room} soundtrack can't play; using the synthesized music instead`);
-    this.failedTracks.add(room);
-    if (this.context && this.active && room === this.room) this.applyRoom(1);
+    this.failedTracks.add(TRACKS[room]);
+    if (this.context && this.active && TRACKS[room] === TRACKS[this.room]) this.applyRoom(1);
   }
 
   applyRoom(fadeSeconds) {
     const now = this.context.currentTime;
     const ease = fadeSeconds / 3;
     this.synth.gain.setTargetAtTime(this.hasTrack() ? 0 : 1, now, ease);
-    Object.keys(TRACKS).forEach((room) => {
-      if (room === this.room && this.hasTrack(room)) {
-        // with music off nothing is downloaded or played
-        if (this.musicOn) this.playTrack(room);
-        this.track(room).gain.gain.setTargetAtTime(TRACK_LEVEL, now, ease);
-      } else if (this.tracks[room]) {
-        this.tracks[room].gain.gain.setTargetAtTime(0, now, ease);
-        // pause once it has faded, unless the visitor came straight back
-        setTimeout(() => {
-          if (this.room !== room || !this.hasTrack(room)) this.tracks[room].element.pause();
-        }, fadeSeconds * 1000 + 600);
-      }
+    const playing = this.hasTrack() ? TRACKS[this.room] : null;
+    if (playing) {
+      // with music off nothing is downloaded or played
+      if (this.musicOn) this.playTrack(this.room);
+      this.track(this.room).gain.gain.setTargetAtTime(TRACK_LEVEL, now, ease);
+    }
+    Object.entries(this.tracks).forEach(([url, track]) => {
+      if (url === playing) return;
+      track.gain.gain.setTargetAtTime(0, now, ease);
+      // pause once it has faded, unless the visitor came straight back
+      setTimeout(() => {
+        if (!this.hasTrack() || TRACKS[this.room] !== url) track.element.pause();
+      }, fadeSeconds * 1000 + 600);
     });
   }
 
@@ -332,7 +336,7 @@ class AudioEngine {
       gain.linearRampToValueAtTime(on ? 1 : 0, now + fadeSeconds);
     });
     if (!changed) return;
-    const track = this.tracks[this.room];
+    const track = this.tracks[TRACKS[this.room]];
     if (on && this.hasTrack()) this.playTrack(this.room);
     // pause the recording once it has faded out, so it stops streaming
     if (!on && track) setTimeout(() => !this.musicOn && track.element.pause(), fadeSeconds * 1000 + 200);

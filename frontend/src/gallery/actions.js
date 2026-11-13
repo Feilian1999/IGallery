@@ -65,11 +65,11 @@ export const enterPortal = (target, arrival) => {
 export const startIntro = () => {
   audio.start();
   runtime.introStartedAt = performance.now();
-  // the robot materialises at the entrance a little after the camera starts moving
+  // the mascot materialises at the entrance a little after the camera starts moving
   runtime.spawnedAt = performance.now() + 2600;
   getGalleryState().set({phase: "intro"});
   markActive(8000);
-  // wave hello once the robot has appeared
+  // wave hello once the mascot has appeared
   setTimeout(() => {
     runtime.player.emote = "Wave";
     markActive();

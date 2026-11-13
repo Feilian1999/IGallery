@@ -1,4 +1,4 @@
-// Outfit options for the robot. body tints the "Main" material, trim the "Grey" one.
+// Outfit options for the mascot: body colors its body, trim its feet and sprout.
 // Names are translated at render time: gallery:outfits.<group>.<id>.
 export const BODY_COLORS = {
   orange: {color: "#d9772b"},

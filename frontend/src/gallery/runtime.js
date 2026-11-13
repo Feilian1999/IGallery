@@ -6,7 +6,7 @@ import {createPlayer} from "./player";
 export const runtime = {
   // the local visitor's body; the view follows its heading and pitch
   player: createPlayer(() => new THREE.Vector3()),
-  // the photo mode camera, orbiting the robot
+  // the photo mode camera, orbiting the mascot
   camera: {
     yaw: 0,
     pitch: -0.12,
@@ -16,7 +16,7 @@ export const runtime = {
   look: {dx: 0, dy: 0},
   // {position: [x, z], heading, height?} requested by the map or a portal, applied by the player controller
   teleport: null,
-  // ms timestamp (performance.now) when the robot last appeared, drives the spawn effect
+  // ms timestamp (performance.now) when the mascot last appeared, drives the spawn effect
   spawnedAt: 0,
   introStartedAt: 0,
   // wall meshes that fade out when they block the third person camera

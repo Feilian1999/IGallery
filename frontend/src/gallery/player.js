@@ -57,9 +57,9 @@ export const createPlayer = (vector = () => ({x: 0, y: 0, z: 0})) => ({
   // body touched down at this speed (0 when it didn't)
   jumped: false,
   landed: 0,
-  // null, or the bench seat the robot is sitting on
+  // null, or the bench seat the mascot is sitting on
   seat: null,
-  // emote waiting to be played by this visitor's robot
+  // emote waiting to be played by this visitor's mascot
   emote: null,
 });
 
@@ -87,7 +87,7 @@ export const stepPlayer = (player, intent, dt, colliders) => {
   }
   player.moving = push > 0.1;
 
-  // sitting: any wish to move or jump stands the robot up
+  // sitting: any wish to move or jump stands the mascot up
   if (player.seat) {
     if (!player.moving && !intent.jump) {
       velocity.x = 0;

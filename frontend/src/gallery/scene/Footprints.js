@@ -12,7 +12,7 @@ const LIFETIME_MS = 45000;
 const FADE_MS = 12000;
 const COLORS = {night: "#cdb894", white: "#7d756b", warm: "#4a3020"};
 
-// The trail of footprints the robot leaves behind.
+// The trail of footprints the mascot leaves behind.
 const Footprints = () => {
   const mesh = React.useRef();
   const roomId = useGalleryStore((state) => state.room);

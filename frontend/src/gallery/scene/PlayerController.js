@@ -11,7 +11,7 @@ import audio from "../audio/AudioEngine";
 
 // radians per second while a turn key is held
 const TURN_SPEED = 2.4;
-// How quickly the camera reaches its place: the third person camera trails the robot a
+// How quickly the camera reaches its place: the third person camera trails the mascot a
 // little, and a first person camera gliding in from elsewhere arrives and then stays put.
 const FOLLOW_RATE = {third: 10, firstArrive: 12};
 const PHOTO_PITCH = [-0.9, 0.7];
@@ -113,7 +113,7 @@ const PlayerController = () => {
     placeAt(room.spawn.position, room.spawn.heading, room.spawn.height);
   }, []);
 
-  // The third person camera: behind the robot, raised or lowered by where the visitor looks.
+  // The third person camera: behind the mascot, raised or lowered by where the visitor looks.
   const followPose = (target, look) => {
     const player = runtime.player;
     const yaw = player.heading + Math.PI;
@@ -124,7 +124,7 @@ const PlayerController = () => {
     const ceiling = layout.CAMERA_CEILING ?? WALL_HEIGHT - 0.45;
     const fullReach = Math.cos(elevation) * FOLLOW_DISTANCE;
     let reach = fullReach;
-    // a round room keeps the camera inside its wall by pulling it in toward the robot
+    // a round room keeps the camera inside its wall by pulling it in toward the mascot
     if (layout.CAMERA_RADIUS) {
       const dx = Math.sin(yaw);
       const dz = Math.cos(yaw);
@@ -132,7 +132,7 @@ const PlayerController = () => {
       const inside = layout.CAMERA_RADIUS ** 2 - (player.position.x ** 2 + player.position.z ** 2);
       if (inside > 0) reach = Math.max(0.6, Math.min(reach, -along + Math.sqrt(along * along + inside)));
     }
-    // pulled in close, the camera rises and looks past the robot instead of at its back
+    // pulled in close, the camera rises and looks past the mascot instead of at its back
     const shortfall = fullReach - reach;
     target.set(
         player.position.x + Math.sin(yaw) * reach,
@@ -170,7 +170,7 @@ const PlayerController = () => {
     runtime.look.dx = 0;
     runtime.look.dy = 0;
 
-    // photo mode starts behind the robot, then orbits it without turning it
+    // photo mode starts behind the mascot, then orbits it without turning it
     if (l.mode !== state.mode) {
       l.mode = state.mode;
       if (state.mode === "photo") {
@@ -441,7 +441,7 @@ const PlayerController = () => {
       markActive(200);
     }
 
-    // --- fade walls that hide the robot -----------------------------------
+    // --- fade walls that hide the mascot -----------------------------------
     const thirdPerson = state.cameraMode !== "first" || state.mode === "photo";
     const hits = new Set();
     if (thirdPerson && runtime.occluders.size) {
